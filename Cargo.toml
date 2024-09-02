@@ -1,0 +1,8 @@
+[package]
+name = "todor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4.5.16"
+dirs = "5.0.1"
