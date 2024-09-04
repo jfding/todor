@@ -1,4 +1,7 @@
 use clap::{Parser, Subcommand};
+use dirs;
+use std::path::{Path, PathBuf};
+use anyhow::Result;
 
 #[derive(Debug, Parser)]
 #[command(name= "todor")]
@@ -32,10 +35,24 @@ enum Commands {
     Count,
 }
 
+fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> Result<PathBuf> {
+    let mut path = dirs::data_local_dir().expect("cannot get you local data dir");
+    if let Some(dir) = dir {
+        path = Path::new(&dir).to_path_buf();
+    }
+
+    path = path.join(inbox.unwrap_or("TODO".to_string()));
+    path.set_extension("md");
+
+    Ok(path)
+}
+
 fn main() {
     let args = Cli::parse();
-
     println!("{:?}", args);
+    let inbox_path = get_inbox_file(args.dir, args.inbox);
+    println!("{:?}", inbox_path);
+
     match args.command {
         Some(Commands::Add) => {
             println!("todo add item")
