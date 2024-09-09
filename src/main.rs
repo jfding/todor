@@ -60,7 +60,7 @@ fn main() {
             let todo = TaskBox::new(inbox_path);
 
             let input = inquire::Text::new("")
-                .with_help_message("Enter to add")
+                .with_help_message("<enter> | ctrl+c")
                 .with_render_config(RenderConfig::default().with_prompt_prefix("✅".into()))
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| return String::new());
@@ -80,6 +80,7 @@ fn main() {
             todo.mark(
                 inquire::MultiSelect::new("To close:", tasks)
                 .with_vim_mode(true)
+                .with_help_message("j/k | <space> | <enter> | ctrl+c")
                 .prompt().unwrap_or_else(|_| Vec::new())
             )
         }
