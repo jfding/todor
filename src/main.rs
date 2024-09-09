@@ -4,7 +4,7 @@ use std::env;
 use std::process::Command;
 use clap::{Parser, Subcommand};
 use dirs;
-use inquire::{Text, ui::RenderConfig};
+use inquire::ui::RenderConfig;
 use colored::Colorize;
 
 use todor::TaskBox;
@@ -59,7 +59,7 @@ fn main() {
         Some(Commands::Add) => {
             let todo = TaskBox::new(inbox_path);
 
-            let input = Text::new("")
+            let input = inquire::Text::new("")
                 .with_help_message("Enter to add")
                 .with_render_config(RenderConfig::default().with_prompt_prefix("✅".into()))
                 .with_placeholder("something to do?")
@@ -74,8 +74,14 @@ fn main() {
         }
 
         Some(Commands::List) | None => {
-            let todo = TaskBox::new(inbox_path);
-            todo.list(None)
+            let mut todo = TaskBox::new(inbox_path);
+            let tasks = todo.list(Some(false)); // false means NOT all
+
+            todo.mark(
+                inquire::MultiSelect::new("To close:", tasks)
+                .with_vim_mode(true)
+                .prompt().unwrap_or_else(|_| Vec::new())
+            )
         }
         Some(Commands::Edit) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist

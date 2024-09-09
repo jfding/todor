@@ -58,18 +58,51 @@ impl TaskBox {
         writeln!(file, "- [ ] {}", what).expect("Failed to write to file");
     }
 
-    pub fn list(mut self, all: Option<bool>) {
+    pub fn list(&mut self, all: Option<bool>) -> Vec<String> {
         self._load();
+
         let all = all.unwrap_or(false); // Default value is false
-        println!("TODO Box Title: {}\n->:", self.title);
-        for (task, done) in &self.tasks {
-            if all || !done {
-                println!("- {} {}", if *done { "[x]" } else { "[ ]" }, task);
-            }
-        } 
+        self.tasks.iter().filter(|(_,done)| all || !done).map(|(task, _)| task.clone()).collect()
     }
     pub fn count(mut self) -> usize {
         self._load();
         self.tasks.iter().filter(|(_, done)| !done).count()
+    }
+
+    pub fn mark(&mut self, tasks: Vec<String>) {
+        if tasks.is_empty() {
+            return
+        }
+
+        let mut content = fs::read_to_string(&self.fpath).expect("Failed to read file");
+
+        let orig_content = content.clone();
+        let mut new_content = String::new();
+
+        for task in tasks {
+            if ! new_content.is_empty() {
+                content = new_content.clone();
+            }
+
+            new_content = content
+                .lines()
+                .map(|line| {
+                    if line.trim().starts_with("- [ ] ") && line.trim()[6..].eq(&task) {
+                        line.replace("- [ ]", "- [x]")
+                    } else {
+                        line.to_string()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            new_content.push_str("\n")
+        }
+        
+        if !new_content.is_empty() && new_content != orig_content {
+            fs::write(&self.fpath, new_content).expect("cannot write file")
+        }
+
+        // refresh
+        self._load();
     }
 }
