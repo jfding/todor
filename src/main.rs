@@ -1,6 +1,8 @@
+use std::path::PathBuf;
+use std::fs;
+
 use clap::{Parser, Subcommand};
 use dirs;
-use std::path::PathBuf;
 
 use todor::TaskBox;
 
@@ -37,7 +39,12 @@ enum Commands {
 }
 
 fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
-    let base_path = dir.map(PathBuf::from).unwrap_or_else(|| dirs::data_local_dir().expect("cannot get local data dir"));
+    let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
+        dirs::home_dir()
+            .expect("cannot get home directory")
+            .join(".local/share/todor")
+    });
+    fs::create_dir_all(&base_path).expect("Failed to create base directory");
     return base_path.join(inbox.unwrap_or("TODO".to_string())).with_extension("md");
 }   
 
