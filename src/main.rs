@@ -4,7 +4,7 @@ use std::env;
 use std::process::Command;
 use clap::{Parser, Subcommand};
 use dirs;
-use rustyline;
+use inquire::{Text, ui::RenderConfig};
 use colored::Colorize;
 
 use todor::TaskBox;
@@ -59,9 +59,11 @@ fn main() {
         Some(Commands::Add) => {
             let todo = TaskBox::new(inbox_path);
 
-            let mut rl = rustyline::DefaultEditor::new().expect("Failed to create editor");
-            let prompt = "◆ ".bold().purple();
-            let input = rl.readline(&prompt.to_string()).unwrap_or_else(|_| return String::new());
+            let input = Text::new("")
+                .with_help_message("Enter to add")
+                .with_render_config(RenderConfig::default().with_prompt_prefix("✅".into()))
+                .with_placeholder("something to do?")
+                .prompt().unwrap_or_else(|_| return String::new());
 
             if !input.is_empty() {
                 todo.add(input);
