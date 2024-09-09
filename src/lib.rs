@@ -56,7 +56,7 @@ impl TaskBox {
             .open(&self.fpath)
             .expect("Failed to open file");
 
-        writeln!(file, "- [] {}", what).expect("Failed to write to file");
+        writeln!(file, "- [ ] {}", what).expect("Failed to write to file");
     }
 
     pub fn list(mut self, all: Option<bool>) {
@@ -71,6 +71,6 @@ impl TaskBox {
     }
     pub fn count(mut self) -> usize {
         self._load();
-        self.tasks.len()
+        self.tasks.iter().filter(|(_, done)| !done).count()
     }
 }
