@@ -69,4 +69,8 @@ impl TaskBox {
             }
         } 
     }
+    pub fn count(mut self) -> usize {
+        self._load();
+        self.tasks.len()
+    }
 }
