@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::fs;
-
+use std::env;
+use std::process::Command;
 use clap::{Parser, Subcommand};
 use dirs;
 
@@ -80,7 +81,11 @@ fn main() {
             todo.list(None)
         }
         Some(Commands::Edit) => {
-            println!("todo edit item")
+            let todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
+
+            let editor = env::var("EDITOR").unwrap_or("vi".to_string());
+            let mut child = Command::new(editor).arg(&inbox_path).spawn().expect("Failed to start editor");
+            child.wait().expect("Failed to wait on editor");
         }
         Some(Commands::Count) => {
             println!("todo count item")
