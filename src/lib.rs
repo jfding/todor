@@ -50,7 +50,6 @@ impl TaskBox {
     }
 
     pub fn add(self, what: String) {
-
         let mut file = fs::OpenOptions::new()
             .append(true)
             .open(&self.fpath)

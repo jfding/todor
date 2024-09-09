@@ -4,6 +4,8 @@ use std::env;
 use std::process::Command;
 use clap::{Parser, Subcommand};
 use dirs;
+use rustyline;
+use colored::Colorize;
 
 use todor::TaskBox;
 
@@ -51,28 +53,21 @@ fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
 
 fn main() {
     let args = Cli::parse();
-    println!("{:?}", args);
     let inbox_path = get_inbox_file(args.dir, args.inbox);
-    println!("inbox file: {:?}", inbox_path);
 
     match args.command {
         Some(Commands::Add) => {
             let todo = TaskBox::new(inbox_path);
 
-            use std::io::{self, Write};
-
-            print!("Enter a new task: ");
-            io::stdout().flush().expect("Failed to flush stdout");
-
-            let mut input = String::new();
-            io::stdin().read_line(&mut input).expect("Failed to read line");
-            let input = input.trim().to_string();
+            let mut rl = rustyline::DefaultEditor::new().expect("Failed to create editor");
+            let prompt = "◆ ".bold().purple();
+            let input = rl.readline(&prompt.to_string()).unwrap_or_else(|_| return String::new());
 
             if !input.is_empty() {
                 todo.add(input);
-                println!("Task added successfully!");
+                println!("{}", "Task added successfully!".bold().green());
             } else {
-                println!("No task added. Input was empty.");
+                println!("{}", "No task added. Input was empty.".red());
             }  
         }
 
