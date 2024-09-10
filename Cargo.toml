@@ -10,6 +10,7 @@ keywords = ["todo", "rust", "cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
+chrono = "0.4.38"
 clap = { version = "4.5.16", features = ["derive"] }
 colored = "2.1.0"
 dirs = "5.0.1"

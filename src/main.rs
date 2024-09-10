@@ -1,11 +1,13 @@
 use std::path::PathBuf;
 use std::fs;
 use std::env;
+use std::ops::Add;
 use std::process::Command;
 use clap::{Parser, Subcommand};
 use dirs;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
+use chrono::prelude::*;
 
 use todor::TaskBox;
 
@@ -53,7 +55,15 @@ fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
 
 fn main() {
     let args = Cli::parse();
-    let inbox_path = get_inbox_file(args.dir, args.inbox);
+    let cli = std::env::args().nth(0).expect("cannot get arg0");
+
+    let mut inbox = args.inbox;
+    if cli.ends_with("today") {
+        inbox = Some(Local::now().format("%Y-%m-%d").to_string());
+    } else if cli.ends_with("tomorrow") {
+        inbox = Some(Local::now().add(chrono::Duration::days(1)).format("%Y-%m-%d").to_string());
+    }
+    let inbox_path = get_inbox_file(args.dir, inbox);
 
     match args.command {
         Some(Commands::Add) => {
@@ -84,6 +94,7 @@ fn main() {
                 .prompt().unwrap_or_else(|_| Vec::new())
             )
         }
+
         Some(Commands::Edit) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
@@ -91,6 +102,7 @@ fn main() {
             let mut child = Command::new(editor).arg(&inbox_path).spawn().expect("Failed to start editor");
             child.wait().expect("Failed to wait on editor");
         }
+
         Some(Commands::Count) => {
             let todo = TaskBox::new(inbox_path);
             let count = todo.count();
