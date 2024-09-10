@@ -1,4 +1,4 @@
-# todor - Todo Cli Tools in Rust "(yet another) TODO cli in Rust"
+# todor - yet another TODO cli in Rust
 
 ## Design Points
 
@@ -10,15 +10,15 @@
   - then: (new) sync with MS-TODO
 
 - config need to go XDG_HOME_CONFIG
-- file store at: (default) ~/.local/state/todor/*.md
+- file store at: (default) ~/.local/share/todor/*.md
 
 - cli interface:
   - add : friendly readline
   - list: checklist with hjkl navi key support, <space> to toggle
+  - edit: call vi to edit markdown file directly
   - colorful!
 
-- how to parse args: start with the basic env::args, then clap
-- modules: dirs, colored, rustyline, cmd_lib, inquire
-- #[no_link]
+- how to parse args: clap
+- modules: dirs, colored, cmd_lib, inquire
 
 
