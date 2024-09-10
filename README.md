@@ -1,4 +1,4 @@
-# todor - yet another TODO cli in Rust
+# todor - yet another cli TODO in Rust
 
 ## Design Points
 

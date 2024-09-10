@@ -2,6 +2,12 @@
 name = "todor"
 version = "0.1.0"
 edition = "2021"
+authors = ["JF Ding <jfding@gmail.com>"]
+description = "yet another cli TODO in Rust"
+repository = "https://github.com/jfding/todor"
+license = "Apache2.0"
+keywords = ["todo", "rust", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive"] }

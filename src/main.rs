@@ -11,7 +11,7 @@ use todor::TaskBox;
 
 #[derive(Debug, Parser)]
 #[command(name= "todor")]
-#[command(version, about= "yet-another TODO cli in Rust", long_about=None)]
+#[command(version, about= "yet another cli TODO in Rust", long_about=None)]
 struct Cli {
     /// working dir
     #[arg(short, long, value_name = "FOLDER")]
