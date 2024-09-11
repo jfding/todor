@@ -1,69 +1,25 @@
-use std::path::PathBuf;
-use std::fs;
 use std::env;
 use std::ops::Add;
 use std::process::Command;
-use clap::{Parser, Subcommand};
-use dirs;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
 use chrono::prelude::*;
 
-use todor::TaskBox;
-
-#[derive(Debug, Parser)]
-#[command(name= "todor")]
-#[command(version, about= "yet another cli TODO in Rust", long_about=None)]
-struct Cli {
-    /// working dir
-    #[arg(short, long, value_name = "FOLDER")]
-    dir: Option<String>,
-
-    /// inbox file
-    #[arg(short, long, value_name = "FILE")]
-    inbox: Option<String>,
-
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Debug, Subcommand)]
-enum Commands {
-    /// -> add todo item to inbox
-    #[clap(visible_alias("a"))]
-    Add,
-    /// -> list all todo items in inbox
-    #[clap(visible_aliases(["l", "ls"]))]
-    List,
-    /// -> edit todo inbox file
-    #[clap(visible_aliases(["e", "ed"]))]
-    Edit,
-    /// -> count items in inbox
-    #[clap(visible_aliases(["c"]))]
-    Count,
-}
-
-fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
-    let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
-        dirs::home_dir()
-            .expect("cannot get home directory")
-            .join(".local/share/todor")
-    });
-    fs::create_dir_all(&base_path).expect("Failed to create base directory");
-    return base_path.join(inbox.unwrap_or("TODO".to_string())).with_extension("md");
-}   
+use todor::taskbox::TaskBox;
+use todor::cli::*;
 
 fn main() {
-    let args = Cli::parse();
-    let cli = std::env::args().nth(0).expect("cannot get arg0");
-
+    let args = Cli::new();
     let mut inbox = args.inbox;
-    if cli.ends_with("today") {
+
+    let clicmd = std::env::args().nth(0).expect("cannot get arg0");
+    if clicmd.ends_with("today") {
         inbox = Some(Local::now().format("%Y-%m-%d").to_string());
-    } else if cli.ends_with("tomorrow") {
+    } else if clicmd.ends_with("tomorrow") {
         inbox = Some(Local::now().add(chrono::Duration::days(1)).format("%Y-%m-%d").to_string());
     }
-    let inbox_path = get_inbox_file(args.dir, inbox);
+
+    let inbox_path = todor::get_inbox_file(args.dir, inbox);
 
     match args.command {
         Some(Commands::Add) => {
