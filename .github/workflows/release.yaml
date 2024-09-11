@@ -24,20 +24,20 @@ jobs:
             target: x86_64-unknown-linux-musl
             build-args: "--release"
 
-          # - name: Linux aarch64
-          #   target: aarch64-unknown-linux-musl
-          #   build-args: "--release"
-          #
+          - name: Linux aarch64
+            target: aarch64-unknown-linux-musl
+            build-args: "--release"
+
           # Mac OS
           - name: MacOS x86_64
             os: macos-latest
             target: x86_64-apple-darwin
             build-args: "--release"
 
-          # - name: MacOS aarch64
-          #   os: macos-latest
-          #   target: aarch64-apple-darwin
-          #   build-args: "--release"
+          - name: MacOS aarch64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            build-args: "--release"
 
     steps:
       - name: Install package for linux
@@ -90,7 +90,7 @@ jobs:
     name: Release
     needs: [ build ]
     # We run the release job only if a tag starts with 'v' letter
-    #if: startsWith( github.ref, 'refs/tags/v' )
+    if: startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Git repo
@@ -104,11 +104,7 @@ jobs:
           merge-multiple: true
 
       - name: list artifacts
-        run: ls
-
-      # - name: archive
-      #   run: |
-      #     bash -c 'cd artifacts; for _dir in `ls -d */`; do tar czpfv ${_dir}.tar.gz $_dir; done'
+        run: ls todor*.zip
 
       - name: Release
         uses: softprops/action-gh-release@v2
