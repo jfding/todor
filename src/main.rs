@@ -1,6 +1,7 @@
 use std::env;
 use std::ops::Add;
 use std::process::Command;
+use std::path::PathBuf;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
 use chrono::prelude::*;
@@ -66,5 +67,22 @@ fn main() {
                 println!("{}", count);
             }
         }
+
+        Some(Commands::All) => {
+            show_all(&inbox_path)
+        }
     }
+}
+
+fn show_all(inbox_path: &PathBuf) {
+    use cmd_lib::run_fun;
+
+    let wildpat = format!("{}/*.md", inbox_path.as_path().parent().unwrap().display());
+    let pager = "fzf --no-sort --tac";
+
+    let res = run_fun!(
+      sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager"
+    ).unwrap_or_else(|_| String::from("- [ ] n/a"));
+
+    println!("{}", &res[6..])
 }

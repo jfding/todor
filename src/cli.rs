@@ -21,15 +21,22 @@ pub enum Commands {
     /// -> add todo item to inbox
     #[clap(visible_alias("a"))]
     Add,
+
     /// -> list all todo items in inbox
     #[clap(visible_aliases(["l", "ls"]))]
     List,
+
     /// -> edit todo inbox file
     #[clap(visible_aliases(["e", "ed"]))]
     Edit,
+
     /// -> count items in inbox
     #[clap(visible_aliases(["c"]))]
     Count,
+
+    /// -> show items in all inboxes
+    #[clap(visible_aliases(["A"]))]
+    All,
 }
 
 impl Cli {

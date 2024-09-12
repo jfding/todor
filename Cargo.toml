@@ -12,6 +12,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 chrono = "0.4.38"
 clap = { version = "4.5.16", features = ["derive"] }
+cmd_lib = "1.9.4"
 colored = "2.1.0"
 dirs = "5.0.1"
 inquire = "0.7.5"
