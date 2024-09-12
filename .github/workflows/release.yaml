@@ -75,7 +75,9 @@ jobs:
         run: |
           export _BIN=${{ env.BIN_NAME }}${{ contains(matrix.platform.target, 'windows') && '.exe' || '' }}
           mv target/${{ matrix.platform.target }}/release${{ contains(matrix.platform.target, 'windows') && '-with-symbols' || '' }}/$_BIN .
-          zip -r ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BIN
+          ln -sf $_BIN today
+          ln -sf $_BIN tomorrow
+          zip -r ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BIN today tomorrow
 
       - name: Store artifact
         uses: actions/upload-artifact@v4
