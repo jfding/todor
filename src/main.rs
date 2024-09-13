@@ -71,6 +71,16 @@ fn main() {
         Some(Commands::All) => {
             show_all(&inbox_path)
         }
+
+        Some(Commands::Purge) => {
+            if true == inquire::Confirm::new("are you sure?")
+                .with_default(false)
+                .prompt().unwrap_or(false) {
+
+                let mut todo = TaskBox::new(inbox_path);
+                todo.purge();
+            }
+        }
     }
 }
 

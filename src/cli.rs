@@ -37,6 +37,9 @@ pub enum Commands {
     /// -> show items in all inboxes
     #[clap(visible_aliases(["A"]))]
     All,
+
+    /// -> purge all the duplicated lines
+    Purge, // no alias for safe
 }
 
 impl Cli {

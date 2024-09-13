@@ -2,6 +2,9 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
+const PREFIX :&str  = "- [ ] ";
+const PREFIX_DONE :&str  = "- [x] ";
+
 #[derive(Debug)]
 pub struct TaskBox {
     fpath: PathBuf,
@@ -48,6 +51,21 @@ impl TaskBox {
         self.tasks = tasks;
     }
 
+    fn _dump(&mut self, newfile: PathBuf) {
+        let mut content = String::from(format!("# {}\n\n", self.title));
+
+        for (task, done) in self.tasks.clone() {
+            if done {
+                content.push_str(PREFIX_DONE)
+            } else {
+                content.push_str(PREFIX)
+            }
+            content.push_str(&(task + "\n"))
+        }
+
+        fs::write(&newfile, content).expect("cannot write file")
+    }
+
     pub fn add(self, what: String) {
         let mut file = fs::OpenOptions::new()
             .append(true)
@@ -63,6 +81,7 @@ impl TaskBox {
         let all = all.unwrap_or(false); // Default value is false
         self.tasks.iter().filter(|(_,done)| all || !done).map(|(task, _)| task.clone()).collect()
     }
+
     pub fn count(mut self) -> usize {
         self._load();
         self.tasks.iter().filter(|(_, done)| !done).count()
@@ -86,8 +105,8 @@ impl TaskBox {
             new_content = content
                 .lines()
                 .map(|line| {
-                    if line.trim().starts_with("- [ ] ") && line.trim()[6..].eq(&task) {
-                        line.replace("- [ ]", "- [x]")
+                    if line.trim().starts_with(PREFIX) && line.trim()[6..].eq(&task) {
+                        line.replace(PREFIX, PREFIX_DONE)
                     } else {
                         line.to_string()
                     }
@@ -103,5 +122,13 @@ impl TaskBox {
 
         // refresh
         self._load();
+    }
+
+    pub fn purge(&mut self) {
+        use cmd_lib::run_cmd;
+        let fpath = self.fpath.display();
+        run_cmd!(
+            awk "!seen[$0]++" $fpath > ./test.md
+        ).expect("cannot run awk")
     }
 }
