@@ -1,3 +1,4 @@
+use std::io;
 use std::env;
 use std::ops::Add;
 use std::process::Command;
@@ -5,6 +6,8 @@ use std::path::PathBuf;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
 use chrono::prelude::*;
+use crossterm::execute;
+use crossterm::cursor::SetCursorStyle::*;
 
 use todor::taskbox::TaskBox;
 use todor::cli::*;
@@ -26,6 +29,8 @@ fn main() {
         Some(Commands::Add) => {
             let todo = TaskBox::new(inbox_path);
 
+            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
+
             let input = inquire::Text::new("")
                 .with_help_message("<enter> | ctrl+c")
                 .with_render_config(RenderConfig::default().with_prompt_prefix("✅".into()))
@@ -38,18 +43,22 @@ fn main() {
             } else {
                 println!("{}", "No task added. Input was empty.".red());
             }  
+
+            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }
 
         Some(Commands::List) | None => {
             let mut todo = TaskBox::new(inbox_path);
             let tasks = todo.list(Some(false)); // false means NOT all
 
+            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
             todo.mark(
                 inquire::MultiSelect::new("To close:", tasks)
                 .with_vim_mode(true)
                 .with_help_message("j/k | <space> | <enter> | ctrl+c")
                 .prompt().unwrap_or_else(|_| Vec::new())
-            )
+            );
+            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }
 
         Some(Commands::Edit) => {
