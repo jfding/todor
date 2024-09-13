@@ -128,7 +128,8 @@ impl TaskBox {
         use cmd_lib::run_cmd;
         let fpath = self.fpath.display();
         run_cmd!(
-            awk "!seen[$0]++" $fpath > ./test.md
+            awk "!seen[$0]++" $fpath > /tmp/todor.tmp.md;
+            mv /tmp/todor.tmp.md $fpath
         ).expect("cannot run awk")
     }
 }

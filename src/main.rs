@@ -1,13 +1,13 @@
 use std::io;
 use std::env;
 use std::ops::Add;
-use std::process::Command;
 use std::path::PathBuf;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
 use chrono::prelude::*;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
+use cmd_lib::*;
 
 use todor::taskbox::TaskBox;
 use todor::cli::*;
@@ -65,8 +65,9 @@ fn main() {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
             let editor = env::var("EDITOR").unwrap_or("vi".to_string());
-            let mut child = Command::new(editor).arg(&inbox_path).spawn().expect("Failed to start editor");
-            child.wait().expect("Failed to wait on editor");
+            run_cmd!(
+                $editor $inbox_path 2>/dev/null
+            ).expect("cannot launch cli editor(vi?)")
         }
 
         Some(Commands::Count) => {
@@ -94,7 +95,6 @@ fn main() {
 }
 
 fn show_all(inbox_path: &PathBuf) {
-    use cmd_lib::run_fun;
 
     let wildpat = format!("{}/*.md", inbox_path.as_path().parent().unwrap().display());
     let pager = "fzf --no-sort --tac";
