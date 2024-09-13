@@ -3,13 +3,21 @@
 ## Design Points
 
 - compatibile with my own shell wrapper of mdt'
-- in MD, not json
-- commands: add, list, edit, count
-  - later: shift, sink, collect, postp
-  - then: purge, cloudify, tui
-  - then: (new) sync with MS-TODO
+- commands: 
+  - [x] add
+  - [x] list
+  - [x] edit
+  - [x] count
+  - [x] purge
+  - [ ] shift
+  - [ ] sink
+  - [ ] collect
+  - [ ] postp
+  - [ ] cloudify
+  - [ ] sync with MS-TODO
 
 - config need to go XDG_HOME_CONFIG
+- in MD, not json
 - file store at: (default) ~/.local/share/todor/*.md
 
 - cli interface:
@@ -17,8 +25,3 @@
   - list: checklist with hjkl navi key support, <space> to toggle
   - edit: call vi to edit markdown file directly
   - colorful!
-
-- how to parse args: clap
-- modules: dirs, colored, cmd_lib, inquire
-
-
