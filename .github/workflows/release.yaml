@@ -74,10 +74,12 @@ jobs:
       - name: archive the bin
         run: |
           export _BIN=${{ env.BIN_NAME }}${{ contains(matrix.platform.target, 'windows') && '.exe' || '' }}
-          mv target/${{ matrix.platform.target }}/release${{ contains(matrix.platform.target, 'windows') && '-with-symbols' || '' }}/$_BIN .
-          ln -sf $_BIN today
-          ln -sf $_BIN tomorrow
-          zip -r --symlinks ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BIN today tomorrow
+          export _BINDIR=${{ env.BIN_NAME }}.bin
+          mkdir -p $_BINDIR
+          mv target/${{ matrix.platform.target }}/release${{ contains(matrix.platform.target, 'windows') && '-with-symbols' || '' }}/$_BIN ${{ env.BIN_NAME }}.bin
+          sh -c "cd $_BINDIR; ln -sf $_BIN today"
+          sh -c "cd $_BINDIR; ln -sf $_BIN tomorrow"
+          zip -r --symlinks ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BINDIR/*
 
       - name: Store artifact
         uses: actions/upload-artifact@v4
