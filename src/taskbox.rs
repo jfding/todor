@@ -55,7 +55,7 @@ impl TaskBox {
         self.tasks = tasks;
     }
 
-    fn _dump(&mut self, newfile: PathBuf) {
+    fn _dump(&mut self) {
         let mut content = String::from(format!("# {}\n\n", self.title.clone().unwrap()));
 
         for (task, done) in self.tasks.clone() {
@@ -67,7 +67,7 @@ impl TaskBox {
             content.push_str(&(task + "\n"))
         }
 
-        fs::write(&newfile, content).expect("cannot write file")
+        fs::write(&self.fpath, content).expect("cannot write file")
     }
 
     pub fn add(self, what: String) {
@@ -91,43 +91,21 @@ impl TaskBox {
         self.tasks.iter().filter(|(_, done)| !done).count()
     }
 
-    pub fn mark(&mut self, tasks: Vec<String>) {
+    pub fn mark(&mut self, items: Vec<String>) {
         self._load();
 
-        if tasks.is_empty() {
+        if items.is_empty() || self.tasks.is_empty() {
             return
         }
 
-        let mut content = fs::read_to_string(&self.fpath).expect("Failed to read file");
-
-        let orig_content = content.clone();
-        let mut new_content = String::new();
-
-        for task in tasks {
-            if ! new_content.is_empty() {
-                content = new_content.clone();
+        for (task, done) in self.tasks.iter_mut() {
+            if *done { continue }
+            if items.contains(task) {
+                *done = true;
             }
-
-            new_content = content
-                .lines()
-                .map(|line| {
-                    if line.trim().starts_with(PREFIX) && line.trim()[6..].eq(&task) {
-                        line.replace(PREFIX, PREFIX_DONE)
-                    } else {
-                        line.to_string()
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("\n");
-            new_content.push_str("\n")
-        }
-        
-        if !new_content.is_empty() && new_content != orig_content {
-            fs::write(&self.fpath, new_content).expect("cannot write file")
         }
 
-        // refresh
-        self._load();
+        self._dump();
     }
 
     pub fn purge(&mut self) {
