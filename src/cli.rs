@@ -40,6 +40,9 @@ pub enum Commands {
 
     /// -> purge all the duplicated lines
     Purge, // no alias for safe
+
+    /// -> sink all uncompeleted to "today"
+    Sink,
 }
 
 impl Cli {

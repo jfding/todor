@@ -91,6 +91,10 @@ fn main() {
                 todo.purge();
             }
         }
+
+        Some(Commands::Sink) => {
+            TaskBox::sink(inbox_path.as_path().parent().unwrap())
+        }
     }
 }
 

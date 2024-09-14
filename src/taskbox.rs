@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
@@ -114,7 +114,8 @@ impl TaskBox {
         self._load();
         if self.tasks.is_empty() { return }
 
-        // rules: with same content
+        // rules: to keep the original order,
+        // and when with same content:
         //      done+done => done
         //      not+not => not
         //      done+not => not
@@ -138,5 +139,69 @@ impl TaskBox {
 
         self.tasks = newtasks;
         self._dump();
+    }
+
+    /// clear all uncompelted tasks
+    fn _clear(&mut self) {
+        self._load();
+
+        let mut newtasks = Vec::new();
+        for (task, done) in self.tasks.iter() {
+            if *done {
+                newtasks.push((task.clone(), *done));
+            }
+        }
+
+        self.tasks = newtasks;
+        self._dump();
+    }
+
+    fn _movein(&mut self, todo: &mut TaskBox) {
+        self._load();
+
+        todo._load();
+        if todo.tasks.is_empty() { return }
+
+        for (task, done) in todo.tasks.iter() {
+            if ! *done {
+                self.tasks.push((task.clone(), *done));
+            }
+        }
+        todo._clear();
+
+        self._dump();
+    }
+
+    pub fn sink(basedir: &Path) {
+        use regex::Regex;
+        let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
+
+        use chrono::*;
+        let today =  Local::now().date_naive();
+        let mut today_todo = TaskBox::new(basedir.join(today.to_string()).with_extension("md"));
+
+        let mut boxes = Vec::new();
+        for entry in fs::read_dir(basedir).expect("cannot read dir") {
+            let path = entry.expect("cannot get entry").path();
+            if path.is_file() {
+                if re.is_match(path.to_str().unwrap()) { 
+                    boxes.push(path)
+                }
+            }
+        }
+        boxes.sort(); boxes.reverse();
+
+        for taskbox in boxes {
+            let boxdate = NaiveDate::parse_from_str(
+                taskbox.file_stem().unwrap().to_str().unwrap(),
+                "%Y-%m-%d").expect("something wrong!");
+
+            if boxdate < today {
+                let mut todo = TaskBox::new(taskbox);
+                today_todo._movein(&mut todo);
+            } else {
+                println!("future date {:?}", taskbox);
+            }
+        }
     }
 }
