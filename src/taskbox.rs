@@ -109,11 +109,34 @@ impl TaskBox {
     }
 
     pub fn purge(&mut self) {
-        use cmd_lib::run_cmd;
-        let fpath = self.fpath.display();
-        run_cmd!(
-            awk "!seen[$0]++" $fpath > /tmp/todor.tmp.md;
-            mv /tmp/todor.tmp.md $fpath
-        ).expect("cannot run awk")
+        use std::collections::HashSet;
+
+        self._load();
+        if self.tasks.is_empty() { return }
+
+        // rules: with same content
+        //      done+done => done
+        //      not+not => not
+        //      done+not => not
+
+        let mut hs = HashSet::new();
+        let mut newtasks = Vec::new();
+
+        // 1st scan: remove dups
+        for (task, done) in self.tasks.iter() {
+            if ! hs.contains(task) {
+                newtasks.push((task.clone(), *done));
+                hs.insert(task);
+            }
+        }
+        // 2nd scan: check status
+        for (task, done) in newtasks.iter_mut() {
+            if *done && self.tasks.contains(&(task.to_string(), false)) {
+                *done = false
+            }
+        }
+
+        self.tasks = newtasks;
+        self._dump();
     }
 }
