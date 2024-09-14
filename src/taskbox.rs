@@ -8,7 +8,7 @@ const PREFIX_DONE :&str  = "- [x] ";
 #[derive(Debug)]
 pub struct TaskBox {
     fpath: PathBuf,
-    title: String,
+    title: Option<String>,
     tasks: Vec<(String, bool)>,
 }
 
@@ -23,11 +23,15 @@ impl TaskBox {
         
         Self {
             fpath: fpath,
-            title: title,
+            title: None, // None means not loaded
             tasks: Vec::new(),
         }
     }
     fn _load(&mut self) {
+        if self.title != None {
+            return
+        }
+
         let content = fs::read_to_string(&self.fpath).expect("Failed to read file");
         
         let mut tasks = Vec::new();
@@ -47,12 +51,12 @@ impl TaskBox {
             }
         }
 
-        self.title = title;
+        self.title = Some(title);
         self.tasks = tasks;
     }
 
     fn _dump(&mut self, newfile: PathBuf) {
-        let mut content = String::from(format!("# {}\n\n", self.title));
+        let mut content = String::from(format!("# {}\n\n", self.title.clone().unwrap()));
 
         for (task, done) in self.tasks.clone() {
             if done {
@@ -88,6 +92,8 @@ impl TaskBox {
     }
 
     pub fn mark(&mut self, tasks: Vec<String>) {
+        self._load();
+
         if tasks.is_empty() {
             return
         }
