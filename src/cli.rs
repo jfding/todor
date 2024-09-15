@@ -49,7 +49,10 @@ pub enum Commands {
     Purge, // no alias for safe
 
     /// -> sink all outdated uncompeleted to "today"
-    Sink,
+    Sink {
+        #[arg(short, long)]
+        all: bool,
+    },
 
     /// -> shift all uncompeleted in "today" to "tomorrow"
     Shift,

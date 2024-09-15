@@ -119,8 +119,8 @@ fn main() {
             }
         }
 
-        Some(Commands::Sink) => {
-            TaskBox::sink(inbox_path.as_path().parent().unwrap())
+        Some(Commands::Sink { all }) => {
+            TaskBox::sink(inbox_path.as_path().parent().unwrap(), all)
         }
 
         Some(Commands::Shift) => {
