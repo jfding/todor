@@ -1,16 +1,15 @@
 use std::io;
 use std::env;
-use std::ops::Add;
 use std::path::PathBuf;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
-use chrono::prelude::*;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
 use cmd_lib::*;
 
-use todor::taskbox::TaskBox;
+use todor::taskbox::*;
 use todor::cli::*;
+use todor::util;
 
 fn main() {
     let args = Cli::new();
@@ -18,12 +17,12 @@ fn main() {
 
     let clicmd = std::env::args().nth(0).expect("cannot get arg0");
     if clicmd.ends_with("today") {
-        inbox = Some(Local::now().format("%Y-%m-%d").to_string());
+        inbox = Some(get_today())
     } else if clicmd.ends_with("tomorrow") {
-        inbox = Some(Local::now().add(chrono::Duration::days(1)).format("%Y-%m-%d").to_string());
+        inbox = Some(get_tomorrow())
     }
 
-    let inbox_path = todor::get_inbox_file(args.dir, inbox);
+    let inbox_path = util::get_inbox_file(args.dir, inbox);
 
     match args.command {
         Some(Commands::Mark) | None => {

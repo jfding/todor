@@ -1,8 +1,20 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use regex::Regex;
+
 use chrono::*;
-use std::ops::Add;
+use std::ops::*;
+
+pub fn get_today() -> String {
+    Local::now().date_naive().to_string()
+}
+pub fn get_yesterday() -> String {
+    Local::now().add(chrono::Duration::days(-1)).date_naive().to_string()
+}
+pub fn get_tomorrow() -> String {
+    Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
+}
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
@@ -176,12 +188,9 @@ impl TaskBox {
     }
 
     pub fn sink(basedir: &Path) {
-        use regex::Regex;
+        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
+
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
-
-        let today =  Local::now().date_naive();
-        let mut today_todo = TaskBox::new(basedir.join(today.to_string()).with_extension("md"));
-
         let mut boxes = Vec::new();
         for entry in fs::read_dir(basedir).expect("cannot read dir") {
             let path = entry.expect("cannot get entry").path();
@@ -193,6 +202,7 @@ impl TaskBox {
         }
         boxes.sort(); boxes.reverse();
 
+        let today =  Local::now().date_naive();
         for taskbox in boxes {
             let boxdate = NaiveDate::parse_from_str(
                 taskbox.file_stem().unwrap().to_str().unwrap(),
@@ -201,17 +211,13 @@ impl TaskBox {
             if boxdate < today {
                 let mut todo = TaskBox::new(taskbox);
                 today_todo._move_in(&mut todo);
-            } else {
-                println!("future date {:?}", taskbox);
             }
         }
     }
 
     pub fn shift(basedir: &Path) {
-        let today =  Local::now().date_naive();
-        let tomor =  Local::now().add(chrono::Duration::days(1)).date_naive();
-        let mut today_todo = TaskBox::new(basedir.join(today.to_string()).with_extension("md"));
-        let mut tomor_todo = TaskBox::new(basedir.join(tomor.to_string()).with_extension("md"));
+        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
+        let mut tomor_todo = TaskBox::new(basedir.join(get_tomorrow()).with_extension("md"));
         tomor_todo._move_in(&mut today_todo)
     }
 }
