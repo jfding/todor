@@ -24,7 +24,7 @@
   - [x] purge
   - [x] glance
   - [x] sink
-  - [ ] shift
+  - [x] shift
   - [ ] collect
   - [ ] postp
   - [ ] import
