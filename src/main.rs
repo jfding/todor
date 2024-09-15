@@ -61,7 +61,7 @@ fn main() {
         }
 
         Some(Commands::Add) => {
-            let todo = TaskBox::new(inbox_path);
+            let mut todo = TaskBox::new(inbox_path);
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
@@ -76,7 +76,7 @@ fn main() {
                 println!("{}", "Task added successfully!".bold().green());
             } else {
                 println!("{}", "No task added. Input was empty.".red());
-            }  
+            }
 
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }

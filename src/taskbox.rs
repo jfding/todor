@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use regex::Regex;
 
@@ -34,20 +33,21 @@ impl TaskBox {
             fs::File::create(&fpath).expect("Failed to create file");
             fs::write(&fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
         }
-        
+
         Self {
             fpath: fpath,
             title: None, // None means not loaded
             tasks: Vec::new(),
         }
     }
+
     fn _load(&mut self) {
         if self.title != None {
             return
         }
 
         let content = fs::read_to_string(&self.fpath).expect("Failed to read file");
-        
+
         let mut tasks = Vec::new();
         let mut title = String::new();
 
@@ -84,13 +84,41 @@ impl TaskBox {
         fs::write(&self.fpath, content).expect("cannot write file")
     }
 
-    pub fn add(self, what: String) {
-        let mut file = fs::OpenOptions::new()
-            .append(true)
-            .open(&self.fpath)
-            .expect("Failed to open file");
+    /// clear all uncompelted tasks
+    fn _clear(&mut self) {
+        self._load();
 
-        writeln!(file, "- [ ] {}", what).expect("Failed to write to file");
+        let mut newtasks = Vec::new();
+        for (task, done) in self.tasks.iter() {
+            if *done {
+                newtasks.push((task.clone(), *done));
+            }
+        }
+
+        self.tasks = newtasks;
+        self._dump();
+    }
+
+    fn _move_in(&mut self, todo: &mut TaskBox) {
+        self._load();
+
+        todo._load();
+        if todo.tasks.is_empty() { return }
+
+        for (task, done) in todo.tasks.iter() {
+            if ! *done {
+                self.tasks.push((task.clone(), *done));
+            }
+        }
+        todo._clear();
+
+        self._dump();
+    }
+
+    pub fn add(&mut self, what: String) {
+        self._load();
+        self.tasks.push((what, false));
+        self._dump();
     }
 
     pub fn _list(&mut self) -> (Vec<String> ,Vec<String>) {
@@ -153,37 +181,6 @@ impl TaskBox {
         }
 
         self.tasks = newtasks;
-        self._dump();
-    }
-
-    /// clear all uncompelted tasks
-    fn _clear(&mut self) {
-        self._load();
-
-        let mut newtasks = Vec::new();
-        for (task, done) in self.tasks.iter() {
-            if *done {
-                newtasks.push((task.clone(), *done));
-            }
-        }
-
-        self.tasks = newtasks;
-        self._dump();
-    }
-
-    fn _move_in(&mut self, todo: &mut TaskBox) {
-        self._load();
-
-        todo._load();
-        if todo.tasks.is_empty() { return }
-
-        for (task, done) in todo.tasks.iter() {
-            if ! *done {
-                self.tasks.push((task.clone(), *done));
-            }
-        }
-        todo._clear();
-
         self._dump();
     }
 
