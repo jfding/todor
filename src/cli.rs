@@ -53,6 +53,9 @@ pub enum Commands {
 
     /// -> shift all uncompeleted in "today" to "tomorrow"
     Shift,
+
+    /// -> collect all uncompeleted in INBOX to "today"
+    Collect,
 }
 
 impl Cli {
