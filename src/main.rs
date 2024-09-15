@@ -70,14 +70,20 @@ fn main() {
             }
         }
 
-        Some(Commands::Add) => {
+        Some(Commands::Add { what }) => {
             let mut todo = TaskBox::new(inbox_path);
+
+            if let Some(input) = what {
+                todo.add(input);
+                println!("{}", "Task added successfully!".bold().green());
+                return
+            }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
             let input = inquire::Text::new("")
                 .with_help_message("<enter> | ctrl+c")
-                .with_render_config(RenderConfig::default().with_prompt_prefix("✅".into()))
+                .with_render_config(RenderConfig::default().with_prompt_prefix("󰄗".into()))
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| return String::new());
 
@@ -119,8 +125,8 @@ fn main() {
             }
         }
 
-        Some(Commands::Sink) => {
-            TaskBox::sink(inbox_path.as_path().parent().unwrap())
+        Some(Commands::Sink { all }) => {
+            TaskBox::sink(inbox_path.as_path().parent().unwrap(), all)
         }
 
         Some(Commands::Shift) => {

@@ -28,6 +28,6 @@
   - [x] collect
   - [x] postp
   - [ ] import
-  - [ ] cloudify
+  - [ ] sync with iCloud
   - [ ] sync with MS-TODO
 

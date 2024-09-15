@@ -203,7 +203,8 @@ impl TaskBox {
     }
 
     // outdated -> today
-    pub fn sink(basedir: &Path) {
+    // flag:all -- whether sink future (mainly tomorrow)
+    pub fn sink(basedir: &Path, all: bool) {
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
 
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
@@ -224,7 +225,7 @@ impl TaskBox {
                 taskbox.file_stem().unwrap().to_str().unwrap(),
                 "%Y-%m-%d").expect("something wrong!");
 
-            if boxdate < today {
+            if boxdate < today || (all && boxdate != today) {
                 let mut todo = TaskBox::new(taskbox);
                 today_todo._move_in(&mut todo);
             }
