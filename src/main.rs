@@ -1,16 +1,12 @@
 use std::io;
-use std::env;
-use std::ops::Add;
-use std::path::PathBuf;
 use inquire::ui::RenderConfig;
 use colored::Colorize;
-use chrono::prelude::*;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
-use cmd_lib::*;
 
-use todor::taskbox::TaskBox;
+use todor::taskbox::*;
 use todor::cli::*;
+use todor::util;
 
 fn main() {
     let args = Cli::new();
@@ -18,12 +14,12 @@ fn main() {
 
     let clicmd = std::env::args().nth(0).expect("cannot get arg0");
     if clicmd.ends_with("today") {
-        inbox = Some(Local::now().format("%Y-%m-%d").to_string());
+        inbox = Some(get_today())
     } else if clicmd.ends_with("tomorrow") {
-        inbox = Some(Local::now().add(chrono::Duration::days(1)).format("%Y-%m-%d").to_string());
+        inbox = Some(get_tomorrow())
     }
 
-    let inbox_path = todor::get_inbox_file(args.dir, inbox);
+    let inbox_path = util::get_inbox_file(args.dir, inbox);
 
     match args.command {
         Some(Commands::Mark) | None => {
@@ -65,7 +61,7 @@ fn main() {
         }
 
         Some(Commands::Add) => {
-            let todo = TaskBox::new(inbox_path);
+            let mut todo = TaskBox::new(inbox_path);
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
@@ -80,7 +76,7 @@ fn main() {
                 println!("{}", "Task added successfully!".bold().green());
             } else {
                 println!("{}", "No task added. Input was empty.".red());
-            }  
+            }
 
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }
@@ -88,10 +84,7 @@ fn main() {
         Some(Commands::Edit) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
-            let editor = env::var("EDITOR").unwrap_or("vi".to_string());
-            run_cmd!(
-                $editor $inbox_path 2>/dev/null
-            ).expect("cannot launch cli editor(vi?)")
+            util::edit_box(&inbox_path);
         }
 
         Some(Commands::Count) => {
@@ -103,7 +96,7 @@ fn main() {
         }
 
         Some(Commands::Glance) => {
-            glance_all(&inbox_path)
+            util::glance_all(&inbox_path)
         }
 
         Some(Commands::Purge) => {
@@ -124,16 +117,4 @@ fn main() {
             TaskBox::shift(inbox_path.as_path().parent().unwrap())
         }
     }
-}
-
-fn glance_all(inbox_path: &PathBuf) {
-
-    let wildpat = format!("{}/*.md", inbox_path.as_path().parent().unwrap().display());
-    let pager = "fzf --no-sort --tac";
-
-    let res = run_fun!(
-      sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager"
-    ).unwrap_or_else(|_| String::from("- [ ] n/a"));
-
-    println!("{}", &res[6..])
 }
