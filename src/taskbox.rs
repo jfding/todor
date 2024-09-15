@@ -184,6 +184,7 @@ impl TaskBox {
         self._dump();
     }
 
+    // outdated -> today
     pub fn sink(basedir: &Path) {
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
 
@@ -212,9 +213,24 @@ impl TaskBox {
         }
     }
 
+    // today -> tomorrow
     pub fn shift(basedir: &Path) {
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut tomor_todo = TaskBox::new(basedir.join(get_tomorrow()).with_extension("md"));
         tomor_todo._move_in(&mut today_todo)
+    }
+
+    // INBOX -> today
+    pub fn collect(basedir: &Path, inbox_path: PathBuf) {
+        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
+        let mut todo = TaskBox::new(inbox_path);
+        today_todo._move_in(&mut todo)
+    }
+
+    // today -> INBOX
+    pub fn postp(basedir: &Path, inbox_path: PathBuf) {
+        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
+        let mut todo = TaskBox::new(inbox_path);
+        todo._move_in(&mut today_todo)
     }
 }

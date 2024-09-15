@@ -116,5 +116,13 @@ fn main() {
         Some(Commands::Shift) => {
             TaskBox::shift(inbox_path.as_path().parent().unwrap())
         }
+
+        Some(Commands::Collect) => {
+            TaskBox::collect(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
+        }
+
+        Some(Commands::Postp) => {
+            TaskBox::postp(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
+        }
     }
 }
