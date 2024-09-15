@@ -25,8 +25,8 @@
   - [x] glance
   - [x] sink
   - [x] shift
-  - [ ] collect
-  - [ ] postp
+  - [x] collect
+  - [x] postp
   - [ ] import
   - [ ] cloudify
   - [ ] sync with MS-TODO
