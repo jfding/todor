@@ -31,9 +31,19 @@ fn main() {
             let (tasks,_) = todo._list();
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
+
+            let mystyle: RenderConfig = RenderConfig::default()
+                .with_unselected_checkbox("󰄱".into())
+                .with_selected_checkbox("󰄵".into())
+                .with_highlighted_option_prefix("➡️".into())
+                .with_scroll_up_prefix("↥".into())
+                .with_scroll_down_prefix("↧".into());
+
             todo.mark(
                 inquire::MultiSelect::new("To close:", tasks)
+                .with_render_config(mystyle)
                 .with_vim_mode(true)
+                .with_page_size(10)
                 .with_help_message("j/k | <space> | <enter> | ctrl+c")
                 .prompt().unwrap_or_else(|_| Vec::new())
             );
