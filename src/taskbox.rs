@@ -99,19 +99,37 @@ impl TaskBox {
         self._dump();
     }
 
-    fn _move_in(&mut self, todo: &mut TaskBox) {
-        self._load();
-
-        todo._load();
-        if todo.tasks.is_empty() { return }
-
-        for (task, done) in todo.tasks.iter() {
-            if ! *done {
-                self.tasks.push((task.clone(), *done));
+    fn _move_in(&mut self, todo_in: &mut TaskBox) {
+        use colored::Colorize;
+        fn __friendly_name(name_in: Option<&String>) -> &str {
+            if Some(&get_today()) == name_in {
+                "today"
+            } else if Some(&get_tomorrow()) == name_in {
+                "tomorrow"
+            } else if Some(&get_yesterday()) == name_in {
+                "yesterday"
+            } else if Some("TODO") == name_in.map(|x| x.as_str()) {
+                "Inbox"
+            } else {
+                name_in.map(|x| x.as_str()).unwrap()
             }
         }
-        todo._clear();
 
+        self._load();
+        todo_in._load();
+
+        let (tasks, _) = todo_in._list();
+        if tasks.is_empty() { return }
+
+        for task in tasks {
+            println!("Moving from {} to {} : 󰄗 {}",
+                __friendly_name(todo_in.title.as_ref()).green(),
+                __friendly_name(self.title.as_ref()).red(),
+                task);
+            self.tasks.push((task.clone(), false));
+        }
+
+        todo_in._clear();
         self._dump();
     }
 
