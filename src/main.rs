@@ -120,5 +120,9 @@ fn main() {
         Some(Commands::Collect) => {
             TaskBox::collect(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
         }
+
+        Some(Commands::Postp) => {
+            TaskBox::postp(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
+        }
     }
 }

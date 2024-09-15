@@ -56,6 +56,9 @@ pub enum Commands {
 
     /// -> collect all uncompeleted in INBOX to "today"
     Collect,
+
+    /// -> postpone all uncompeleted of today to INBOX
+    Postp,
 }
 
 impl Cli {
