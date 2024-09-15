@@ -62,7 +62,7 @@ fn main() {
                 }
             }
 
-            if all {
+            if all && !dones.is_empty() {
                 println!("");
                 for t in dones {
                     println!(" 󰄸  {}", t.strikethrough())
