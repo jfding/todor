@@ -102,8 +102,8 @@ fn main() {
             }
         }
 
-        Some(Commands::All) => {
-            show_all(&inbox_path)
+        Some(Commands::Glance) => {
+            glance_all(&inbox_path)
         }
 
         Some(Commands::Purge) => {
@@ -122,7 +122,7 @@ fn main() {
     }
 }
 
-fn show_all(inbox_path: &PathBuf) {
+fn glance_all(inbox_path: &PathBuf) {
 
     let wildpat = format!("{}/*.md", inbox_path.as_path().parent().unwrap().display());
     let pager = "fzf --no-sort --tac";

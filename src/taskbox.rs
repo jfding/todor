@@ -81,7 +81,6 @@ impl TaskBox {
 
     pub fn _list(&mut self) -> (Vec<String> ,Vec<String>) {
         self._load();
-
         (
             self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect(),
             self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect()
