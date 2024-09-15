@@ -1,6 +1,8 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use chrono::*;
+use std::ops::Add;
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
@@ -177,7 +179,6 @@ impl TaskBox {
         use regex::Regex;
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
 
-        use chrono::*;
         let today =  Local::now().date_naive();
         let mut today_todo = TaskBox::new(basedir.join(today.to_string()).with_extension("md"));
 
@@ -204,5 +205,13 @@ impl TaskBox {
                 println!("future date {:?}", taskbox);
             }
         }
+    }
+
+    pub fn shift(basedir: &Path) {
+        let today =  Local::now().date_naive();
+        let tomor =  Local::now().add(chrono::Duration::days(1)).date_naive();
+        let mut today_todo = TaskBox::new(basedir.join(today.to_string()).with_extension("md"));
+        let mut tomor_todo = TaskBox::new(basedir.join(tomor.to_string()).with_extension("md"));
+        tomor_todo._move_in(&mut today_todo)
     }
 }

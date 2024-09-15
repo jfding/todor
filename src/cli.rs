@@ -48,8 +48,11 @@ pub enum Commands {
     /// -> purge all the duplicated lines
     Purge, // no alias for safe
 
-    /// -> sink all uncompeleted to "today"
+    /// -> sink all outdated uncompeleted to "today"
     Sink,
+
+    /// -> shift all uncompeleted in "today" to "tomorrow"
+    Shift,
 }
 
 impl Cli {
