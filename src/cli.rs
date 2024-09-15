@@ -20,7 +20,10 @@ pub struct Cli {
 pub enum Commands {
     /// -> add todo item to inbox
     #[clap(visible_alias("a"))]
-    Add,
+    Add {
+        #[arg(value_name = "TASK")]
+        what: Option<String>,
+    },
 
     /// -> mark item as done
     #[clap(visible_alias("m"))]

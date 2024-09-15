@@ -70,8 +70,14 @@ fn main() {
             }
         }
 
-        Some(Commands::Add) => {
+        Some(Commands::Add { what }) => {
             let mut todo = TaskBox::new(inbox_path);
+
+            if let Some(input) = what {
+                todo.add(input);
+                println!("{}", "Task added successfully!".bold().green());
+                return
+            }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
