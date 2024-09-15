@@ -26,6 +26,34 @@ fn main() {
     let inbox_path = todor::get_inbox_file(args.dir, inbox);
 
     match args.command {
+        Some(Commands::Mark) | None => {
+            let mut todo = TaskBox::new(inbox_path);
+            let (tasks,_) = todo._list();
+
+            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
+            todo.mark(
+                inquire::MultiSelect::new("To close:", tasks)
+                .with_vim_mode(true)
+                .with_help_message("j/k | <space> | <enter> | ctrl+c")
+                .prompt().unwrap_or_else(|_| Vec::new())
+            );
+            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
+        }
+
+        Some(Commands::List { all }) => {
+            let mut todo = TaskBox::new(inbox_path);
+            let (tasks, dones) = todo._list();
+            for t in tasks {
+                println!("󰄷 {}", t.bold())
+            }
+            if all {
+                println!("");
+                for t in dones {
+                    println!("󰄹 {}", t.strikethrough())
+                }
+            }
+        }
+
         Some(Commands::Add) => {
             let todo = TaskBox::new(inbox_path);
 
@@ -47,20 +75,6 @@ fn main() {
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }
 
-        Some(Commands::List) | None => {
-            let mut todo = TaskBox::new(inbox_path);
-            let tasks = todo.list(Some(false)); // false means NOT all
-
-            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            todo.mark(
-                inquire::MultiSelect::new("To close:", tasks)
-                .with_vim_mode(true)
-                .with_help_message("j/k | <space> | <enter> | ctrl+c")
-                .prompt().unwrap_or_else(|_| Vec::new())
-            );
-            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-        }
-
         Some(Commands::Edit) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
@@ -71,7 +85,7 @@ fn main() {
         }
 
         Some(Commands::Count) => {
-            let todo = TaskBox::new(inbox_path);
+            let mut todo = TaskBox::new(inbox_path);
             let count = todo.count();
             if count > 0 {
                 println!("{}", count);

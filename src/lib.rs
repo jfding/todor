@@ -17,3 +17,4 @@ pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
 
     return base_path.join(inbox.unwrap_or("TODO".to_string())).with_extension("md");
 }
+

@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-#[derive(Debug, Parser)]
+#[derive(Debug, Clone, Parser)]
 #[command(name= "todor")]
 #[command(version, about= "yet another cli TODO in Rust", long_about=None)]
 pub struct Cli {
@@ -16,15 +16,22 @@ pub struct Cli {
     pub command: Option<Commands>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Clone, Subcommand)]
 pub enum Commands {
     /// -> add todo item to inbox
     #[clap(visible_alias("a"))]
     Add,
 
+    /// -> mark item as done
+    #[clap(visible_alias("m"))]
+    Mark,
+
     /// -> list all todo items in inbox
     #[clap(visible_aliases(["l", "ls"]))]
-    List,
+    List {
+        #[arg(short, long)]
+        all: bool,
+    },
 
     /// -> edit todo inbox file
     #[clap(visible_aliases(["e", "ed"]))]

@@ -79,14 +79,16 @@ impl TaskBox {
         writeln!(file, "- [ ] {}", what).expect("Failed to write to file");
     }
 
-    pub fn list(&mut self, all: Option<bool>) -> Vec<String> {
+    pub fn _list(&mut self) -> (Vec<String> ,Vec<String>) {
         self._load();
 
-        let all = all.unwrap_or(false); // Default value is false
-        self.tasks.iter().filter(|(_,done)| all || !done).map(|(task, _)| task.clone()).collect()
+        (
+            self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect(),
+            self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect()
+        )
     }
 
-    pub fn count(mut self) -> usize {
+    pub fn count(&mut self) -> usize {
         self._load();
         self.tasks.iter().filter(|(_, done)| !done).count()
     }
@@ -156,7 +158,7 @@ impl TaskBox {
         self._dump();
     }
 
-    fn _movein(&mut self, todo: &mut TaskBox) {
+    fn _move_in(&mut self, todo: &mut TaskBox) {
         self._load();
 
         todo._load();
@@ -198,7 +200,7 @@ impl TaskBox {
 
             if boxdate < today {
                 let mut todo = TaskBox::new(taskbox);
-                today_todo._movein(&mut todo);
+                today_todo._move_in(&mut todo);
             } else {
                 println!("future date {:?}", taskbox);
             }
