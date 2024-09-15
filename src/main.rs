@@ -77,7 +77,7 @@ fn main() {
 
             let input = inquire::Text::new("")
                 .with_help_message("<enter> | ctrl+c")
-                .with_render_config(RenderConfig::default().with_prompt_prefix("✅".into()))
+                .with_render_config(RenderConfig::default().with_prompt_prefix("󰄗".into()))
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| return String::new());
 

@@ -31,6 +31,7 @@ pub fn glance_all(inbox_path: &PathBuf) {
 
 pub fn edit_box(inbox_path: &PathBuf) {
     let editor = env::var("EDITOR").unwrap_or("vi".to_string());
+    println!("editing todo box file: {}", inbox_path.display());
     run_cmd!(
         $editor $inbox_path 2>/dev/null
     ).expect("cannot launch cli editor(vi?)")
