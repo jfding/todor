@@ -1,8 +1,9 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs;
 use std::env;
 use dirs;
 use cmd_lib::*;
+use colored::Colorize;
 
 const DATA_BASE : &str = ".local/share/todor";
 
@@ -35,4 +36,17 @@ pub fn edit_box(inbox_path: &PathBuf) {
     run_cmd!(
         $editor $inbox_path 2>/dev/null
     ).expect("cannot launch cli editor(vi?)")
+}
+
+pub fn list_boxes(basedir: &Path) {
+    println!("[ {} ]", basedir.display().to_string().purple());
+
+    let mut boxes = Vec::new();
+    for entry in fs::read_dir(basedir).expect("cannot read dir") {
+        let path = entry.expect("cannot get entry").path();
+        if path.is_file() && path.extension().unwrap() == "md" {
+            boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
+        }
+    }
+    boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(|b| println!("󰄹  {}", b))
 }

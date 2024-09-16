@@ -36,6 +36,10 @@ pub enum Commands {
         all: bool,
     },
 
+    /// -> list all todo box in working dir
+    #[clap(visible_aliases(["lb"]))]
+    Listbox,
+
     /// -> edit todo inbox file
     #[clap(visible_aliases(["e", "ed"]))]
     Edit,
