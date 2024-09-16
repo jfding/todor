@@ -121,10 +121,10 @@ impl TaskBox {
 
         println!("{}  {} ↩️",
             __friendly_name(todo_in.title.as_ref()).green(),
-            __friendly_name(self.title.as_ref()).red());
+            __friendly_name(self.title.as_ref()).blue());
 
         for task in tasks {
-            println!("   󰄗 {}", task);
+            println!("{} : {}", " 󰄗".to_string().red(), task);
             self.tasks.push((task.clone(), false));
         }
 
