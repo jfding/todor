@@ -47,21 +47,23 @@ impl TaskBox {
             return
         }
 
-        let content = fs::read_to_string(&self.fpath).expect("Failed to read file");
 
         let mut tasks = Vec::new();
         let mut title = String::new();
 
-        for (index, line) in content.lines().enumerate() {
+        for (index, rline) in fs::read_to_string(&self.fpath)
+                            .expect("Failed to read file")
+                            .lines().enumerate() {
+
+            let line = rline.trim();
             if index == 0 {
-                title = line.trim().trim_start_matches("# ").to_string();
+                title = line.trim_start_matches("# ").to_string();
 
             } else {
-                let trimmed = line.trim();
-                if trimmed.starts_with("- [") && trimmed.len() > 4 {
-                    let completed = trimmed.chars().nth(3) == Some('x');
-                    let task = trimmed[5..].trim().to_string();
-                    tasks.push((task, completed));
+                if let Some(stripped) = line.strip_prefix(PREFIX) {
+                    tasks.push((stripped.to_string(), false))
+                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
+                    tasks.push((stripped.to_string(), true))
                 }
             }
         }
@@ -264,9 +266,9 @@ impl TaskBox {
             let line = rline.trim();
             if line.is_empty() { continue }
 
-            if line.starts_with(PREFIX) {
-                println!("{} : {}", " 󰄗".to_string().red(), &line[6..]);
-                newt.push((line[6..].to_string(), false))
+            if let Some(stripped) = line.strip_prefix(PREFIX) {
+                println!("{} : {}", " 󰄗".to_string().red(), stripped);
+                newt.push((stripped.to_string(), false))
             }
         }
 
