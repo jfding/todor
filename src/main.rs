@@ -58,14 +58,14 @@ fn main() {
                 println!(" {} left!", "nothing".yellow());
             } else {
                 for t in tasks {
-                    println!(" 󰄗  {}", t.bold())
+                    println!("{}  {}", "󰄗".to_string().red(), t)
                 }
             }
 
             if all && !dones.is_empty() {
                 println!();
                 for t in dones {
-                    println!(" 󰄸  {}", t.strikethrough())
+                    println!("󰄸  {}", t.strikethrough())
                 }
             }
         }

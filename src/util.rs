@@ -49,5 +49,5 @@ pub fn list_boxes(basedir: &Path) {
             boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
         }
     }
-    boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(|b| println!("󰄹  {}", b))
+    boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(|b| println!("{}  {}","󰄹".to_string().blue(), b))
 }
