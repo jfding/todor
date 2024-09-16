@@ -19,7 +19,7 @@ fn main() {
         inbox = Some(get_tomorrow())
     }
 
-    let inbox_path = util::get_inbox_file(args.dir, inbox);
+    let inbox_path = get_inbox_file(args.dir, inbox);
 
     match args.command {
         Some(Commands::Mark) | None => {

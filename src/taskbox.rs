@@ -2,9 +2,24 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use regex::Regex;
 use colored::Colorize;
+use dirs;
 
 use chrono::*;
 use std::ops::*;
+
+const DATA_BASE : &str = ".local/share/todor";
+const INBOX_NAME :&str  = "INBOX";
+
+pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
+    let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
+        dirs::home_dir()
+            .expect("cannot get home directory")
+            .join(DATA_BASE)
+    });
+    fs::create_dir_all(&base_path).expect("Failed to create base directory");
+
+    base_path.join(inbox.unwrap_or(INBOX_NAME.to_string())).with_extension("md")
+}
 
 pub fn get_today() -> String {
     Local::now().date_naive().to_string()
@@ -255,8 +270,8 @@ impl TaskBox {
         let basedir = inbox_path.as_path().parent().unwrap();
 
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut todo = TaskBox::new(inbox_path);
-        today_todo._move_in(&mut todo)
+        let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
+        today_todo._move_in(&mut inbox_todo)
     }
 
     // today -> INBOX
@@ -264,8 +279,8 @@ impl TaskBox {
         let basedir = inbox_path.as_path().parent().unwrap();
 
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut todo = TaskBox::new(inbox_path);
-        todo._move_in(&mut today_todo)
+        let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
+        inbox_todo._move_in(&mut today_todo)
     }
 
     // specified markdown file -> cur
