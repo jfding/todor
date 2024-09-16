@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::fs;
 use std::env;
 use cmd_lib::*;
 use colored::Colorize;
@@ -22,17 +21,4 @@ pub fn edit_box(inbox_path: &Path) {
     run_cmd!(
         $editor $inbox_path 2>/dev/null
     ).expect("cannot launch cli editor(vi?)")
-}
-
-pub fn list_boxes(basedir: &Path) {
-    println!("[ {} ]", basedir.display().to_string().purple());
-
-    let mut boxes = Vec::new();
-    for entry in fs::read_dir(basedir).expect("cannot read dir") {
-        let path = entry.expect("cannot get entry").path();
-        if path.is_file() && path.extension().unwrap() == "md" {
-            boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
-        }
-    }
-    boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(|b| println!("{}  {}","󰄹".to_string().blue(), b))
 }

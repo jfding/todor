@@ -116,7 +116,7 @@ fn main() {
         }
 
         Some(Commands::Listbox) => {
-            util::list_boxes(inbox_path.as_path().parent().unwrap())
+            TaskBox::list_boxes(inbox_path)
         }
 
         Some(Commands::Purge) => {

@@ -311,4 +311,27 @@ impl TaskBox {
             self._dump();
         }
     }
+
+    pub fn list_boxes(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+        println!("[ {} ]", basedir.display().to_string().purple());
+
+        let mut boxes = Vec::new();
+        for entry in fs::read_dir(basedir).expect("cannot read dir") {
+            let path = entry.expect("cannot get entry").path();
+            if path.is_file() && path.extension().unwrap() == "md" {
+                boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
+            }
+        }
+        boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
+            |b| {
+                print!("{}  {}","󰄹".to_string().blue(), b);
+                let tbox = TaskBox::new(basedir.join(b).with_extension("md"));
+                if tbox.alias.is_some() {
+                    println!(" ({})", tbox.alias.unwrap().bright_black().blink())
+                } else {
+                    println!()
+                }
+            })
+    }
 }
