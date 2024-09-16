@@ -137,8 +137,8 @@ fn main() {
             TaskBox::shift(inbox_path)
         }
 
-        Some(Commands::Collect) => {
-            TaskBox::collect(inbox_path)
+        Some(Commands::Collect { inbox }) => {
+            TaskBox::collect(inbox_path, inbox)
         }
 
         Some(Commands::Postp) => {

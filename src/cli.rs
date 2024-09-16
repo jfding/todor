@@ -64,8 +64,11 @@ pub enum Commands {
     /// -> shift all uncompeleted in "today" to "tomorrow"
     Shift,
 
-    /// -> collect all uncompeleted in INBOX to "today"
-    Collect,
+    /// -> collect all uncompeleted in INBOX(or --inbox <which>) to "today"
+    Collect {
+        #[arg(short, long)]
+        inbox: Option<String>,
+    },
 
     /// -> postpone all uncompeleted of today to INBOX
     Postp,

@@ -266,12 +266,17 @@ impl TaskBox {
     }
 
     // INBOX -> today
-    pub fn collect(inbox_path: PathBuf) {
+    pub fn collect(inbox_path: PathBuf, inbox_from: Option<String>) {
         let basedir = inbox_path.as_path().parent().unwrap();
 
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
-        today_todo._move_in(&mut inbox_todo)
+        let mut from_todo = if let Some(from_name) = inbox_from {
+            TaskBox::new(basedir.join(from_name).with_extension("md"))
+        } else {
+            TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"))
+        };
+
+        today_todo._move_in(&mut from_todo)
     }
 
     // today -> INBOX
