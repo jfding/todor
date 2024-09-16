@@ -12,7 +12,7 @@ fn main() {
     let args = Cli::new();
     let mut inbox = args.inbox;
 
-    let clicmd = std::env::args().nth(0).expect("cannot get arg0");
+    let clicmd = std::env::args().next().expect("cannot get arg0");
     if clicmd.ends_with("today") {
         inbox = Some(get_today())
     } else if clicmd.ends_with("tomorrow") {
@@ -63,7 +63,7 @@ fn main() {
             }
 
             if all && !dones.is_empty() {
-                println!("");
+                println!();
                 for t in dones {
                     println!(" 󰄸  {}", t.strikethrough())
                 }
@@ -85,7 +85,7 @@ fn main() {
                 .with_help_message("<enter> | ctrl+c")
                 .with_render_config(RenderConfig::default().with_prompt_prefix("󰄗".into()))
                 .with_placeholder("something to do?")
-                .prompt().unwrap_or_else(|_| return String::new());
+                .prompt().unwrap_or_else(|_| String::new());
 
             if !input.is_empty() {
                 todo.add(input);
@@ -120,7 +120,7 @@ fn main() {
         }
 
         Some(Commands::Purge) => {
-            if true == inquire::Confirm::new("are you sure?")
+            if inquire::Confirm::new("are you sure?")
                 .with_default(false)
                 .prompt().unwrap_or(false) {
 
