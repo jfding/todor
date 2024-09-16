@@ -27,7 +27,7 @@ gitmain:
     git branch $1
     git checkout $1
 
-@gh-reset:
+@gh-close:
     git checkout main
     git pull
 
