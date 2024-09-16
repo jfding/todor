@@ -75,7 +75,7 @@ fn main() {
 
             if let Some(input) = what {
                 todo.add(input);
-                println!("{}", "Task added successfully!".bold().green());
+                println!("{}", "Task added successfully!".bold().blue());
                 return
             }
 
@@ -89,7 +89,7 @@ fn main() {
 
             if !input.is_empty() {
                 todo.add(input);
-                println!("{}", "Task added successfully!".bold().green());
+                println!("{}", "Task added successfully!".bold().blue());
             } else {
                 println!("{}", "No task added. Input was empty.".red());
             }
@@ -113,6 +113,10 @@ fn main() {
 
         Some(Commands::Glance) => {
             util::glance_all(&inbox_path)
+        }
+
+        Some(Commands::Listbox) => {
+            util::list_boxes(inbox_path.as_path().parent().unwrap())
         }
 
         Some(Commands::Purge) => {
