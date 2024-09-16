@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use regex::Regex;
+use colored::Colorize;
 
 use chrono::*;
 use std::ops::*;
@@ -27,7 +28,7 @@ pub struct TaskBox {
 
 impl TaskBox {
     pub fn new (fpath: PathBuf) -> Self {
-        let title = fpath.file_stem().and_then(|s| s.to_str()).unwrap_or("TODO").to_string();
+        let title = fpath.file_stem().and_then(|s| s.to_str()).unwrap().to_string();
 
         if !fpath.exists() {
             fs::File::create(&fpath).expect("Failed to create file");
@@ -100,7 +101,6 @@ impl TaskBox {
     }
 
     fn _move_in(&mut self, todo_in: &mut TaskBox) {
-        use colored::Colorize;
         fn __friendly_name(name_in: Option<&String>) -> &str {
             if Some(&get_today()) == name_in {
                 "today"
@@ -108,8 +108,6 @@ impl TaskBox {
                 "tomorrow"
             } else if Some(&get_yesterday()) == name_in {
                 "yesterday"
-            } else if Some("TODO") == name_in.map(|x| x.as_str()) {
-                "Inbox"
             } else {
                 name_in.map(|x| x.as_str()).unwrap()
             }
@@ -123,10 +121,10 @@ impl TaskBox {
 
         println!("{}  {} ↩️",
             __friendly_name(todo_in.title.as_ref()).green(),
-            __friendly_name(self.title.as_ref()).red());
+            __friendly_name(self.title.as_ref()).blue());
 
         for task in tasks {
-            println!("   󰄗 {}", task);
+            println!("{} : {}", " 󰄗".to_string().red(), task);
             self.tasks.push((task.clone(), false));
         }
 
@@ -250,5 +248,34 @@ impl TaskBox {
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut todo = TaskBox::new(inbox_path);
         todo._move_in(&mut today_todo)
+    }
+
+    // specified markdown file -> cur
+    pub fn import(&mut self, mdfile: String) {
+        let fpath = Path::new(&mdfile);
+        if ! fpath.is_file() {
+            eprintln!("not a file or not exists: {}", mdfile.red());
+            std::process::exit(1)
+        }
+        println!("importing {} ↩️", mdfile.purple());
+
+        let mut newt = Vec::new();
+        for rline in fs::read_to_string(fpath).expect("cannot read file").lines() {
+            let line = rline.trim();
+            if line.is_empty() { continue }
+
+            if line.starts_with(PREFIX) {
+                println!("{} : {}", " 󰄗".to_string().red(), &line[6..]);
+                newt.push((line[6..].to_string(), false))
+            }
+        }
+
+        if newt.is_empty() {
+            println!("{} found", "nothing".to_string().yellow())
+        } else {
+            self._load();
+            self.tasks.append(&mut newt);
+            self._dump();
+        }
     }
 }

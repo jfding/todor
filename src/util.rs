@@ -6,6 +6,7 @@ use cmd_lib::*;
 use colored::Colorize;
 
 const DATA_BASE : &str = ".local/share/todor";
+const INBOX_NAME :&str  = "INBOX";
 
 pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
     let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
@@ -15,7 +16,7 @@ pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
     });
     fs::create_dir_all(&base_path).expect("Failed to create base directory");
 
-    base_path.join(inbox.unwrap_or("TODO".to_string())).with_extension("md")
+    base_path.join(inbox.unwrap_or(INBOX_NAME.to_string())).with_extension("md")
 }
 
 pub fn glance_all(inbox_path: &Path) {

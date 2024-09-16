@@ -144,5 +144,10 @@ fn main() {
         Some(Commands::Postp) => {
             TaskBox::postp(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
         }
+
+        Some(Commands::Import{ file }) => {
+            let mut todo = TaskBox::new(inbox_path);
+            todo.import(file)
+        }
     }
 }
