@@ -53,7 +53,10 @@ pub enum Commands {
     Glance,
 
     /// -> purge all the duplicated lines
-    Purge, // no alias for safe
+    Purge {
+        #[arg(short, long)]
+        sort: bool,
+    }, // no alias for safe
 
     /// -> sink all outdated uncompeleted to "today"
     Sink {

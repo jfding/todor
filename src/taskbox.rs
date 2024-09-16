@@ -194,7 +194,7 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn purge(&mut self) {
+    pub fn purge(&mut self, sort: bool) {
         use std::collections::HashSet;
 
         self._load();
@@ -222,6 +222,9 @@ impl TaskBox {
                 *done = false
             }
         }
+
+        // (optional) 3rd scan: sort by completed and uncomplated
+        if sort { newtasks.sort_by(|a, b| a.1.cmp(&b.1)) }
 
         self.tasks = newtasks;
         self._dump();
