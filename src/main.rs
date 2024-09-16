@@ -19,7 +19,7 @@ fn main() {
         inbox = Some(get_tomorrow())
     }
 
-    let inbox_path = util::get_inbox_file(args.dir, inbox);
+    let inbox_path = get_inbox_file(args.dir, inbox);
 
     match args.command {
         Some(Commands::Mark) | None => {
@@ -58,14 +58,14 @@ fn main() {
                 println!(" {} left!", "nothing".yellow());
             } else {
                 for t in tasks {
-                    println!(" 󰄗  {}", t.bold())
+                    println!("{}  {}", "󰄗".to_string().red(), t)
                 }
             }
 
             if all && !dones.is_empty() {
                 println!();
                 for t in dones {
-                    println!(" 󰄸  {}", t.strikethrough())
+                    println!("󰄸  {}", t.strikethrough())
                 }
             }
         }
@@ -116,7 +116,7 @@ fn main() {
         }
 
         Some(Commands::Listbox) => {
-            util::list_boxes(inbox_path.as_path().parent().unwrap())
+            TaskBox::list_boxes(inbox_path)
         }
 
         Some(Commands::Purge) => {
@@ -130,19 +130,19 @@ fn main() {
         }
 
         Some(Commands::Sink { all }) => {
-            TaskBox::sink(inbox_path.as_path().parent().unwrap(), all)
+            TaskBox::sink(inbox_path, all)
         }
 
         Some(Commands::Shift) => {
-            TaskBox::shift(inbox_path.as_path().parent().unwrap())
+            TaskBox::shift(inbox_path)
         }
 
         Some(Commands::Collect) => {
-            TaskBox::collect(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
+            TaskBox::collect(inbox_path)
         }
 
         Some(Commands::Postp) => {
-            TaskBox::postp(inbox_path.clone().as_path().parent().unwrap(), inbox_path)
+            TaskBox::postp(inbox_path)
         }
 
         Some(Commands::Import{ file }) => {

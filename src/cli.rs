@@ -49,7 +49,7 @@ pub enum Commands {
     Count,
 
     /// -> show items in all inboxes
-    #[clap(visible_aliases(["A", "g"]))]
+    #[clap(visible_aliases(["g"]))]
     Glance,
 
     /// -> purge all the duplicated lines

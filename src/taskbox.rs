@@ -2,9 +2,24 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use regex::Regex;
 use colored::Colorize;
+use dirs;
 
 use chrono::*;
 use std::ops::*;
+
+const DATA_BASE : &str = ".local/share/todor";
+const INBOX_NAME :&str  = "INBOX";
+
+pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
+    let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
+        dirs::home_dir()
+            .expect("cannot get home directory")
+            .join(DATA_BASE)
+    });
+    fs::create_dir_all(&base_path).expect("Failed to create base directory");
+
+    base_path.join(inbox.unwrap_or(INBOX_NAME.to_string())).with_extension("md")
+}
 
 pub fn get_today() -> String {
     Local::now().date_naive().to_string()
@@ -16,6 +31,18 @@ pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
 
+fn get_alias(name_in: Option<String>) -> Option<String> {
+    let alias = match name_in {
+        Some(name) if name == get_today() => "today",
+        Some(name) if name == get_tomorrow() => "tomorrow",
+        Some(name) if name == get_yesterday() => "yesterday",
+        _ => "",
+    };
+
+    if alias.is_empty() { None }
+    else { Some(alias.to_string()) }
+}
+
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
 
@@ -23,6 +50,7 @@ const PREFIX_DONE :&str  = "- [x] ";
 pub struct TaskBox {
     fpath: PathBuf,
     title: Option<String>,
+    alias: Option<String>,
     tasks: Vec<(String, bool)>,
 }
 
@@ -38,6 +66,7 @@ impl TaskBox {
         Self {
             fpath,
             title: None, // None means not loaded
+            alias: get_alias(Some(title)),
             tasks: Vec::new(),
         }
     }
@@ -47,22 +76,22 @@ impl TaskBox {
             return
         }
 
-        let content = fs::read_to_string(&self.fpath).expect("Failed to read file");
 
         let mut tasks = Vec::new();
         let mut title = String::new();
 
-        for (index, line) in content.lines().enumerate() {
-            if index == 0 {
-                title = line.trim().trim_start_matches("# ").to_string();
+        for (index, rline) in fs::read_to_string(&self.fpath)
+                            .expect("Failed to read file")
+                            .lines().enumerate() {
 
-            } else {
-                let trimmed = line.trim();
-                if trimmed.starts_with("- [") && trimmed.len() > 4 {
-                    let completed = trimmed.chars().nth(3) == Some('x');
-                    let task = trimmed[5..].trim().to_string();
-                    tasks.push((task, completed));
-                }
+            let line = rline.trim();
+            if index == 0 {
+                title = line.trim_start_matches("# ").to_string();
+
+            } else if let Some(stripped) = line.strip_prefix(PREFIX) {
+                tasks.push((stripped.to_string(), false))
+            } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
+                tasks.push((stripped.to_string(), true))
             }
         }
 
@@ -101,27 +130,24 @@ impl TaskBox {
     }
 
     fn _move_in(&mut self, todo_in: &mut TaskBox) {
-        fn __friendly_name(name_in: Option<&String>) -> &str {
-            if Some(&get_today()) == name_in {
-                "today"
-            } else if Some(&get_tomorrow()) == name_in {
-                "tomorrow"
-            } else if Some(&get_yesterday()) == name_in {
-                "yesterday"
-            } else {
-                name_in.map(|x| x.as_str()).unwrap()
-            }
-        }
-
         self._load();
         todo_in._load();
 
         let (tasks, _) = todo_in._list();
         if tasks.is_empty() { return }
 
-        println!("{}  {} ↩️",
-            __friendly_name(todo_in.title.as_ref()).green(),
-            __friendly_name(self.title.as_ref()).blue());
+        let from = if todo_in.alias.is_some() {
+            todo_in.alias.as_ref()
+        } else {
+            todo_in.title.as_ref()
+        };
+        let to = if self.alias.is_some() {
+            self.alias.as_ref()
+        } else {
+            self.title.as_ref()
+        };
+
+        println!("{}  {} ↩️", from.unwrap().green(), to.unwrap().blue());
 
         for task in tasks {
             println!("{} : {}", " 󰄗".to_string().red(), task);
@@ -203,7 +229,8 @@ impl TaskBox {
 
     // outdated -> today
     // flag:all -- whether sink future (mainly tomorrow)
-    pub fn sink(basedir: &Path, all: bool) {
+    pub fn sink(inbox_path: PathBuf, all: bool) {
+        let basedir = inbox_path.as_path().parent().unwrap();
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
 
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
@@ -230,24 +257,30 @@ impl TaskBox {
     }
 
     // today -> tomorrow
-    pub fn shift(basedir: &Path) {
+    pub fn shift(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut tomor_todo = TaskBox::new(basedir.join(get_tomorrow()).with_extension("md"));
         tomor_todo._move_in(&mut today_todo)
     }
 
     // INBOX -> today
-    pub fn collect(basedir: &Path, inbox_path: PathBuf) {
+    pub fn collect(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut todo = TaskBox::new(inbox_path);
-        today_todo._move_in(&mut todo)
+        let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
+        today_todo._move_in(&mut inbox_todo)
     }
 
     // today -> INBOX
-    pub fn postp(basedir: &Path, inbox_path: PathBuf) {
+    pub fn postp(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut todo = TaskBox::new(inbox_path);
-        todo._move_in(&mut today_todo)
+        let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
+        inbox_todo._move_in(&mut today_todo)
     }
 
     // specified markdown file -> cur
@@ -264,9 +297,9 @@ impl TaskBox {
             let line = rline.trim();
             if line.is_empty() { continue }
 
-            if line.starts_with(PREFIX) {
-                println!("{} : {}", " 󰄗".to_string().red(), &line[6..]);
-                newt.push((line[6..].to_string(), false))
+            if let Some(stripped) = line.strip_prefix(PREFIX) {
+                println!("{} : {}", " 󰄗".to_string().red(), stripped);
+                newt.push((stripped.to_string(), false))
             }
         }
 
@@ -277,5 +310,28 @@ impl TaskBox {
             self.tasks.append(&mut newt);
             self._dump();
         }
+    }
+
+    pub fn list_boxes(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+        println!("[ {} ]", basedir.display().to_string().purple());
+
+        let mut boxes = Vec::new();
+        for entry in fs::read_dir(basedir).expect("cannot read dir") {
+            let path = entry.expect("cannot get entry").path();
+            if path.is_file() && path.extension().unwrap() == "md" {
+                boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
+            }
+        }
+        boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
+            |b| {
+                print!("{}  {}","󰄹".to_string().blue(), b);
+                let tbox = TaskBox::new(basedir.join(b).with_extension("md"));
+                if tbox.alias.is_some() {
+                    println!(" ({})", tbox.alias.unwrap().bright_black().blink())
+                } else {
+                    println!()
+                }
+            })
     }
 }
