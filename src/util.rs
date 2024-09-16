@@ -19,7 +19,12 @@ pub fn edit_box(inbox_path: &Path, with: Option<String>) {
     let editor = env::var("EDITOR").unwrap_or("vi".to_string());
 
     if let Some(other) = with {
-        let otherf = format!("{}/{}.md", inbox_path.parent().unwrap().display(), &other);
+        let otherf = if other.ends_with(".md") {
+            &other
+        } else {
+            &format!("{}/{}.md", inbox_path.parent().unwrap().display(), &other)
+        };
+
         println!("editing : {} v.s. {}", inbox_path.display().to_string().purple(), other.red());
         run_cmd!(
             vimdiff $inbox_path $otherf 2>/dev/null
