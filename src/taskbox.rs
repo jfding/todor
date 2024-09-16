@@ -16,6 +16,18 @@ pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
 
+fn get_alias(name_in: Option<String>) -> Option<String> {
+    let alias = match name_in {
+        Some(name) if name == get_today() => "today",
+        Some(name) if name == get_tomorrow() => "tomorrow",
+        Some(name) if name == get_yesterday() => "yesterday",
+        _ => "",
+    };
+
+    if alias.is_empty() { None }
+    else { Some(alias.to_string()) }
+}
+
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
 
@@ -23,6 +35,7 @@ const PREFIX_DONE :&str  = "- [x] ";
 pub struct TaskBox {
     fpath: PathBuf,
     title: Option<String>,
+    alias: Option<String>,
     tasks: Vec<(String, bool)>,
 }
 
@@ -38,6 +51,7 @@ impl TaskBox {
         Self {
             fpath,
             title: None, // None means not loaded
+            alias: get_alias(Some(title)),
             tasks: Vec::new(),
         }
     }
@@ -101,27 +115,24 @@ impl TaskBox {
     }
 
     fn _move_in(&mut self, todo_in: &mut TaskBox) {
-        fn __friendly_name(name_in: Option<&String>) -> &str {
-            if Some(&get_today()) == name_in {
-                "today"
-            } else if Some(&get_tomorrow()) == name_in {
-                "tomorrow"
-            } else if Some(&get_yesterday()) == name_in {
-                "yesterday"
-            } else {
-                name_in.map(|x| x.as_str()).unwrap()
-            }
-        }
-
         self._load();
         todo_in._load();
 
         let (tasks, _) = todo_in._list();
         if tasks.is_empty() { return }
 
-        println!("{}  {} ↩️",
-            __friendly_name(todo_in.title.as_ref()).green(),
-            __friendly_name(self.title.as_ref()).blue());
+        let from = if todo_in.alias.is_some() {
+            todo_in.alias.as_ref()
+        } else {
+            todo_in.title.as_ref()
+        };
+        let to = if self.alias.is_some() {
+            self.alias.as_ref()
+        } else {
+            self.title.as_ref()
+        };
+
+        println!("{}  {} ↩️", from.unwrap().green(), to.unwrap().blue());
 
         for task in tasks {
             println!("{} : {}", " 󰄗".to_string().red(), task);
