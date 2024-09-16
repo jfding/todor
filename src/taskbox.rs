@@ -28,7 +28,7 @@ pub struct TaskBox {
 
 impl TaskBox {
     pub fn new (fpath: PathBuf) -> Self {
-        let title = fpath.file_stem().and_then(|s| s.to_str()).unwrap_or("TODO").to_string();
+        let title = fpath.file_stem().and_then(|s| s.to_str()).unwrap().to_string();
 
         if !fpath.exists() {
             fs::File::create(&fpath).expect("Failed to create file");
@@ -108,8 +108,6 @@ impl TaskBox {
                 "tomorrow"
             } else if Some(&get_yesterday()) == name_in {
                 "yesterday"
-            } else if Some("TODO") == name_in.map(|x| x.as_str()) {
-                "Inbox"
             } else {
                 name_in.map(|x| x.as_str()).unwrap()
             }
