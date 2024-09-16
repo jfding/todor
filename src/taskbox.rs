@@ -59,12 +59,10 @@ impl TaskBox {
             if index == 0 {
                 title = line.trim_start_matches("# ").to_string();
 
-            } else {
-                if let Some(stripped) = line.strip_prefix(PREFIX) {
-                    tasks.push((stripped.to_string(), false))
-                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
-                    tasks.push((stripped.to_string(), true))
-                }
+            } else if let Some(stripped) = line.strip_prefix(PREFIX) {
+                tasks.push((stripped.to_string(), false))
+            } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
+                tasks.push((stripped.to_string(), true))
             }
         }
 
@@ -205,7 +203,8 @@ impl TaskBox {
 
     // outdated -> today
     // flag:all -- whether sink future (mainly tomorrow)
-    pub fn sink(basedir: &Path, all: bool) {
+    pub fn sink(inbox_path: PathBuf, all: bool) {
+        let basedir = inbox_path.as_path().parent().unwrap();
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
 
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
@@ -232,21 +231,27 @@ impl TaskBox {
     }
 
     // today -> tomorrow
-    pub fn shift(basedir: &Path) {
+    pub fn shift(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut tomor_todo = TaskBox::new(basedir.join(get_tomorrow()).with_extension("md"));
         tomor_todo._move_in(&mut today_todo)
     }
 
     // INBOX -> today
-    pub fn collect(basedir: &Path, inbox_path: PathBuf) {
+    pub fn collect(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut todo = TaskBox::new(inbox_path);
         today_todo._move_in(&mut todo)
     }
 
     // today -> INBOX
-    pub fn postp(basedir: &Path, inbox_path: PathBuf) {
+    pub fn postp(inbox_path: PathBuf) {
+        let basedir = inbox_path.as_path().parent().unwrap();
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut todo = TaskBox::new(inbox_path);
         todo._move_in(&mut today_todo)
