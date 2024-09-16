@@ -116,5 +116,5 @@ jobs:
           files: |
             todor*.zip
           make_latest: true
-          #generate_release_notes: true
+          generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -27,6 +27,10 @@ gitmain:
     git branch $1
     git checkout $1
 
+@gh-reset:
+    git checkout main
+    git pull
+
 @gh-push br:
     git push origin $1
 
