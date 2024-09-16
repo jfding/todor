@@ -1,7 +1,10 @@
+set positional-arguments
+
 default: build
 
 alias i := install
 alias b := build
+alias l := clippy
 
 install: build
     command cp -f target/release/todor ~/.local/bin/
@@ -11,3 +14,24 @@ install: build
 build:
     cargo build --release
 
+clippy:
+    cargo clippy
+
+gitmain:
+    git checkout main
+    git pull
+
+@gh-start br:
+    git checkout main
+    git pull
+    git branch $1
+    git checkout $1
+
+@gh-push br:
+    git push origin $1
+
+@gh-release ver:
+    git checkout main
+    git tag $1
+    git push --tags
+    git push origin main
