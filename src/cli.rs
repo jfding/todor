@@ -42,7 +42,11 @@ pub enum Commands {
 
     /// -> edit todo inbox file
     #[clap(visible_aliases(["e", "ed"]))]
-    Edit,
+    Edit {
+        #[arg(short, long)]
+        #[arg(value_name = "another-taskbox")]
+        with: Option<String>,
+    },
 
     /// -> count items in inbox
     #[clap(visible_aliases(["c"]))]
@@ -70,6 +74,7 @@ pub enum Commands {
     /// -> collect all uncompeleted in INBOX(or --inbox <which>) to "today"
     Collect {
         #[arg(short, long)]
+        #[arg(value_name = "taskbox-name")]
         inbox: Option<String>,
     },
 
