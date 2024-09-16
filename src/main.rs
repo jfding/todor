@@ -58,7 +58,7 @@ fn main() {
                 println!(" {} left!", "nothing".yellow());
             } else {
                 for t in tasks {
-                    println!("{}  {}", "󰄗".to_string().red(), t)
+                    println!("{}  {}", "󰄗".red(), t)
                 }
             }
 
@@ -137,8 +137,8 @@ fn main() {
             TaskBox::shift(inbox_path)
         }
 
-        Some(Commands::Collect) => {
-            TaskBox::collect(inbox_path)
+        Some(Commands::Collect { inbox }) => {
+            TaskBox::collect(inbox_path, inbox)
         }
 
         Some(Commands::Postp) => {
