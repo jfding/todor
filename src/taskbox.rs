@@ -121,11 +121,12 @@ impl TaskBox {
         let (tasks, _) = todo_in._list();
         if tasks.is_empty() { return }
 
+        println!("{}  {} ↩️",
+            __friendly_name(todo_in.title.as_ref()).green(),
+            __friendly_name(self.title.as_ref()).red());
+
         for task in tasks {
-            println!("Moving from {} to {} : 󰄗 {}",
-                __friendly_name(todo_in.title.as_ref()).green(),
-                __friendly_name(self.title.as_ref()).red(),
-                task);
+            println!("   󰄗 {}", task);
             self.tasks.push((task.clone(), false));
         }
 
