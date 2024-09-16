@@ -69,6 +69,12 @@ pub enum Commands {
 
     /// -> postpone all uncompeleted of today to INBOX
     Postp,
+
+    /// -> import uncompeleted task in any markdown file to current
+    Import{
+        #[arg(short, long)]
+        file: String,
+    },
 }
 
 impl Default for Cli {
