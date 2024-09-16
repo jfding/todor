@@ -15,12 +15,12 @@ pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
     });
     fs::create_dir_all(&base_path).expect("Failed to create base directory");
 
-    return base_path.join(inbox.unwrap_or("TODO".to_string())).with_extension("md");
+    base_path.join(inbox.unwrap_or("TODO".to_string())).with_extension("md")
 }
 
-pub fn glance_all(inbox_path: &PathBuf) {
+pub fn glance_all(inbox_path: &Path) {
 
-    let wildpat = format!("{}/*.md", inbox_path.as_path().parent().unwrap().display());
+    let wildpat = format!("{}/*.md", inbox_path.parent().unwrap().display());
     let pager = "fzf --no-sort --tac";
 
     let res = run_fun!(
@@ -30,9 +30,9 @@ pub fn glance_all(inbox_path: &PathBuf) {
     println!("{}", &res[6..])
 }
 
-pub fn edit_box(inbox_path: &PathBuf) {
+pub fn edit_box(inbox_path: &Path) {
     let editor = env::var("EDITOR").unwrap_or("vi".to_string());
-    println!("editing todo box file: {}", inbox_path.display());
+    println!("editing : {}", inbox_path.display().to_string().purple());
     run_cmd!(
         $editor $inbox_path 2>/dev/null
     ).expect("cannot launch cli editor(vi?)")

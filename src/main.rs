@@ -9,7 +9,7 @@ use todor::cli::*;
 use todor::util;
 
 fn main() {
-    let args = Cli::new();
+    let args = Cli::default();
     let mut inbox = args.inbox;
 
     let clicmd = std::env::args().next().expect("cannot get arg0");
@@ -26,7 +26,7 @@ fn main() {
             let mut todo = TaskBox::new(inbox_path);
             let (tasks,_) = todo._list();
             if tasks.is_empty() {
-                println!(" {} left!", "nothing".purple());
+                println!(" {} left!", "nothing".yellow());
                 return
             }
 
@@ -55,7 +55,7 @@ fn main() {
             let (tasks, dones) = todo._list();
 
             if tasks.is_empty() {
-                println!(" {} left!", "nothing".purple());
+                println!(" {} left!", "nothing".yellow());
             } else {
                 for t in tasks {
                     println!(" 󰄗  {}", t.bold())
