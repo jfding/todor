@@ -12,6 +12,7 @@
   - config need to go XDG_HOME_CONFIG
   - in MD, not json
   - file store at: (default) ~/.local/share/todor/*.md
+  - default inbox file will be INBOX.md
 
 ## Sub commands
 
@@ -27,7 +28,8 @@
   - [x] shift
   - [x] collect
   - [x] postp
-  - [ ] import
+  - [x] import
+  - [x] listbox
   - [ ] sync with iCloud
   - [ ] sync with MS-TODO
 
