@@ -35,14 +35,14 @@ impl TaskBox {
         }
 
         Self {
-            fpath: fpath,
+            fpath,
             title: None, // None means not loaded
             tasks: Vec::new(),
         }
     }
 
     fn _load(&mut self) {
-        if self.title != None {
+        if self.title.is_some() {
             return
         }
 
@@ -70,7 +70,7 @@ impl TaskBox {
     }
 
     fn _dump(&mut self) {
-        let mut content = String::from(format!("# {}\n\n", self.title.clone().unwrap()));
+        let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
         for (task, done) in self.tasks.clone() {
             if done {
@@ -212,10 +212,8 @@ impl TaskBox {
         let mut boxes = Vec::new();
         for entry in fs::read_dir(basedir).expect("cannot read dir") {
             let path = entry.expect("cannot get entry").path();
-            if path.is_file() {
-                if re.is_match(path.to_str().unwrap()) { 
-                    boxes.push(path)
-                }
+            if path.is_file() && re.is_match(path.to_str().unwrap()) { 
+                boxes.push(path)
             }
         }
         boxes.sort(); boxes.reverse();

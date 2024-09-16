@@ -71,8 +71,8 @@ pub enum Commands {
     Postp,
 }
 
-impl Cli {
-    pub fn new() -> Self {
+impl Default for Cli {
+    fn default() -> Self {
         Cli::parse()
     }
 }
