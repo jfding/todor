@@ -150,7 +150,7 @@ impl TaskBox {
         println!("{}  {} ↩️", from.unwrap().green(), to.unwrap().blue());
 
         for task in tasks {
-            println!("{} : {}", " 󰄗".to_string().red(), task);
+            println!("{} : {}", " 󰄗".red(), task);
             self.tasks.push((task.clone(), false));
         }
 
@@ -269,6 +269,11 @@ impl TaskBox {
     pub fn collect(inbox_path: PathBuf, inbox_from: Option<String>) {
         let basedir = inbox_path.as_path().parent().unwrap();
 
+        if inbox_from == Some(get_today()) {
+            println!("{} is not a valid source", "󰄹 today".red());
+            return
+        }
+
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut from_todo = if let Some(from_name) = inbox_from {
             TaskBox::new(basedir.join(from_name).with_extension("md"))
@@ -303,13 +308,13 @@ impl TaskBox {
             if line.is_empty() { continue }
 
             if let Some(stripped) = line.strip_prefix(PREFIX) {
-                println!("{} : {}", " 󰄗".to_string().red(), stripped);
+                println!("{} : {}", " 󰄗".red(), stripped);
                 newt.push((stripped.to_string(), false))
             }
         }
 
         if newt.is_empty() {
-            println!("{} found", "nothing".to_string().yellow())
+            println!("{} found", "nothing".yellow())
         } else {
             self._load();
             self.tasks.append(&mut newt);
@@ -330,7 +335,7 @@ impl TaskBox {
         }
         boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
             |b| {
-                print!("{}  {}","󰄹".to_string().blue(), b);
+                print!("{}  {}","󰄹".blue(), b);
                 let tbox = TaskBox::new(basedir.join(b).with_extension("md"));
                 if tbox.alias.is_some() {
                     println!(" ({})", tbox.alias.unwrap().bright_black().blink())

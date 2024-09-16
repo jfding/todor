@@ -58,7 +58,7 @@ fn main() {
                 println!(" {} left!", "nothing".yellow());
             } else {
                 for t in tasks {
-                    println!("{}  {}", "󰄗".to_string().red(), t)
+                    println!("{}  {}", "󰄗".red(), t)
                 }
             }
 
