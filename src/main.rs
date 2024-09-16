@@ -119,13 +119,13 @@ fn main() {
             TaskBox::list_boxes(inbox_path)
         }
 
-        Some(Commands::Purge) => {
+        Some(Commands::Purge { sort }) => {
             if inquire::Confirm::new("are you sure?")
                 .with_default(false)
                 .prompt().unwrap_or(false) {
 
                 let mut todo = TaskBox::new(inbox_path);
-                todo.purge();
+                todo.purge(sort);
             }
         }
 
