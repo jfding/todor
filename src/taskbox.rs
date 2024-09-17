@@ -271,7 +271,7 @@ impl TaskBox {
 
         // 1st scan: remove dups
         for (task, done) in self.tasks.iter() {
-            if ! hs.contains(task) || task.starts_with(SUB_PREFIX) {
+            if ! hs.contains(task) {
                 newtasks.push((task.clone(), *done));
                 hs.insert(task);
             }
