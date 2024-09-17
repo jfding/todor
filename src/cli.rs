@@ -85,8 +85,8 @@ pub enum Commands {
 
     /// -> import uncompeleted task in any markdown file to current
     Import{
-        #[arg(short, long)]
-        file: String,
+        #[arg(value_name = "markdown-file")]
+        file: Option<String>,
     },
 }
 

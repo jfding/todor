@@ -7,6 +7,8 @@ use dirs;
 use chrono::*;
 use std::ops::*;
 
+use crate::util;
+
 const DATA_BASE : &str = ".local/share/todor";
 const INBOX_NAME :&str  = "INBOX";
 
@@ -358,7 +360,9 @@ impl TaskBox {
     }
 
     // specified markdown file -> cur
-    pub fn import(&mut self, mdfile: String) {
+    pub fn import(&mut self, file: Option<String>) {
+        let mdfile= file.unwrap_or(util::pick_file());
+
         let fpath = Path::new(&mdfile);
         if ! fpath.is_file() {
             eprintln!("not a file or not exists: {}", mdfile.red());

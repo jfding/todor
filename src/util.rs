@@ -37,3 +37,11 @@ pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
         ).expect("cannot launch cli editor(vi?)")
     }
 }
+
+pub fn pick_file() -> String {
+    run_fun!(
+        ls | fzf;
+    ).ok().unwrap_or_else(||
+        std::process::exit(1)
+    )
+}
