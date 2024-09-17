@@ -47,7 +47,7 @@ pub enum Commands {
     Edit {
         #[arg(short, long)]
         #[arg(value_name = "another-taskbox")]
-        with: Option<String>,
+        diffwith: Option<String>,
     },
 
     /// -> count items in inbox

@@ -83,10 +83,10 @@ fn main() {
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }
 
-        Some(Commands::Edit { with }) => {
+        Some(Commands::Edit { diffwith }) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
-            util::edit_box(&inbox_path, with);
+            util::edit_box(&inbox_path, diffwith);
         }
 
         Some(Commands::Count) => {

@@ -15,10 +15,10 @@ pub fn glance_all(inbox_path: &Path) {
     println!("{}", &res[6..])
 }
 
-pub fn edit_box(inbox_path: &Path, with: Option<String>) {
+pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
     let editor = env::var("EDITOR").unwrap_or("vi".to_string());
 
-    if let Some(other) = with {
+    if let Some(other) = diffwith {
         let otherf = if other.ends_with(".md") {
             &other
         } else {
