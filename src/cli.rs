@@ -23,6 +23,8 @@ pub enum Commands {
     Add {
         #[arg(value_name = "TASK")]
         what: Option<String>,
+        #[arg(short, long)]
+        date: bool,
     },
 
     /// -> mark item as done

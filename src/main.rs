@@ -34,8 +34,8 @@ fn main() {
 
             let mystyle: RenderConfig = RenderConfig::default()
                 .with_unselected_checkbox("󰄗".into())
-                .with_selected_checkbox("󰄸".into())
-                .with_highlighted_option_prefix("➡️".into())
+                .with_selected_checkbox("󰄲".into())
+                .with_highlighted_option_prefix("".into())
                 .with_scroll_up_prefix("↥".into())
                 .with_scroll_down_prefix("↧".into());
 
@@ -58,23 +58,23 @@ fn main() {
                 println!(" {} left!", "nothing".yellow());
             } else {
                 for t in tasks {
-                    println!("{}  {}", "󰄗".red(), t)
+                    println!("{}  {}", "󰄗".blink().green(), t)
                 }
             }
 
             if all && !dones.is_empty() {
                 println!();
                 for t in dones {
-                    println!("󰄸  {}", t.strikethrough())
+                    println!("󰄲  {}", t.strikethrough())
                 }
             }
         }
 
-        Some(Commands::Add { what }) => {
+        Some(Commands::Add { what, date }) => {
             let mut todo = TaskBox::new(inbox_path);
 
             if let Some(input) = what {
-                todo.add(input);
+                todo.add(input, date);
                 println!("{}", "Task added successfully!".bold().blue());
                 return
             }
@@ -88,7 +88,7 @@ fn main() {
                 .prompt().unwrap_or_else(|_| String::new());
 
             if !input.is_empty() {
-                todo.add(input);
+                todo.add(input, date);
                 println!("{}", "Task added successfully!".bold().blue());
             } else {
                 println!("{}", "No task added. Input was empty.".red());
