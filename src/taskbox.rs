@@ -45,6 +45,7 @@ fn get_alias(name_in: Option<String>) -> Option<String> {
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
+const SUB_PREFIX :&str  = " 󱞩 ";
 
 #[derive(Debug)]
 pub struct TaskBox {
@@ -84,7 +85,7 @@ impl TaskBox {
                             .expect("Failed to read file")
                             .lines().enumerate() {
 
-            let line = rline.trim();
+            let line = rline.trim_end();
             if index == 0 {
                 title = line.trim_start_matches("# ").to_string();
 
@@ -92,6 +93,15 @@ impl TaskBox {
                 tasks.push((stripped.to_string(), false))
             } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
                 tasks.push((stripped.to_string(), true))
+            } else {
+                // might be sub-tasks
+                let line = line.trim_start();
+
+                if let Some(stripped) = line.strip_prefix(PREFIX) {
+                    tasks.push((SUB_PREFIX.to_owned() + stripped, false))
+                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
+                    tasks.push((SUB_PREFIX.to_owned() + stripped, true))
+                }
             }
         }
 
@@ -102,7 +112,12 @@ impl TaskBox {
     fn _dump(&mut self) {
         let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
-        for (task, done) in self.tasks.clone() {
+        for (mut task, done) in self.tasks.clone() {
+            if let Some(left) = task.strip_prefix(SUB_PREFIX) {
+                content.push_str("  ");
+                task = left.to_owned();
+            }
+
             if done {
                 content.push_str(PREFIX_DONE)
             } else {
