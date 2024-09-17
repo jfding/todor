@@ -24,7 +24,7 @@ fn main() {
     match args.command {
         Some(Commands::Mark) | None => {
             let mut todo = TaskBox::new(inbox_path);
-            let (tasks,_) = todo._list();
+            let (tasks,_) = todo._get_all();
             if tasks.is_empty() {
                 println!(" {} left!", "nothing".yellow());
                 return
@@ -52,22 +52,7 @@ fn main() {
 
         Some(Commands::List { all }) => {
             let mut todo = TaskBox::new(inbox_path);
-            let (tasks, dones) = todo._list();
-
-            if tasks.is_empty() {
-                println!(" {} left!", "nothing".yellow());
-            } else {
-                for t in tasks {
-                    println!("{}  {}", "󰄗".blink().blue(), t)
-                }
-            }
-
-            if all && !dones.is_empty() {
-                println!();
-                for t in dones {
-                    println!("{}  {}", "󰄲".green(), t.strikethrough())
-                }
-            }
+            todo.list(all);
         }
 
         Some(Commands::Add { what, date }) => {
