@@ -189,6 +189,13 @@ impl TaskBox {
     pub fn list(&mut self, listall: bool) {
         let (tasks, dones) = self._get_all();
 
+        if listall && !dones.is_empty() {
+            for t in dones {
+                println!("{}  {}", "󰄲".green(), t.strikethrough())
+            }
+            println!();
+        }
+
         if tasks.is_empty() {
             println!(" {} left!", "nothing".yellow());
         } else {
@@ -209,13 +216,6 @@ impl TaskBox {
                     msg = msg + &t;
                 }
                 println!("{}", msg);
-            }
-        }
-
-        if listall && !dones.is_empty() {
-            println!();
-            for t in dones {
-                println!("{}  {}", "󰄲".green(), t.strikethrough())
             }
         }
     }
@@ -272,7 +272,8 @@ impl TaskBox {
         }
 
         // (optional) 3rd scan: sort by completed and uncomplated
-        if sort { newtasks.sort_by(|a, b| a.1.cmp(&b.1)) }
+        // upper: completed
+        if sort { newtasks.sort_by(|a, b| b.1.cmp(&a.1)) }
 
         self.tasks = newtasks;
         self._dump();
