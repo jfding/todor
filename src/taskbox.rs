@@ -147,7 +147,7 @@ impl TaskBox {
             self.title.as_ref()
         };
 
-        println!("{}  {} ↩️", from.unwrap().green(), to.unwrap().blue());
+        println!("{}  {} 󰓌", from.unwrap().green(), to.unwrap().blue());
 
         for task in tasks {
             println!("{} : {}", " 󰄗".red(), task);
@@ -158,9 +158,12 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn add(&mut self, what: String) {
+    pub fn add(&mut self, what: String, add_date: bool) {
         self._load();
-        self.tasks.push((what, false));
+
+        if add_date { self.tasks.push((format!("{} [󰃵 {}]", what, get_today()), false))
+        } else {      self.tasks.push((what, false)) }
+
         self._dump();
     }
 
