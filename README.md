@@ -14,6 +14,14 @@
   - file store at: (default) ~/.local/share/todor/*.md
   - default inbox file will be INBOX.md
 
+- sub-tasks support
+  - Use regular markdown symtax to represent sub-tasks
+  - Need to use `edit` command to edit the markdown file manually to manage the level
+  - `list` works very well with nice outputs
+  - `mark`, `purge` can work well enough
+      - but be careful about `purge --sort`
+  - other commands have no changes or regressions
+
 ## Sub commands
 
 - commands: 
@@ -30,6 +38,7 @@
   - [x] postp
   - [x] import
   - [x] listbox
+
   - [ ] sync with iCloud
   - [ ] sync with MS-TODO
 
