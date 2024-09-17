@@ -45,6 +45,7 @@ fn get_alias(name_in: Option<String>) -> Option<String> {
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
+pub const SUB_PREFIX :&str  = " 󱞩 ";
 
 #[derive(Debug)]
 pub struct TaskBox {
@@ -72,10 +73,7 @@ impl TaskBox {
     }
 
     fn _load(&mut self) {
-        if self.title.is_some() {
-            return
-        }
-
+        if self.title.is_some() { return } // avoid _load() twice
 
         let mut tasks = Vec::new();
         let mut title = String::new();
@@ -84,7 +82,7 @@ impl TaskBox {
                             .expect("Failed to read file")
                             .lines().enumerate() {
 
-            let line = rline.trim();
+            let line = rline.trim_end();
             if index == 0 {
                 title = line.trim_start_matches("# ").to_string();
 
@@ -92,6 +90,15 @@ impl TaskBox {
                 tasks.push((stripped.to_string(), false))
             } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
                 tasks.push((stripped.to_string(), true))
+            } else {
+                // might be sub-tasks
+                let line = line.trim_start();
+
+                if let Some(stripped) = line.strip_prefix(PREFIX) {
+                    tasks.push((SUB_PREFIX.to_owned() + stripped, false))
+                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
+                    tasks.push((SUB_PREFIX.to_owned() + stripped, true))
+                }
             }
         }
 
@@ -102,7 +109,12 @@ impl TaskBox {
     fn _dump(&mut self) {
         let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
-        for (task, done) in self.tasks.clone() {
+        for (mut task, done) in self.tasks.clone() {
+            if let Some(left) = task.strip_prefix(SUB_PREFIX) {
+                content.push_str("  ");
+                task = left.to_owned();
+            }
+
             if done {
                 content.push_str(PREFIX_DONE)
             } else {
@@ -133,7 +145,7 @@ impl TaskBox {
         self._load();
         todo_in._load();
 
-        let (tasks, _) = todo_in._list();
+        let (tasks, _) = todo_in._get_all();
         if tasks.is_empty() { return }
 
         let from = if todo_in.alias.is_some() {
@@ -167,12 +179,45 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn _list(&mut self) -> (Vec<String> ,Vec<String>) {
+    pub fn _get_all(&mut self) -> (Vec<String> ,Vec<String>) {
         self._load();
         (
             self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect(),
             self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect()
         )
+    }
+    pub fn list(&mut self, listall: bool) {
+        let (tasks, dones) = self._get_all();
+
+        if tasks.is_empty() {
+            println!(" {} left!", "nothing".yellow());
+        } else {
+            let mut msg;
+            let mut last_is_sub = false;
+            for t in tasks {
+                msg = format!("{}  ", "󰄗".blink().blue());
+                if t.starts_with(SUB_PREFIX) {
+                    msg = format!("{} {}", "󱞩".to_string().blink(), msg);
+                    msg += t.strip_prefix(SUB_PREFIX).unwrap();
+
+                    last_is_sub = true;
+                } else {
+                    if last_is_sub {
+                        last_is_sub = false;
+                        msg = "\n".to_owned() + &msg;
+                    }
+                    msg = msg + &t;
+                }
+                println!("{}", msg);
+            }
+        }
+
+        if listall && !dones.is_empty() {
+            println!();
+            for t in dones {
+                println!("{}  {}", "󰄲".green(), t.strikethrough())
+            }
+        }
     }
 
     pub fn count(&mut self) -> usize {
@@ -214,7 +259,7 @@ impl TaskBox {
 
         // 1st scan: remove dups
         for (task, done) in self.tasks.iter() {
-            if ! hs.contains(task) {
+            if ! hs.contains(task) || task.starts_with(SUB_PREFIX) {
                 newtasks.push((task.clone(), *done));
                 hs.insert(task);
             }
