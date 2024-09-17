@@ -78,6 +78,9 @@ impl TaskBox {
         let mut tasks = Vec::new();
         let mut title = String::new();
 
+        let mut postfix_sub = String::new();
+        let mut last_is_sub = false;
+
         for (index, rline) in fs::read_to_string(&self.fpath)
                             .expect("Failed to read file")
                             .lines().enumerate() {
@@ -86,19 +89,28 @@ impl TaskBox {
             if index == 0 {
                 title = line.trim_start_matches("# ").to_string();
 
-            } else if let Some(stripped) = line.strip_prefix(PREFIX) {
-                tasks.push((stripped.to_string(), false))
-            } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
-                tasks.push((stripped.to_string(), true))
+            } else if line.starts_with("- [") {
+                if let Some(stripped) = line.strip_prefix(PREFIX) {
+                    tasks.push((stripped.to_string(), false))
+                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
+                    tasks.push((stripped.to_string(), true))
+                } else { continue }
+
+                if last_is_sub {
+                    last_is_sub = false;
+                    postfix_sub += " "; // hack way to identify sub-tasks belong to diff task
+                }
             } else {
                 // might be sub-tasks
                 let line = line.trim_start();
 
                 if let Some(stripped) = line.strip_prefix(PREFIX) {
-                    tasks.push((SUB_PREFIX.to_owned() + stripped, false))
+                    tasks.push((SUB_PREFIX.to_owned() + stripped + &postfix_sub, false))
                 } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
-                    tasks.push((SUB_PREFIX.to_owned() + stripped, true))
-                }
+                    tasks.push((SUB_PREFIX.to_owned() + stripped + &postfix_sub, true))
+                } else { continue }
+
+                last_is_sub = true;
             }
         }
 
@@ -112,7 +124,7 @@ impl TaskBox {
         for (mut task, done) in self.tasks.clone() {
             if let Some(left) = task.strip_prefix(SUB_PREFIX) {
                 content.push_str("  ");
-                task = left.to_owned();
+                task = left.trim_end().to_string();
             }
 
             if done {
@@ -189,6 +201,13 @@ impl TaskBox {
     pub fn list(&mut self, listall: bool) {
         let (tasks, dones) = self._get_all();
 
+        if listall && !dones.is_empty() {
+            for t in dones {
+                println!("{}  {}", "󰄲".green(), t.strikethrough())
+            }
+            println!();
+        }
+
         if tasks.is_empty() {
             println!(" {} left!", "nothing".yellow());
         } else {
@@ -209,13 +228,6 @@ impl TaskBox {
                     msg = msg + &t;
                 }
                 println!("{}", msg);
-            }
-        }
-
-        if listall && !dones.is_empty() {
-            println!();
-            for t in dones {
-                println!("{}  {}", "󰄲".green(), t.strikethrough())
             }
         }
     }
@@ -259,7 +271,7 @@ impl TaskBox {
 
         // 1st scan: remove dups
         for (task, done) in self.tasks.iter() {
-            if ! hs.contains(task) || task.starts_with(SUB_PREFIX) {
+            if ! hs.contains(task) {
                 newtasks.push((task.clone(), *done));
                 hs.insert(task);
             }
@@ -272,7 +284,8 @@ impl TaskBox {
         }
 
         // (optional) 3rd scan: sort by completed and uncomplated
-        if sort { newtasks.sort_by(|a, b| a.1.cmp(&b.1)) }
+        // upper: completed
+        if sort { newtasks.sort_by(|a, b| b.1.cmp(&a.1)) }
 
         self.tasks = newtasks;
         self._dump();
