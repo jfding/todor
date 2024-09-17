@@ -45,7 +45,7 @@ fn get_alias(name_in: Option<String>) -> Option<String> {
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
-pub const SUB_PREFIX :&str  = " 󱞩 ";
+const SUB_PREFIX :&str  = " 󱞩 ";
 
 #[derive(Debug)]
 pub struct TaskBox {
@@ -171,10 +171,10 @@ impl TaskBox {
             self.title.as_ref()
         };
 
-        println!("{}  {} 󰓌", from.unwrap().green(), to.unwrap().blue());
+        println!("{} 󰳟 {} 󰓌", from.unwrap().green(), to.unwrap().blue());
 
         for task in tasks {
-            println!("{} : {}", " 󰄗".red(), task);
+            println!(" {} : {}", " 󰄗".red(), task);
             self.tasks.push((task.clone(), false));
         }
 
@@ -372,7 +372,7 @@ impl TaskBox {
             if line.is_empty() { continue }
 
             if let Some(stripped) = line.strip_prefix(PREFIX) {
-                println!("{} : {}", " 󰄗".red(), stripped);
+                println!(" {} : {}", " 󰄗".red(), stripped);
                 newt.push((stripped.to_string(), false))
             }
         }

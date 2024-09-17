@@ -32,10 +32,11 @@ fn main() {
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
+            // "󰳟"  "" -- choose one to be compatible with all popular terms
             let mystyle: RenderConfig = RenderConfig::default()
                 .with_unselected_checkbox("󰄗".into())
                 .with_selected_checkbox("󰄲".into())
-                .with_highlighted_option_prefix("".into())
+                .with_highlighted_option_prefix("󰳟".into())
                 .with_scroll_up_prefix("↥".into())
                 .with_scroll_down_prefix("↧".into());
 
