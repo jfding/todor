@@ -31,12 +31,13 @@ pub enum Commands {
     #[clap(visible_alias("m"))]
     Mark,
 
-    /// -> list all todo items in inbox
+    /// -> list all uncompeleted tasks in box
     #[clap(visible_aliases(["l", "ls"]))]
-    List {
-        #[arg(short, long)]
-        all: bool,
-    },
+    List,
+
+    /// -> list all(including compeleted) tasks
+    #[clap(visible_aliases(["la"]))]
+    Listall,
 
     /// -> list all todo box in working dir
     #[clap(visible_aliases(["lb"]))]

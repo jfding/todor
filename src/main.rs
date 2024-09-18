@@ -22,7 +22,16 @@ fn main() {
     let inbox_path = get_inbox_file(args.dir, inbox);
 
     match args.command {
-        Some(Commands::Mark) | None => {
+        Some(Commands::List) | None => {
+            let mut todo = TaskBox::new(inbox_path);
+            todo.list(false);
+        }
+        Some(Commands::Listall) => {
+            let mut todo = TaskBox::new(inbox_path);
+            todo.list(true);
+        }
+
+        Some(Commands::Mark) => {
             let mut todo = TaskBox::new(inbox_path);
             let (tasks,_) = todo._get_all();
             if tasks.is_empty() {
@@ -49,11 +58,6 @@ fn main() {
                 .prompt().unwrap_or_else(|_| Vec::new())
             );
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-        }
-
-        Some(Commands::List { all }) => {
-            let mut todo = TaskBox::new(inbox_path);
-            todo.list(all);
         }
 
         Some(Commands::Add { what, date }) => {
