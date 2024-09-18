@@ -25,19 +25,10 @@
 ## Sub commands
 
 - commands: 
-  - [x] add
-  - [x] list
-  - [x] mark
-  - [x] edit
-  - [x] count
-  - [x] purge
-  - [x] glance
-  - [x] sink
-  - [x] shift
-  - [x] collect
-  - [x] postp
-  - [x] import
-  - [x] listbox
+  - list(default), listall, add, mark, edit, count
+  - purge, glance, listbox
+  - sink, shift, collect, postp
+  - import
 
   - [ ] sync with iCloud
   - [ ] sync with MS-TODO
