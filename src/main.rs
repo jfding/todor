@@ -1,5 +1,4 @@
 use std::io;
-use inquire::ui::RenderConfig;
 use colored::Colorize;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
@@ -7,6 +6,7 @@ use crossterm::cursor::SetCursorStyle::*;
 use todor::taskbox::*;
 use todor::cli::*;
 use todor::util;
+use todor::util::*;
 
 fn main() {
     let args = Cli::default();
@@ -35,23 +35,14 @@ fn main() {
             let mut todo = TaskBox::new(inbox_path);
             let (tasks,_) = todo._get_all();
             if tasks.is_empty() {
-                println!(" {} left!", "nothing".yellow());
+                println!(" {} left!", S_empty!("nothing"));
                 return
             }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-
-            // "󰳟"  "" -- choose one to be compatible with all popular terms
-            let mystyle: RenderConfig = RenderConfig::default()
-                .with_unselected_checkbox("󰄗".into())
-                .with_selected_checkbox("󰄲".into())
-                .with_highlighted_option_prefix("󰳟".into())
-                .with_scroll_up_prefix("↥".into())
-                .with_scroll_down_prefix("↧".into());
-
             todo.mark(
-                inquire::MultiSelect::new("To close:", tasks)
-                .with_render_config(mystyle)
+                inquire::MultiSelect::new("choose to close:", tasks)
+                .with_render_config(util::get_multi_select_style())
                 .with_vim_mode(true)
                 .with_page_size(10)
                 .with_help_message("j/k | <space> | <enter> | ctrl+c")
@@ -65,23 +56,23 @@ fn main() {
 
             if let Some(input) = what {
                 todo.add(input, date);
-                println!("{}", "Task added successfully!".bold().blue());
+                println!("{}", S_success!("Task added successfully!"));
                 return
             }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
             let input = inquire::Text::new("")
+                .with_render_config(util::get_text_input_style())
                 .with_help_message("<enter> | ctrl+c")
-                .with_render_config(RenderConfig::default().with_prompt_prefix("󰄗".into()))
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| String::new());
 
             if !input.is_empty() {
                 todo.add(input, date);
-                println!("{}", "Task added successfully!".bold().blue());
+                println!("{}", S_success!("Task added successfully!"));
             } else {
-                println!("{}", "No task added. Input was empty.".red());
+                println!("{}", S_empty!("No task added. Input was empty."));
             }
 
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
@@ -90,7 +81,7 @@ fn main() {
         Some(Commands::Edit { diffwith }) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
-            util::edit_box(&inbox_path, diffwith);
+            todor::util::edit_box(&inbox_path, diffwith);
         }
 
         Some(Commands::Count) => {
@@ -102,7 +93,7 @@ fn main() {
         }
 
         Some(Commands::Glance) => {
-            util::glance_all(&inbox_path)
+            todor::util::glance_all(&inbox_path)
         }
 
         Some(Commands::Listbox) => {

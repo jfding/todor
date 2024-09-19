@@ -8,6 +8,7 @@ use chrono::*;
 use std::ops::*;
 
 use crate::util;
+use crate::util::*;
 
 const DATA_BASE : &str = ".local/share/todor";
 const INBOX_NAME :&str  = "INBOX";
@@ -173,10 +174,10 @@ impl TaskBox {
             self.title.as_ref()
         };
 
-        println!("{} 󰳟 {} 󰓌", from.unwrap().green(), to.unwrap().blue());
+        println!("{} {} {} {}", S_movefrom!(from.unwrap()), MOVING, S_moveto!(to.unwrap()), PROGRESS);
 
         for task in tasks {
-            println!(" {} : {}", " 󰄗".red(), task);
+            println!("  {} : {}", S_checkbox!(CHECKBOX), task);
             self.tasks.push((task.clone(), false));
         }
 
@@ -205,20 +206,20 @@ impl TaskBox {
 
         if listall && !dones.is_empty() {
             for t in dones {
-                println!("{}  {}", "󰄲".green(), t.strikethrough())
+                println!("{}  {}", S_checked!(CHECKED), t.strikethrough())
             }
             println!();
         }
 
         if tasks.is_empty() {
-            println!(" {} left!", "nothing".yellow());
+            println!(" {} left!", S_empty!("nothing"));
         } else {
             let mut msg;
             let mut last_is_sub = false;
             for t in tasks {
-                msg = format!("{}  ", "󰄗".blink().blue());
+                msg = format!("{}  ", S_checkbox!(CHECKBOX).blink());
                 if t.starts_with(SUB_PREFIX) {
-                    msg = format!("{} {}", "󱞩".to_string().blink(), msg);
+                    msg = format!("{} {}", SUBTASK.to_string().blink(), msg);
                     msg += t.strip_prefix(SUB_PREFIX).unwrap();
 
                     last_is_sub = true;
@@ -336,7 +337,7 @@ impl TaskBox {
         let basedir = inbox_path.as_path().parent().unwrap();
 
         if inbox_from == Some(get_today()) {
-            println!("{} is not a valid source", "󰄹 today".red());
+            println!("{} is not a valid source", S_moveto!("today"));
             return
         }
 
@@ -366,10 +367,10 @@ impl TaskBox {
 
         let fpath = Path::new(&mdfile);
         if ! fpath.is_file() {
-            eprintln!("not a file or not exists: {}", mdfile.red());
+            eprintln!("not a file or not exists: {}", S_fpath!(mdfile)); 
             std::process::exit(1)
         }
-        println!("importing {} ↩️", mdfile.purple());
+        println!("importing {} {}", S_fpath!(mdfile), PROGRESS);
 
         let mut newt = Vec::new();
         for rline in fs::read_to_string(fpath).expect("cannot read file").lines() {
@@ -377,13 +378,13 @@ impl TaskBox {
             if line.is_empty() { continue }
 
             if let Some(stripped) = line.strip_prefix(PREFIX) {
-                println!(" {} : {}", " 󰄗".red(), stripped);
+                println!("  {} : {}", S_checkbox!(CHECKBOX), stripped);
                 newt.push((stripped.to_string(), false))
             }
         }
 
         if newt.is_empty() {
-            println!("{} found", "nothing".yellow())
+            println!("{} found!", S_empty!("nothing"));
         } else {
             self._load();
             self.tasks.append(&mut newt);
@@ -393,7 +394,7 @@ impl TaskBox {
 
     pub fn list_boxes(inbox_path: PathBuf) {
         let basedir = inbox_path.as_path().parent().unwrap();
-        println!("[ {} ]", basedir.display().to_string().purple());
+        println!("[ {} ]", S_fpath!(basedir.display()));
 
         let mut boxes = Vec::new();
         for entry in fs::read_dir(basedir).expect("cannot read dir") {
@@ -404,10 +405,10 @@ impl TaskBox {
         }
         boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
             |b| {
-                print!("{}  {}","󰄹".blue(), b);
+                print!("{}  {}",S_checkbox!(TASKBOX), b);
                 let tbox = TaskBox::new(basedir.join(b).with_extension("md"));
                 if tbox.alias.is_some() {
-                    println!(" ({})", tbox.alias.unwrap().bright_black().blink())
+                    println!(" ({})", S_hints!(tbox.alias.unwrap()).blink())
                 } else {
                     println!()
                 }
