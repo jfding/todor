@@ -19,5 +19,5 @@ dirs = "5.0.1"
 inquire = "0.7.5"
 regex = "1.10.6"
 
-[patch.crates-io]
-inquire = { git = "https://github.com/jfding/inquire" }
+#[patch.crates-io]
+#inquire = { git = "https://github.com/jfding/inquire" }
