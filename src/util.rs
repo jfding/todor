@@ -4,15 +4,16 @@ use cmd_lib::*;
 use colored::Colorize;
 
 pub fn glance_all(inbox_path: &Path) {
-
     let wildpat = format!("{}/*.md", inbox_path.parent().unwrap().display());
-    let pager = "fzf --no-sort --tac";
+    let pager = "bat --paging=always -l md";
+    let pager_fallback = "less";
 
-    let res = run_fun!(
-      sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager"
-    ).unwrap_or_else(|_| String::from("- [ ] n/a"));
-
-    println!("{}", &res[6..])
+    run_cmd!(
+      sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager 2>/dev/null"
+    ).unwrap_or_else(|_|
+        run_cmd!(
+          sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager_fallback"
+        ).unwrap_or_else(|_| std::process::exit(1)));
 }
 
 pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
@@ -34,14 +35,14 @@ pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
         println!("editing : {}", inbox_path.display().to_string().purple());
         run_cmd!(
             $editor $inbox_path 2>/dev/null
-        ).expect("cannot launch cli editor(vi?)")
+        ).expect("cannot launch $EDITOR or vi")
     }
 }
 
 pub fn pick_file() -> String {
     run_fun!(
         ls | fzf;
-    ).ok().unwrap_or_else(||
+    ).unwrap_or_else(|_|
         std::process::exit(1)
     )
 }
