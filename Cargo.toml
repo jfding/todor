@@ -1,6 +1,6 @@
 [package]
 name = "todor"
-version = "1.4.0"
+version = "1.5.0"
 edition = "2021"
 authors = ["JF Ding <jfding@gmail.com>"]
 description = "yet another cli TODO in Rust"
@@ -18,6 +18,3 @@ crossterm = "0.28.1"
 dirs = "5.0.1"
 inquire = "0.7.5"
 regex = "1.10.6"
-
-#[patch.crates-io]
-#inquire = { git = "https://github.com/jfding/inquire" }
