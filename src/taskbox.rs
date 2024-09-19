@@ -361,6 +361,7 @@ impl TaskBox {
 
     // specified markdown file -> cur
     pub fn import(&mut self, file: Option<String>) {
+        #[allow(clippy::redundant_closure)]
         let mdfile= file.unwrap_or_else(|| util::pick_file());
 
         let fpath = Path::new(&mdfile);
