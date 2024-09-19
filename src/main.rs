@@ -1,11 +1,11 @@
 use std::io;
-use inquire::ui::{ Styled, RenderConfig, Color, StyleSheet, Attributes };
 use colored::Colorize;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
 
 use todor::taskbox::*;
 use todor::cli::*;
+use todor::util;
 use todor::util::*;
 
 fn main() {
@@ -40,39 +40,12 @@ fn main() {
             }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-
-            let help_msg_style_sheet =StyleSheet::default()
-                .with_fg(Color::DarkGrey)
-                .with_attr(Attributes::ITALIC | Attributes::BOLD);
-
-            let selected_opt_style_sheet =StyleSheet::default()
-                .with_bg(Color::DarkGrey)
-                .with_fg(Color::DarkBlue)
-                .with_attr(Attributes::BOLD);
-
-            let answer_style_sheet =StyleSheet::default()
-                .with_fg(Color::DarkBlue)
-                .with_attr(Attributes::BOLD);
-
-            let prompt_prefix = Styled::new(TASKBOX).with_fg(Color::DarkRed);
-
-            let mystyle: RenderConfig = RenderConfig::default()
-                .with_unselected_checkbox(CHECKBOX.into())
-                .with_selected_checkbox(CHECKED.into())
-                .with_highlighted_option_prefix(MOVING.into())
-                .with_scroll_up_prefix(SCROLLUP.into())
-                .with_help_message(help_msg_style_sheet)
-                .with_selected_option(Some(selected_opt_style_sheet))
-                .with_answer(answer_style_sheet)
-                .with_prompt_prefix(prompt_prefix)
-                .with_scroll_down_prefix(SCROLLDOWN.into());
-
             todo.mark(
                 inquire::MultiSelect::new("choose to close:", tasks)
-                .with_render_config(mystyle)
+                .with_render_config(util::get_multi_select_style())
                 .with_vim_mode(true)
                 .with_page_size(10)
-                .with_help_message(" j/k | <space> | <enter> | ctrl+c ")
+                .with_help_message("j/k | <space> | <enter> | ctrl+c")
                 .prompt().unwrap_or_else(|_| Vec::new())
             );
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
@@ -90,8 +63,8 @@ fn main() {
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
 
             let input = inquire::Text::new("")
+                .with_render_config(util::get_text_input_style())
                 .with_help_message("<enter> | ctrl+c")
-                .with_render_config(RenderConfig::default().with_prompt_prefix(CHECKBOX.into()))
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| String::new());
 
