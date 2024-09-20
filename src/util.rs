@@ -3,6 +3,9 @@ use std::env;
 use cmd_lib::*;
 use colored::Colorize;
 use inquire::ui::{ Styled, RenderConfig, Color, StyleSheet, Attributes };
+use clap::builder::styling;
+
+pub use crate::*;
 
 pub const CHECKBOX: &str = "󰄗";
 pub const CHECKED: &str = "󰄲";
@@ -33,16 +36,16 @@ macro_rules! S_success { ($e:expr) => { $e.to_string().green().bold() }; }
 #[macro_export]
 macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
 
-pub use S_fpath;
-pub use S_checkbox;
-pub use S_checked;
-pub use S_empty;
-pub use S_movefrom;
-pub use S_moveto;
-pub use S_hints;
-pub use S_success;
-pub use S_failure;
+// for 'clap'
+pub fn get_usage_styles() -> styling::Styles {
+    styling::Styles::styled()
+    .header(styling::AnsiColor::Green.on_default().bold())
+    .usage(styling::AnsiColor::Green.on_default().bold())
+    .literal(styling::AnsiColor::Blue.on_default().bold())
+    .placeholder(styling::AnsiColor::Cyan.on_default())
+}
 
+// for 'inquire'
 pub fn get_text_input_style() -> RenderConfig<'static> {
     RenderConfig::default()
         .with_prompt_prefix(CHECKBOX.into())
@@ -59,8 +62,6 @@ pub fn get_text_input_style() -> RenderConfig<'static> {
         )
 }
 pub fn get_multi_select_style() -> RenderConfig<'static> {
-    let prompt_prefix = Styled::new(TASKBOX).with_fg(Color::DarkRed);
-
     RenderConfig::default()
         .with_unselected_checkbox(CHECKBOX.into())
         .with_selected_checkbox(CHECKED.into())
@@ -68,7 +69,10 @@ pub fn get_multi_select_style() -> RenderConfig<'static> {
         .with_highlighted_option_prefix(MOVING.into())
         .with_scroll_up_prefix(SCROLLUP.into())
         .with_scroll_down_prefix(SCROLLDOWN.into())
-        .with_prompt_prefix(prompt_prefix)
+        .with_prompt_prefix(
+             Styled::new(TASKBOX)
+            .with_fg(Color::DarkRed)
+         )
         .with_help_message(
              StyleSheet::default()
             .with_fg(Color::DarkGrey)
