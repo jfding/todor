@@ -1,8 +1,15 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, builder::styling};
+
+const STYLES: styling::Styles = styling::Styles::styled()
+    .header(styling::AnsiColor::Green.on_default().bold())
+    .usage(styling::AnsiColor::Green.on_default().bold())
+    .literal(styling::AnsiColor::Blue.on_default().bold())
+    .placeholder(styling::AnsiColor::Cyan.on_default());
 
 #[derive(Debug, Clone, Parser)]
 #[command(name= "todor")]
 #[command(version, about= "yet another cli TODO in Rust", long_about=None)]
+#[command(styles=STYLES)]
 pub struct Cli {
     /// working dir
     #[arg(short, long, value_name = "FOLDER")]
