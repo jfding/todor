@@ -88,6 +88,11 @@ pub fn get_multi_select_style() -> RenderConfig<'static> {
 }
 
 pub fn glance_all(inbox_path: &Path) {
+    if cfg!(windows) {
+        println!("Sorry, this feature is not supported on Windows.");
+        return;
+    }
+
     let wildpat = format!("{}/*.md", inbox_path.parent().unwrap().display());
     let pager = "bat --paging=always -l md";
     let pager_fallback = "less";
@@ -101,8 +106,6 @@ pub fn glance_all(inbox_path: &Path) {
 }
 
 pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
-    let editor = env::var("EDITOR").unwrap_or("vi".to_string());
-
     if let Some(other) = diffwith {
         let otherf = if other.ends_with(".md") {
             &other
@@ -111,15 +114,30 @@ pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
         };
 
         println!("editing : {} v.s. {}", S_fpath!(inbox_path.display()), S_fpath!(otherf));
-        run_cmd!(
+        if run_cmd!(
             vimdiff $inbox_path $otherf 2>/dev/null
-        ).expect("cannot launch vimdiff")
+        ).is_err() {
+            println!("cannot launch vimdiff, ignore --diffwith option");
+        }
 
     } else {
+        let editor = env::var("EDITOR").unwrap_or_else(|_|
+                                        if cfg!(windows) {
+                                            "notepad".into()
+                                        } else {
+                                            "vi".into()
+                                        });
+
+        let nulldev = if cfg!(windows) {
+                          "NUL"
+                      } else {
+                          "/dev/null"
+                      };
+
         println!("editing : {}", S_fpath!(inbox_path.display()));
         run_cmd!(
-            $editor $inbox_path 2>/dev/null
-        ).expect("cannot launch $EDITOR or vi")
+            $editor $inbox_path 2> $nulldev
+        ).expect("cannot launch $EDITOR or default editor")
     }
 }
 
