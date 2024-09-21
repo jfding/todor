@@ -17,11 +17,18 @@ pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
     let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
         dirs::home_dir()
             .expect("cannot get home directory")
-            .join(DATA_BASE)
+            .join(Path::new(DATA_BASE))
     });
     fs::create_dir_all(&base_path).expect("Failed to create base directory");
 
-    base_path.join(inbox.unwrap_or(INBOX_NAME.to_string())).with_extension("md")
+    let inbox_name = match inbox.as_deref() {
+        Some("today") => get_today(),
+        Some("tomorrow") => get_tomorrow(),
+        Some("yesterday") => get_yesterday(),
+        None => INBOX_NAME.to_string(),
+        _ => inbox.unwrap(),
+    };
+    base_path.join(inbox_name).with_extension("md")
 }
 
 pub fn get_today() -> String {
