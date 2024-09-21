@@ -17,7 +17,7 @@ pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
     let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
         dirs::home_dir()
             .expect("cannot get home directory")
-            .join(DATA_BASE)
+            .join(Path::new(DATA_BASE))
     });
     fs::create_dir_all(&base_path).expect("Failed to create base directory");
 
