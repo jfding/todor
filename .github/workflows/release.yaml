@@ -39,6 +39,17 @@ jobs:
             target: aarch64-apple-darwin
             build-args: "--release"
 
+          # Windows
+          - name: Windows x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            build-args: "--release"
+
+          - name: Windows x86
+            os: windows-latest
+            target: i686-pc-windows-msvc
+            build-args: "--release"
+
     steps:
       - name: Install package for linux
         if: contains(matrix.platform.target, 'linux')
@@ -72,6 +83,7 @@ jobs:
           args: ${{ matrix.platform.build-args }} --target ${{ matrix.platform.target }}
 
       - name: archive the bin
+        if: ${{ ! contains(matrix.platform.target, 'windows') }}
         run: |
           export _BIN=${{ env.BIN_NAME }}${{ contains(matrix.platform.target, 'windows') && '.exe' || '' }}
           export _BINDIR=${{ env.BIN_NAME }}.bin
@@ -81,7 +93,8 @@ jobs:
           sh -c "cd $_BINDIR; ln -sf $_BIN tomorrow"
           zip -r --symlinks ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BINDIR/*
 
-      - name: Store artifact
+      - name: Store artifact as zip
+        if: ${{ ! contains(matrix.platform.target, 'windows') }}
         uses: actions/upload-artifact@v4
         with:
           # Finally, we store the binary as GitHub artifact for later usage
@@ -89,6 +102,14 @@ jobs:
           path: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip
           retention-days: 1
           compression-level: 9
+
+      - name: Store artifact exe
+        if: contains(matrix.platform.target, 'windows')
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 1
+          name: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}
+          path: target/${{ matrix.platform.target }}/release/${{ env.BIN_NAME }}.exe
 
   release:
     name: Release
@@ -108,13 +129,14 @@ jobs:
           merge-multiple: true
 
       - name: list artifacts
-        run: ls todor*.zip
+        run: ls todor*.zip *.exe
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             todor*.zip
+            todor*.exe
           make_latest: true
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
