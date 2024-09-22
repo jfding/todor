@@ -211,6 +211,30 @@ impl TaskBox {
             self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect()
         )
     }
+    pub fn _get_all_to_mark(&mut self) -> Vec<String> {
+        self._load();
+
+        let mut tasks = Vec::new();
+        let mut last_major_task :Option<(String, bool)> = None;
+        for (t, done) in &self.tasks {
+            if t.starts_with(SUB_PREFIX) {
+                if let Some((ref last_major, lm_done)) = last_major_task {
+                    if lm_done && !done {
+                        tasks.push(WARN.to_owned() + " " + last_major);
+                        last_major_task = None;
+                    }
+                }
+            } else {
+                last_major_task = Some((t.clone(), *done));
+            }
+            if !done {
+                tasks.push(t.clone());
+            }
+        }
+
+        tasks
+    }
+
     pub fn list(&mut self, listall: bool) {
         let (left, dones) = self._get_all();
 
@@ -236,8 +260,8 @@ impl TaskBox {
 
                     last_is_sub = true;
 
-                    if let Some((ref last_major, done)) = last_major_task {
-                        if done {
+                    if let Some((ref last_major, lm_done)) = last_major_task {
+                        if lm_done && !done {
                             println!("{} {} {}", S_checked!(CHECKED), WARN, last_major.strikethrough().bright_black());
                             last_major_task = None;
                         }

@@ -33,22 +33,22 @@ fn main() {
 
         Some(Commands::Mark) => {
             let mut todo = TaskBox::new(inbox_path);
-            let (tasks,_) = todo._get_all();
+            let tasks = todo._get_all_to_mark();
             if tasks.is_empty() {
                 println!(" {} left!", S_empty!("nothing"));
                 return
             }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            todo.mark(
-                inquire::MultiSelect::new("choose to close:", tasks)
+            let selected = inquire::MultiSelect::new("choose to close:", tasks)
                 .with_render_config(util::get_multi_select_style())
                 .with_vim_mode(true)
                 .with_page_size(10)
                 .with_help_message("j/k | <space> | <enter> | ctrl+c")
-                .prompt().unwrap_or_else(|_| Vec::new())
-            );
+                .prompt().unwrap_or_else(|_| Vec::new());
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
+
+            todo.mark(selected);
         }
 
         Some(Commands::Add { what, date }) => {
