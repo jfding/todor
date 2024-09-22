@@ -151,14 +151,29 @@ impl TaskBox {
         fs::write(&self.fpath, content).expect("cannot write file")
     }
 
-    /// clear all uncompelted tasks
-    fn _clear(&mut self) {
+    /// drain all uncompelted tasks
+    fn _drain(&mut self) {
         self._load();
 
         let mut newtasks = Vec::new();
+        let mut last_major_task: Option<(String, bool)> = None;
+
         for (task, done) in self.tasks.iter() {
+            if task.starts_with(SUB_PREFIX) {
+                if *done {
+                    if let Some((ref last_major, lm_done)) = last_major_task {
+                        if !lm_done {
+                            newtasks.push((last_major.to_string(), true));
+                            last_major_task = None;
+                        }
+                    }
+                }
+            } else {
+                last_major_task = Some((task.clone(), *done));
+            }
+
             if *done {
-                newtasks.push((task.clone(), *done));
+                newtasks.push((task.clone(), true));
             }
         }
 
@@ -196,7 +211,7 @@ impl TaskBox {
             }
         }
 
-        todo_in._clear();
+        todo_in._drain();
         self._dump();
     }
 
