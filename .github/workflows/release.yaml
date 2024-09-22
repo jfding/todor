@@ -93,23 +93,19 @@ jobs:
           sh -c "cd $_BINDIR; ln -sf $_BIN tomorrow"
           zip -r --symlinks ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BINDIR/*
 
+      - name: archive the exe
+        if: contains(matrix.platform.target, 'windows')
+        run: |
+          Compress-Archive -Path target/${{ matrix.platform.target }}/release-with-symbols/${{ env.BIN_NAME }}.exe -Destination ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip
+
       - name: Store artifact as zip
-        if: ${{ ! contains(matrix.platform.target, 'windows') }}
         uses: actions/upload-artifact@v4
         with:
           # Finally, we store the binary as GitHub artifact for later usage
-          name: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip
+          name: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}
           path: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip
           retention-days: 1
           compression-level: 9
-
-      - name: Store artifact exe
-        if: contains(matrix.platform.target, 'windows')
-        uses: actions/upload-artifact@v4
-        with:
-          retention-days: 1
-          name: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release-with-symbols/${{ env.BIN_NAME }}.exe
 
   release:
     name: Release
@@ -129,14 +125,13 @@ jobs:
           merge-multiple: true
 
       - name: list artifacts
-        run: ls todor*.zip *.exe
+        run: ls todor*.zip
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             todor*.zip
-            todor*.exe
           make_latest: true
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
