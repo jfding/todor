@@ -151,14 +151,29 @@ impl TaskBox {
         fs::write(&self.fpath, content).expect("cannot write file")
     }
 
-    /// clear all uncompelted tasks
-    fn _clear(&mut self) {
+    /// drain all uncompelted tasks
+    fn _drain(&mut self) {
         self._load();
 
         let mut newtasks = Vec::new();
+        let mut last_major_task: Option<(String, bool)> = None;
+
         for (task, done) in self.tasks.iter() {
+            if task.starts_with(SUB_PREFIX) {
+                if *done {
+                    if let Some((ref last_major, lm_done)) = last_major_task {
+                        if !lm_done {
+                            newtasks.push((last_major.to_string(), true));
+                            last_major_task = None;
+                        }
+                    }
+                }
+            } else {
+                last_major_task = Some((task.clone(), *done));
+            }
+
             if *done {
-                newtasks.push((task.clone(), *done));
+                newtasks.push((task.clone(), true));
             }
         }
 
@@ -170,7 +185,7 @@ impl TaskBox {
         self._load();
         todo_in._load();
 
-        let (tasks, _) = todo_in._get_all();
+        let tasks = todo_in._get_all_to_mark();
         if tasks.is_empty() { return }
 
         let from = if todo_in.alias.is_some() {
@@ -187,11 +202,16 @@ impl TaskBox {
         println!("{} {} {} {}", S_movefrom!(from.unwrap()), MOVING, S_moveto!(to.unwrap()), PROGRESS);
 
         for task in tasks {
-            println!("  {} : {}", S_checkbox!(CHECKBOX), task);
-            self.tasks.push((task.clone(), false));
+            if task.contains(WARN) {
+                println!("  {} : {}", S_checkbox!(CHECKED), task);
+                self.tasks.push((task.clone(), true));
+            } else {
+                println!("  {} : {}", S_checkbox!(CHECKBOX), task);
+                self.tasks.push((task.clone(), false));
+            }
         }
 
-        todo_in._clear();
+        todo_in._drain();
         self._dump();
     }
 
@@ -211,8 +231,32 @@ impl TaskBox {
             self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect()
         )
     }
+    pub fn _get_all_to_mark(&mut self) -> Vec<String> {
+        self._load();
+
+        let mut tasks = Vec::new();
+        let mut last_major_task :Option<(String, bool)> = None;
+        for (t, done) in &self.tasks {
+            if t.starts_with(SUB_PREFIX) {
+                if let Some((ref last_major, lm_done)) = last_major_task {
+                    if lm_done && !done {
+                        tasks.push(WARN.to_owned() + " " + last_major);
+                        last_major_task = None;
+                    }
+                }
+            } else {
+                last_major_task = Some((t.clone(), *done));
+            }
+            if !done {
+                tasks.push(t.clone());
+            }
+        }
+
+        tasks
+    }
+
     pub fn list(&mut self, listall: bool) {
-        let (tasks, dones) = self._get_all();
+        let (left, dones) = self._get_all();
 
         if listall && !dones.is_empty() {
             for t in dones {
@@ -221,26 +265,39 @@ impl TaskBox {
             println!();
         }
 
-        if tasks.is_empty() {
+        if left.is_empty() {
             println!(" {} left!", S_empty!("nothing"));
         } else {
             let mut msg;
+            let mut last_major_task :Option<(String, bool)> = None;
             let mut last_is_sub = false;
-            for t in tasks {
+
+            for (t, done) in &self.tasks {
                 msg = format!("{}  ", S_checkbox!(CHECKBOX).blink());
                 if t.starts_with(SUB_PREFIX) {
                     msg = format!("{} {}", SUBTASK.to_string().blink(), msg);
                     msg += t.strip_prefix(SUB_PREFIX).unwrap();
 
                     last_is_sub = true;
+
+                    if let Some((ref last_major, lm_done)) = last_major_task {
+                        if lm_done && !done {
+                            println!("{} {} {}", S_checked!(CHECKED), WARN, last_major.strikethrough().bright_black());
+                            last_major_task = None;
+                        }
+                    }
                 } else {
+                    last_major_task = Some((t.clone(), *done));
+
                     if last_is_sub {
                         last_is_sub = false;
                         msg = "\n".to_owned() + &msg;
                     }
-                    msg = msg + &t;
+                    msg = msg + t;
                 }
-                println!("{}", msg);
+                if !done {
+                    println!("{}", msg);
+                }
             }
         }
     }
