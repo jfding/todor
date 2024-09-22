@@ -15,6 +15,7 @@ pub const SCROLLUP: &str = "↥";
 pub const SCROLLDOWN: &str = "↧";
 pub const SUBTASK: &str = "󱞩";
 pub const PROGRESS: &str = "󰓌";
+pub const WARN: &str = "󰼈";
 
 // S means Style
 #[macro_export]

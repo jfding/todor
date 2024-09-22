@@ -212,7 +212,7 @@ impl TaskBox {
         )
     }
     pub fn list(&mut self, listall: bool) {
-        let (tasks, dones) = self._get_all();
+        let (left, dones) = self._get_all();
 
         if listall && !dones.is_empty() {
             for t in dones {
@@ -221,26 +221,39 @@ impl TaskBox {
             println!();
         }
 
-        if tasks.is_empty() {
+        if left.is_empty() {
             println!(" {} left!", S_empty!("nothing"));
         } else {
             let mut msg;
+            let mut last_major_task :Option<(String, bool)> = None;
             let mut last_is_sub = false;
-            for t in tasks {
+
+            for (t, done) in &self.tasks {
                 msg = format!("{}  ", S_checkbox!(CHECKBOX).blink());
                 if t.starts_with(SUB_PREFIX) {
                     msg = format!("{} {}", SUBTASK.to_string().blink(), msg);
                     msg += t.strip_prefix(SUB_PREFIX).unwrap();
 
                     last_is_sub = true;
+
+                    if let Some((ref last_major, done)) = last_major_task {
+                        if done {
+                            println!("{} {} {}", S_checked!(CHECKED), WARN, last_major.strikethrough().bright_black());
+                            last_major_task = None;
+                        }
+                    }
                 } else {
+                    last_major_task = Some((t.clone(), *done));
+
                     if last_is_sub {
                         last_is_sub = false;
                         msg = "\n".to_owned() + &msg;
                     }
-                    msg = msg + &t;
+                    msg = msg + t;
                 }
-                println!("{}", msg);
+                if !done {
+                    println!("{}", msg);
+                }
             }
         }
     }
