@@ -104,10 +104,8 @@ fn main() {
             if inquire::Confirm::new("are you sure?")
                 .with_default(false)
                 .prompt().unwrap_or(false) {
-                if sort {
-                    if ! inquire::Confirm::new("Sort can only work well without subtasks, continue?")
+                if sort && ! inquire::Confirm::new("Sort can only work well without subtasks, continue?")
                         .with_default(false).prompt().unwrap_or(false) { return }
-                }
 
                 let mut todo = TaskBox::new(inbox_path);
                 todo.purge(sort);

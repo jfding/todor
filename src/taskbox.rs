@@ -275,13 +275,14 @@ impl TaskBox {
             for (t, done) in &self.tasks {
                 msg = format!("{}  ", S_checkbox!(CHECKBOX).blink());
                 if t.starts_with(SUB_PREFIX) {
+                    if *done { continue }
+
                     msg = format!("{} {}", SUBTASK.to_string().blink(), msg);
                     msg += t.strip_prefix(SUB_PREFIX).unwrap();
-
                     last_is_sub = true;
 
                     if let Some((ref last_major, lm_done)) = last_major_task {
-                        if lm_done && !done {
+                        if lm_done {
                             println!("{} {} {}", S_checked!(CHECKED), WARN, last_major.strikethrough().bright_black());
                             last_major_task = None;
                         }
@@ -289,15 +290,16 @@ impl TaskBox {
                 } else {
                     last_major_task = Some((t.clone(), *done));
 
+                    if *done { continue }
+
                     if last_is_sub {
                         last_is_sub = false;
                         msg = "\n".to_owned() + &msg;
                     }
                     msg = msg + t;
                 }
-                if !done {
-                    println!("{}", msg);
-                }
+
+                println!("{}", msg);
             }
         }
     }
