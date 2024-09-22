@@ -170,7 +170,7 @@ impl TaskBox {
         self._load();
         todo_in._load();
 
-        let (tasks, _) = todo_in._get_all();
+        let tasks = todo_in._get_all_to_mark();
         if tasks.is_empty() { return }
 
         let from = if todo_in.alias.is_some() {
@@ -187,8 +187,13 @@ impl TaskBox {
         println!("{} {} {} {}", S_movefrom!(from.unwrap()), MOVING, S_moveto!(to.unwrap()), PROGRESS);
 
         for task in tasks {
-            println!("  {} : {}", S_checkbox!(CHECKBOX), task);
-            self.tasks.push((task.clone(), false));
+            if task.contains(WARN) {
+                println!("  {} : {}", S_checkbox!(CHECKED), task);
+                self.tasks.push((task.clone(), true));
+            } else {
+                println!("  {} : {}", S_checkbox!(CHECKBOX), task);
+                self.tasks.push((task.clone(), false));
+            }
         }
 
         todo_in._clear();
