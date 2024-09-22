@@ -43,12 +43,12 @@ jobs:
           - name: Windows x86_64
             os: windows-latest
             target: x86_64-pc-windows-msvc
-            build-args: "--release"
+            build-args: "--profile release-with-symbols"
 
           - name: Windows x86
             os: windows-latest
             target: i686-pc-windows-msvc
-            build-args: "--release"
+            build-args: "--profile release-with-symbols"
 
     steps:
       - name: Install package for linux
@@ -109,7 +109,7 @@ jobs:
         with:
           retention-days: 1
           name: ${{ env.BIN_NAME }}-${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/${{ env.BIN_NAME }}.exe
+          path: target/${{ matrix.platform.target }}/release-with-symbols/${{ env.BIN_NAME }}.exe
 
   release:
     name: Release
