@@ -5,6 +5,12 @@ use serde::Deserialize;
 
 use crate::util::*;
 
+const DEF_CONFIG: &str = r#"# config for todor in toml
+
+## base directory for todor data, if not set, use default as below
+#basedir = "~/.local/share/todor"
+"#;
+
 #[derive(Deserialize, Debug, Default)]
 pub struct Config {
     pub basedir: Option<String>,
@@ -39,7 +45,7 @@ impl Config {
             std::fs::create_dir_all(conf_path.parent().unwrap())
                 .expect("Failed to create base directory");
 
-            std::fs::write(conf_path, "# config for todor in toml\n")
+            std::fs::write(conf_path, DEF_CONFIG)
                 .expect("cannot create config file");
         }
     }
@@ -64,7 +70,7 @@ impl Config {
                 return Config::default();
             }
         } else {
-            let rel_base :PathBuf = DEF_CONFIG.split("/").collect();
+            let rel_base :PathBuf = DEF_CONFIG_PATH.split("/").collect();
             confp = dirs::home_dir()
                 .expect("cannot get home dir")
                 .join(rel_base);
