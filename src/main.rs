@@ -5,6 +5,7 @@ use crossterm::cursor::SetCursorStyle::*;
 
 use todor::taskbox::*;
 use todor::cli::*;
+use todor::conf::Config;
 use todor::util;
 use todor::util::*;
 
@@ -19,7 +20,8 @@ fn main() {
         inbox = Some(get_tomorrow())
     }
 
-    let inbox_path = get_inbox_file(args.dir, inbox);
+    let conf = Config::load(args.config);
+    let inbox_path = get_inbox_file(args.dir.or(conf.basedir), inbox);
 
     match args.command {
         Some(Commands::List) | None => {
@@ -61,12 +63,12 @@ fn main() {
             }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-
             let input = inquire::Text::new("")
                 .with_render_config(util::get_text_input_style())
                 .with_help_message("<enter> | ctrl+c")
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| String::new());
+            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
 
             if !input.is_empty() {
                 todo.add(input, date);
@@ -74,8 +76,6 @@ fn main() {
             } else {
                 println!("{}", S_empty!("No task added. Input was empty."));
             }
-
-            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
         }
 
         Some(Commands::Edit { diffwith }) => {

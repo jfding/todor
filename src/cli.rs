@@ -6,6 +6,10 @@ use crate::util;
 #[command(version, about= "yet another cli TODO in Rust", long_about=None)]
 #[command(styles=util::get_usage_styles())]
 pub struct Cli {
+    /// config file
+    #[arg(short, long, value_name = "CONF")]
+    pub config: Option<String>,
+
     /// working dir
     #[arg(short, long, value_name = "FOLDER")]
     pub dir: Option<String>,
