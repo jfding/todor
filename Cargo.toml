@@ -18,6 +18,8 @@ crossterm = "0.28.1"
 dirs = "5.0.1"
 inquire = "0.7.5"
 regex = "1.10.6"
+serde = { version = "1.0.210", features = ["derive"] }
+toml = "0.8.19"
 
 [profile.release-with-symbols]
 inherits = "release"
