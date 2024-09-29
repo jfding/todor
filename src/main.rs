@@ -26,10 +26,6 @@ fn main() {
         g_conf.update_with(&conf);
     }
 
-    if !CONFIG.read().unwrap().blink.unwrap_or(true) {
-        std::env::set_var("NO_BLINK", "yes");
-    }
-
     let inbox_path = get_inbox_file(args.dir.or(CONFIG.read().unwrap().basedir.clone()), inbox);
 
     match args.command {

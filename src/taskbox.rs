@@ -9,6 +9,7 @@ use std::ops::*;
 
 use crate::util;
 use crate::util::*;
+use crate::conf::*;
 
 pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
     // for windows compatibility

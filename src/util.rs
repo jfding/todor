@@ -39,7 +39,8 @@ macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
 
 #[macro_export]
 macro_rules! S_blink { ($e:expr) => {
-    if std::env::var("NO_BLINK").is_ok() {
+    if std::env::var("NO_BLINK").is_ok() || 
+       CONFIG.read().unwrap().blink.unwrap_or(true) == false {
         $e.to_string().bold()
     } else {
         $e.to_string().blink()
