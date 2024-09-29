@@ -31,11 +31,20 @@ macro_rules! S_movefrom { ($e:expr) => { $e.to_string().green() }; }
 #[macro_export]
 macro_rules! S_moveto { ($e:expr) => { $e.to_string().red() }; }
 #[macro_export]
-macro_rules! S_hints { ($e:expr) => { $e.to_string().bright_black() }; }
+macro_rules! S_hints { ($e:expr) => { $e.to_string().bright_black().blink() }; }
 #[macro_export]
 macro_rules! S_success { ($e:expr) => { $e.to_string().green().bold() }; }
 #[macro_export]
 macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
+
+#[macro_export]
+macro_rules! S_blink { ($e:expr) => {
+    if std::env::var("NO_BLINK").is_ok() {
+        $e.to_string().bold()
+    } else {
+        $e.to_string().blink()
+    }
+};}
 
 // for 'clap'
 pub fn get_usage_styles() -> styling::Styles {

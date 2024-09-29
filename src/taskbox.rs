@@ -270,11 +270,11 @@ impl TaskBox {
             let mut last_is_sub = false;
 
             for (t, done) in &self.tasks {
-                msg = format!("{}  ", S_checkbox!(CHECKBOX).blink());
+                msg = format!("{}  ", S_blink!(S_checkbox!(CHECKBOX)));
                 if t.starts_with(SUB_PREFIX) {
                     if *done { continue }
 
-                    msg = format!("{} {}", SUBTASK.to_string().blink(), msg);
+                    msg = format!("{} {}", S_blink!(SUBTASK), msg);
                     msg += t.strip_prefix(SUB_PREFIX).unwrap();
                     last_is_sub = true;
 
@@ -474,7 +474,7 @@ impl TaskBox {
                 print!("{}  {}",S_checkbox!(TASKBOX), b);
                 let tbox = TaskBox::new(basedir.join(b).with_extension("md"));
                 if tbox.alias.is_some() {
-                    println!(" ({})", S_hints!(tbox.alias.unwrap()).blink())
+                    println!(" ({})", S_hints!(tbox.alias.unwrap()))
                 } else {
                     println!()
                 }
