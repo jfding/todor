@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::env;
 use cmd_lib::*;
 use colored::Colorize;
@@ -31,11 +31,21 @@ macro_rules! S_movefrom { ($e:expr) => { $e.to_string().green() }; }
 #[macro_export]
 macro_rules! S_moveto { ($e:expr) => { $e.to_string().red() }; }
 #[macro_export]
-macro_rules! S_hints { ($e:expr) => { $e.to_string().bright_black() }; }
+macro_rules! S_hints { ($e:expr) => { $e.to_string().bright_black().blink() }; }
 #[macro_export]
 macro_rules! S_success { ($e:expr) => { $e.to_string().green().bold() }; }
 #[macro_export]
 macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
+
+#[macro_export]
+macro_rules! S_blink { ($e:expr) => {
+    if std::env::var("NO_BLINK").is_ok() || 
+       CONFIG.read().unwrap().blink.unwrap_or(true) == false {
+        $e.to_string().bold()
+    } else {
+        $e.to_string().blink()
+    }
+};}
 
 // for 'clap'
 pub fn get_usage_styles() -> styling::Styles {
@@ -152,4 +162,28 @@ pub fn pick_file() -> String {
     ).unwrap_or_else(|_|
         std::process::exit(1)
     )
+}
+
+pub fn path_normalize(path_str: String) -> PathBuf {
+    let conf_path;
+    if path_str.starts_with("~/") {
+        conf_path = PathBuf::from(path_str
+                .replace("~", dirs::home_dir()
+                    .expect("cannot get home dir")
+                    .to_str()
+                    .unwrap()));
+
+    } else if path_str.starts_with("./") {
+        conf_path = std::env::current_dir()
+                .expect("cannot get current dir")
+                .join(path_str.to_string().strip_prefix("./").unwrap());
+    } else if !path_str.starts_with("/") {
+        conf_path = std::env::current_dir()
+                .expect("cannot get current dir")
+                .join(path_str);
+    } else {
+        conf_path = PathBuf::from(path_str);
+    }
+
+    conf_path
 }
