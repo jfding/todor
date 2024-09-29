@@ -1,7 +1,9 @@
 use std::path::PathBuf;
+use std::sync::RwLock;
 use dirs;
 use toml;
 use serde::Deserialize;
+use lazy_static::lazy_static;
 
 use crate::util::*;
 
@@ -13,6 +15,10 @@ const DEF_CONFIG_CONTENT: &str = r#"# config for todor in toml
 #blink = true
 "#;
 
+lazy_static! {
+    pub static ref CONFIG: RwLock<Config> = RwLock::new(Config::load(None));
+}
+
 #[derive(Deserialize, Debug, Default)]
 pub struct Config {
     /// base directory for todor data
@@ -23,6 +29,16 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn update_with(&mut self, aconf: &Config) {
+        if let Some(basedir) = &aconf.basedir {
+            self.basedir = Some(basedir.clone());
+        }
+
+        if let Some(blink) = aconf.blink {
+            self.blink = Some(blink);
+        }
+    }
+
     pub fn load(path_str: Option<String>) -> Self {
         let confp;
         if let Some(path_str) = path_str {

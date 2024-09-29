@@ -5,7 +5,7 @@ use crossterm::cursor::SetCursorStyle::*;
 
 use todor::taskbox::*;
 use todor::cli::*;
-use todor::conf::Config;
+use todor::conf::*;
 use todor::util;
 use todor::util::*;
 
@@ -20,12 +20,17 @@ fn main() {
         inbox = Some(get_tomorrow())
     }
 
-    let conf = Config::load(args.config);
-    if !conf.blink.unwrap_or(true) {
+    if args.config.is_some() {
+        let mut g_conf = CONFIG.write().unwrap();
+        let conf = Config::load(args.config);
+        g_conf.update_with(&conf);
+    }
+
+    if !CONFIG.read().unwrap().blink.unwrap_or(true) {
         std::env::set_var("NO_BLINK", "yes");
     }
 
-    let inbox_path = get_inbox_file(args.dir.or(conf.basedir), inbox);
+    let inbox_path = get_inbox_file(args.dir.or(CONFIG.read().unwrap().basedir.clone()), inbox);
 
     match args.command {
         Some(Commands::List) | None => {
