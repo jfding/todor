@@ -21,6 +21,10 @@ fn main() {
     }
 
     let conf = Config::load(args.config);
+    if !conf.blink.unwrap_or(true) {
+        std::env::set_var("NO_BLINK", "yes");
+    }
+
     let inbox_path = get_inbox_file(args.dir.or(conf.basedir), inbox);
 
     match args.command {

@@ -5,16 +5,21 @@ use serde::Deserialize;
 
 use crate::util::*;
 
-const DEF_CONFIG: &str = r#"# config for todor in toml
+const DEF_CONFIG_CONTENT: &str = r#"# config for todor in toml
 
 ## base directory for todor data, if not set, use default as below
 #basedir = "~/.local/share/todor"
+
+#blink = true
 "#;
 
 #[derive(Deserialize, Debug, Default)]
 pub struct Config {
     /// base directory for todor data
     pub basedir: Option<String>,
+
+    /// blink the icons of items or not
+    pub blink: Option<bool>,
 }
 
 impl Config {
@@ -36,7 +41,7 @@ impl Config {
                 std::fs::create_dir_all(confp.parent().unwrap())
                     .expect("Failed to create base directory");
 
-                std::fs::write(confp.clone(), DEF_CONFIG)
+                std::fs::write(confp.clone(), DEF_CONFIG_CONTENT)
                     .expect("cannot create config file");
             }
         }
