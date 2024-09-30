@@ -474,6 +474,7 @@ impl TaskBox {
             });
         if inquire::Confirm::new("Going to remove the aboves, are you sure?")
             .with_default(false)
+            .with_render_config(util::get_confirm_style())
             .prompt().unwrap_or(false) {
             boxes.into_iter().for_each(
                 |(_, path)| {

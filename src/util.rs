@@ -20,6 +20,7 @@ pub const SCROLLDOWN: &str = "↧";
 pub const SUBTASK: &str = "󱞩";
 pub const PROGRESS: &str = "󰓌";
 pub const WARN: &str = "󰼈";
+pub const QUESTION: &str = "󱜹";
 
 // S means Style
 #[macro_export]
@@ -61,6 +62,15 @@ pub fn get_usage_styles() -> styling::Styles {
 }
 
 // for 'inquire'
+pub fn get_confirm_style() -> RenderConfig<'static> {
+    RenderConfig::default()
+        .with_prompt_prefix(QUESTION.into())
+        .with_answer(
+             StyleSheet::default()
+            .with_fg(Color::DarkBlue)
+            .with_attr(Attributes::BOLD)
+        )
+}
 pub fn get_text_input_style() -> RenderConfig<'static> {
     RenderConfig::default()
         .with_prompt_prefix(CHECKBOX.into())

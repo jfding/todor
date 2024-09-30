@@ -112,9 +112,12 @@ fn main() {
         Some(Commands::Purge { sort }) => {
             if inquire::Confirm::new("are you sure?")
                 .with_default(false)
+                .with_render_config(util::get_confirm_style())
                 .prompt().unwrap_or(false) {
                 if sort && ! inquire::Confirm::new("Sort can only work well without subtasks, continue?")
-                        .with_default(false).prompt().unwrap_or(false) { return }
+                        .with_default(false)
+                        .with_render_config(util::get_confirm_style())
+                        .prompt().unwrap_or(false) { return }
 
                 let mut todo = TaskBox::new(inbox_path);
                 todo.purge(sort);

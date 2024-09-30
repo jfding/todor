@@ -29,6 +29,7 @@
   - purge, glance, listbox
   - sink, shift, collect, postp
   - import
+  - cleanup
 
   - [ ] sync with iCloud
   - [ ] sync with MS-TODO
@@ -38,5 +39,4 @@
 These four commands: `sink`, `shift`, `collect`, `postp` are designed to move tasks around in the list. And below is a diagram to show how they work.
 
 ![tasks-flow](./assets/tasks-flow.png)
-
 
