@@ -27,7 +27,7 @@ fn main() {
     }
     if let Some(dir) = args.dir {
         let mut g_conf = CONFIG.write().unwrap();
-        g_conf.basedir = Some(util::path_normalize(dir));
+        g_conf.basedir = Some(util::path_normalize(&dir));
     }
 
     let inbox_path = util::get_inbox_file(inbox);

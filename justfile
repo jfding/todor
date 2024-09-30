@@ -5,6 +5,7 @@ default: build
 alias i := install
 alias b := build
 alias l := clippy
+alias t := test
 
 install: build
     command cp -f target/release/todor ~/.local/bin/
@@ -16,6 +17,9 @@ build:
 
 clippy:
     cargo clippy
+
+test:
+    cargo test
 
 gitmain:
     git checkout main

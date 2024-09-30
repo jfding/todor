@@ -54,7 +54,7 @@ impl Config {
 
         let confp;
         if let Some(path_str) = path_str {
-            confp = PathBuf::from(util::path_normalize(path_str));
+            confp = PathBuf::from(util::path_normalize(&path_str));
             if !confp.exists() {
                 eprintln!("config file not found, ignore and use defaults");
                 return work_conf;
@@ -79,7 +79,7 @@ impl Config {
                 .expect("cannot read config file"))
             .expect("cannot parse config file");
         if let Some(basedir) = conf.basedir {
-            conf.basedir = Some(util::path_normalize(basedir))
+            conf.basedir = Some(util::path_normalize(&basedir))
         }
 
         work_conf.update_with(&conf);

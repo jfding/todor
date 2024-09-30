@@ -26,7 +26,10 @@ pub struct TaskBox {
 
 impl TaskBox {
     pub fn new (fpath: PathBuf) -> Self {
-        let title = fpath.file_stem().and_then(|s| s.to_str()).unwrap().to_string();
+        let title = fpath.file_stem()
+                         .and_then(|s| s.to_str())
+                         .unwrap()
+                         .to_string();
 
         if !fpath.exists() {
             fs::File::create(&fpath).expect("Failed to create file");
@@ -36,7 +39,7 @@ impl TaskBox {
         Self {
             fpath,
             title: None, // None means not loaded
-            alias: get_box_alias(title),
+            alias: get_box_alias(&title),
             tasks: Vec::new(),
         }
     }

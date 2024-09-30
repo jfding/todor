@@ -186,7 +186,7 @@ pub fn pick_file() -> String {
     )
 }
 
-pub fn path_normalize(path_str: String) -> String {
+pub fn path_normalize(path_str: &str) -> String {
     let conf_path;
     if path_str.starts_with("~/") {
         conf_path = PathBuf::from(path_str
@@ -220,7 +220,7 @@ pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
 
-pub fn get_box_alias(name_in: String) -> Option<String> {
+pub fn get_box_alias(name_in: &str) -> Option<String> {
     let alias = match name_in {
         _ if name_in == get_today() => "today",
         _ if name_in == get_tomorrow() => "tomorrow",
@@ -258,4 +258,44 @@ pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
     basedir
         .join(get_box_unalias(&inbox.unwrap_or(INBOX_NAME.into())))
         .with_extension("md")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_default_basedir() {
+        assert!(get_default_basedir().contains(".local/share/todor"));
+    }
+
+    #[test]
+    fn test_aliases() {
+        assert_eq!(get_box_alias(&get_today()), Some("today".into()));
+        assert_eq!(get_box_alias(&get_yesterday()), Some("yesterday".into()));
+        assert_eq!(get_box_alias(&get_tomorrow()), Some("tomorrow".into()));
+        assert_eq!(get_box_alias("dummy"), None);
+        assert_eq!(get_box_alias(""), None);
+    }
+
+    #[test]
+    fn test_unaliases() {
+        assert_eq!(get_box_unalias("today"), get_today());
+        assert_eq!(get_box_unalias("yesterday"), get_yesterday());
+        assert_eq!(get_box_unalias("tomorrow"), get_tomorrow());
+        assert_eq!(get_box_unalias("dummy"), "dummy".to_string());
+    }
+
+    #[test]
+    fn test_path_normalize() {
+        assert_eq!(path_normalize("~/dummy"),
+            dirs::home_dir().unwrap().join("dummy").to_str().unwrap());
+        assert_eq!(path_normalize("dummy"),
+            std::env::current_dir().unwrap().join("dummy").to_str().unwrap());
+        assert_eq!(path_normalize("~dummy"),
+            std::env::current_dir().unwrap().join("~dummy").to_str().unwrap());
+        assert_eq!(path_normalize("./dummy"),
+            std::env::current_dir().unwrap().join("dummy").to_str().unwrap());
+        assert_eq!(path_normalize("/dummy"), "/dummy");
+    }
 }
