@@ -124,7 +124,13 @@ pub fn glance_all(inbox_path: &Path) {
         ).unwrap_or_else(|_| std::process::exit(1)));
 }
 
-pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
+pub fn edit_box(inbox_path: &Path,
+                mut diffwith: Option<String>,
+                diffwith_inbox: bool) {
+    if diffwith_inbox {
+        diffwith = Some(INBOX_NAME.to_string());
+    }
+
     if let Some(other) = diffwith {
         let otherf = if other.ends_with(".md") {
             &other
