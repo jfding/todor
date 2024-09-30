@@ -86,3 +86,39 @@ impl Config {
         work_conf
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config_load() {
+        let testtoml = "/tmp/.todor.toml";
+        let testcontent = r#"basedir = "/tmp/todor"
+        blink = false
+        "#;
+        std::fs::write(PathBuf::from(testtoml), testcontent).expect("write err");
+        let conf = Config::load(Some(testtoml.into()));
+        assert_eq!(conf.basedir, Some("/tmp/todor".into()));
+        assert_eq!(conf.blink, Some(false));
+    }
+
+    #[test]
+    fn test_config_default() {
+        let conf = Config::default();
+        assert_eq!(conf.basedir, Some(util::get_default_basedir()));
+        assert_eq!(conf.blink, Some(true));
+    }
+
+    #[test]
+    fn test_config_update() {
+        let mut conf = Config::default();
+        let aconf = Config {
+            basedir: Some("/nowhere".into()),
+            blink: Some(false),
+        };
+        conf.update_with(&aconf);
+        assert_eq!(conf.basedir, Some("/nowhere".into()));
+        assert_eq!(conf.blink, Some(false));
+    }
+}
