@@ -147,7 +147,7 @@ pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
         let otherf = if other.ends_with(".md") {
             &other
         } else {
-            &format!("{}/{}.md", Config_get!("basedir"), &other)
+            &format!("{}/{}.md", Config_get!("basedir"), get_box_unalias(&other))
         };
 
         println!("editing : {} v.s. {}", S_fpath!(inbox_path.display()), S_fpath!(otherf));
@@ -220,16 +220,24 @@ pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
 
-pub fn get_box_alias(name_in: Option<String>) -> Option<String> {
+pub fn get_box_alias(name_in: String) -> Option<String> {
     let alias = match name_in {
-        Some(name) if name == get_today() => "today",
-        Some(name) if name == get_tomorrow() => "tomorrow",
-        Some(name) if name == get_yesterday() => "yesterday",
+        _ if name_in == get_today() => "today",
+        _ if name_in == get_tomorrow() => "tomorrow",
+        _ if name_in == get_yesterday() => "yesterday",
         _ => "",
     };
 
     if alias.is_empty() { None }
     else { Some(alias.to_string()) }
+}
+pub fn get_box_unalias(alias: &str) -> String {
+    match alias {
+        "today" => get_today(),
+        "yesterday" => get_yesterday(),
+        "tomorrow" => get_tomorrow(),
+        _ => alias.into(),
+    }
 }
 
 pub fn get_default_basedir() -> String {
@@ -247,12 +255,7 @@ pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
     let basedir = PathBuf::from(Config_get!("basedir"));
     fs::create_dir_all(&basedir).expect("Failed to create base directory");
 
-    let inbox_name = match inbox.as_deref() {
-        Some("today") => get_today(),
-        Some("tomorrow") => get_tomorrow(),
-        Some("yesterday") => get_yesterday(),
-        None => INBOX_NAME.to_string(),
-        _ => inbox.unwrap(),
-    };
-    basedir.join(inbox_name).with_extension("md")
+    basedir
+        .join(get_box_unalias(&inbox.unwrap_or(INBOX_NAME.into())))
+        .with_extension("md")
 }

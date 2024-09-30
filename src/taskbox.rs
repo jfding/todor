@@ -36,7 +36,7 @@ impl TaskBox {
         Self {
             fpath,
             title: None, // None means not loaded
-            alias: get_box_alias(Some(title)),
+            alias: get_box_alias(title),
             tasks: Vec::new(),
         }
     }
