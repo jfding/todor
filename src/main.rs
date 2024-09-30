@@ -87,10 +87,10 @@ fn main() {
             }
         }
 
-        Some(Commands::Edit { diffwith, diffwith_inbox }) => {
+        Some(Commands::Edit { diffwith }) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
-            todor::util::edit_box(&inbox_path, diffwith, diffwith_inbox);
+            todor::util::edit_box(&inbox_path, diffwith);
         }
 
         Some(Commands::Count) => {

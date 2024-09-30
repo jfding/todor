@@ -41,7 +41,6 @@ macro_rules! S_hints { ($e:expr) => { $e.to_string().bright_black().blink() }; }
 macro_rules! S_success { ($e:expr) => { $e.to_string().green().bold() }; }
 #[macro_export]
 macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
-
 #[macro_export]
 macro_rules! S_blink { ($e:expr) => {
     if std::env::var("NO_BLINK").is_ok() || 
@@ -51,6 +50,15 @@ macro_rules! S_blink { ($e:expr) => {
         $e.to_string().blink()
     }
 };}
+
+#[macro_export]
+macro_rules! Config_get { ($e:expr) => {
+    match $e {
+        "basedir" => { CONFIG.read().unwrap().basedir.clone().unwrap() },
+        //"blink" => { CONFIG.read().unwrap().blink.unwrap_or(true) },
+        _ => { panic!("unknown config key") }
+    }
+}; }
 
 // for 'clap'
 pub fn get_usage_styles() -> styling::Styles {
@@ -134,18 +142,12 @@ pub fn glance_all(inbox_path: &Path) {
         ).unwrap_or_else(|_| std::process::exit(1)));
 }
 
-pub fn edit_box(inbox_path: &Path,
-                mut diffwith: Option<String>,
-                diffwith_inbox: bool) {
-    if diffwith_inbox {
-        diffwith = Some(INBOX_NAME.to_string());
-    }
-
+pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
     if let Some(other) = diffwith {
         let otherf = if other.ends_with(".md") {
             &other
         } else {
-            &format!("{}/{}.md", inbox_path.parent().unwrap().display(), &other)
+            &format!("{}/{}.md", Config_get!("basedir"), &other)
         };
 
         println!("editing : {} v.s. {}", S_fpath!(inbox_path.display()), S_fpath!(otherf));
@@ -242,7 +244,7 @@ pub fn get_default_basedir() -> String {
 }
 
 pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
-    let basedir = PathBuf::from(CONFIG.read().unwrap().basedir.clone().unwrap());
+    let basedir = PathBuf::from(Config_get!("basedir"));
     fs::create_dir_all(&basedir).expect("Failed to create base directory");
 
     let inbox_name = match inbox.as_deref() {
