@@ -102,11 +102,11 @@ fn main() {
         }
 
         Some(Commands::Glance) => {
-            todor::util::glance_all(&inbox_path)
+            todor::util::glance_all()
         }
 
         Some(Commands::Listbox) => {
-            TaskBox::list_boxes(inbox_path)
+            TaskBox::list_boxes()
         }
 
         Some(Commands::Purge { sort }) => {
@@ -125,19 +125,19 @@ fn main() {
         }
 
         Some(Commands::Sink { all }) => {
-            TaskBox::sink(inbox_path, all)
+            TaskBox::sink(all)
         }
 
         Some(Commands::Shift) => {
-            TaskBox::shift(inbox_path)
+            TaskBox::shift()
         }
 
         Some(Commands::Collect { inbox }) => {
-            TaskBox::collect(inbox_path, inbox)
+            TaskBox::collect(inbox)
         }
 
         Some(Commands::Postp) => {
-            TaskBox::postp(inbox_path)
+            TaskBox::postp()
         }
 
         Some(Commands::Import{ file }) => {

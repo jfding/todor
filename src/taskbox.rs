@@ -321,8 +321,8 @@ impl TaskBox {
 
     // outdated -> today
     // flag:all -- whether sink future (mainly tomorrow)
-    pub fn sink(inbox_path: PathBuf, all: bool) {
-        let basedir = inbox_path.as_path().parent().unwrap();
+    pub fn sink(all: bool) {
+        let basedir = PathBuf::from(Config_get!("basedir"));
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
 
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
@@ -349,8 +349,8 @@ impl TaskBox {
     }
 
     // today -> tomorrow
-    pub fn shift(inbox_path: PathBuf) {
-        let basedir = inbox_path.as_path().parent().unwrap();
+    pub fn shift() {
+        let basedir = PathBuf::from(Config_get!("basedir"));
 
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut tomor_todo = TaskBox::new(basedir.join(get_tomorrow()).with_extension("md"));
@@ -358,8 +358,8 @@ impl TaskBox {
     }
 
     // INBOX -> today
-    pub fn collect(inbox_path: PathBuf, inbox_from: Option<String>) {
-        let basedir = inbox_path.as_path().parent().unwrap();
+    pub fn collect(inbox_from: Option<String>) {
+        let basedir = PathBuf::from(Config_get!("basedir"));
 
         if inbox_from == Some(get_today()) {
             println!("{} is not a valid source", S_moveto!("today"));
@@ -377,8 +377,8 @@ impl TaskBox {
     }
 
     // today -> INBOX
-    pub fn postp(inbox_path: PathBuf) {
-        let basedir = inbox_path.as_path().parent().unwrap();
+    pub fn postp() {
+        let basedir = PathBuf::from(Config_get!("basedir"));
 
         let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
         let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
@@ -417,12 +417,12 @@ impl TaskBox {
         }
     }
 
-    pub fn list_boxes(inbox_path: PathBuf) {
-        let basedir = inbox_path.as_path().parent().unwrap();
-        println!("[ {} ]", S_fpath!(basedir.display()));
+    pub fn list_boxes() {
+        let basedir = Config_get!("basedir");
+        println!("[ {} ]", S_fpath!(basedir));
 
         let mut boxes = Vec::new();
-        for entry in fs::read_dir(basedir).expect("cannot read dir") {
+        for entry in fs::read_dir(&basedir).expect("cannot read dir") {
             let path = entry.expect("cannot get entry").path();
             if path.is_file() && path.extension() == Some(OsStr::new("md")) {
                 boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
@@ -431,7 +431,7 @@ impl TaskBox {
         boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
             |b| {
                 print!("{}  {}",S_checkbox!(TASKBOX), b);
-                let tbox = TaskBox::new(basedir.join(b).with_extension("md"));
+                let tbox = TaskBox::new(PathBuf::from(&basedir).join(b).with_extension("md"));
                 if tbox.alias.is_some() {
                     println!(" ({})", S_hints!(tbox.alias.unwrap()))
                 } else {
@@ -442,7 +442,7 @@ impl TaskBox {
 
     // clean up all empty datetime taskbox
     pub fn cleanup() -> Result<()> {
-        let basedir = CONFIG.read().unwrap().basedir.clone().unwrap();
+        let basedir = Config_get!("basedir");
         println!("[ {} ]", S_fpath!(basedir));
 
         let mut boxes = Vec::new();

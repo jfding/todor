@@ -124,13 +124,13 @@ pub fn get_multi_select_style() -> RenderConfig<'static> {
         )
 }
 
-pub fn glance_all(inbox_path: &Path) {
+pub fn glance_all() {
     if cfg!(windows) {
         println!("Sorry, this feature is not supported on Windows.");
         return;
     }
 
-    let wildpat = format!("{}/*.md", inbox_path.parent().unwrap().display());
+    let wildpat = format!("{}/*.md", Config_get!("basedir"));
     let pager = "bat --paging=always -l md";
     let pager_fallback = "less";
 
