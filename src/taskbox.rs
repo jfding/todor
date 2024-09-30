@@ -487,6 +487,7 @@ impl TaskBox {
     // clean up all empty datetime taskbox
     pub fn cleanup() -> Result<()> {
         let basedir = CONFIG.read().unwrap().basedir.clone().unwrap();
+        println!("[ {} ]", S_fpath!(basedir));
 
         let mut boxes = Vec::new();
         let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
