@@ -15,10 +15,10 @@ install: build
 build:
     cargo build --release
 
-clippy:
+clippy: build
     cargo clippy
 
-test:
+test: build
     cargo test
 
 gitmain:

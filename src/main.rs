@@ -90,26 +90,12 @@ fn main() {
             }
         }
 
-        Some(Commands::Edit { diffwith }) => {
-            let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
-
-            boxops::edit_box(&inbox_path, diffwith);
-        }
-
         Some(Commands::Count) => {
             let mut todo = TaskBox::new(inbox_path);
             let count = todo.count();
             if count > 0 {
                 println!("{}", count);
             }
-        }
-
-        Some(Commands::Glance) => {
-            boxops::glance_all()
-        }
-
-        Some(Commands::Listbox) => {
-            TaskBox::list_boxes()
         }
 
         Some(Commands::Purge { sort }) => {
@@ -127,29 +113,20 @@ fn main() {
             }
         }
 
-        Some(Commands::Sink { all }) => {
-            TaskBox::sink(all)
-        }
+        Some(Commands::Sink { all })      => TaskBox::sink(all),
+        Some(Commands::Shift)             => TaskBox::shift(),
+        Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
+        Some(Commands::Postp)             => TaskBox::postp(),
+        Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
 
-        Some(Commands::Shift) => {
-            TaskBox::shift()
-        }
+        Some(Commands::Edit { diffwith }) => {
+            // just to touch the file
+            let _todo = TaskBox::new(inbox_path.clone());
 
-        Some(Commands::Collect { inbox }) => {
-            TaskBox::collect(inbox)
+            boxops::edit_box(&inbox_path, diffwith);
         }
-
-        Some(Commands::Postp) => {
-            TaskBox::postp()
-        }
-
-        Some(Commands::Import{ file }) => {
-            let mut todo = TaskBox::new(inbox_path);
-            todo.import(file)
-        }
-
-        Some(Commands::Cleanup) => {
-            TaskBox::cleanup().expect("failed")
-        }
+        Some(Commands::Glance)  => boxops::glance_all(),
+        Some(Commands::Listbox) => boxops::list_boxes(),
+        Some(Commands::Cleanup) => boxops::cleanup().expect("failed"),
     }
 }

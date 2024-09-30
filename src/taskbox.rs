@@ -1,11 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::ffi::OsStr;
 use regex::Regex;
 use colored::Colorize;
-use inquire;
-use anyhow::Result;
-
 use chrono::*;
 
 use crate::util::*;
@@ -418,75 +414,5 @@ impl TaskBox {
             self.tasks.append(&mut newt);
             self._dump();
         }
-    }
-
-    pub fn list_boxes() {
-        let basedir = Config_get!("basedir");
-        println!("[ {} ]", S_fpath!(basedir));
-
-        let mut boxes = Vec::new();
-        for entry in fs::read_dir(&basedir).expect("cannot read dir") {
-            let path = entry.expect("cannot get entry").path();
-            if path.is_file() && path.extension() == Some(OsStr::new("md")) {
-                boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
-            }
-        }
-        boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
-            |b| {
-                print!("{}  {}",S_checkbox!(TASKBOX), b);
-                let tbox = TaskBox::new(PathBuf::from(&basedir).join(b).with_extension("md"));
-                if tbox.alias.is_some() {
-                    println!(" ({})", S_hints!(tbox.alias.unwrap()))
-                } else {
-                    println!()
-                }
-            })
-    }
-
-    // clean up all empty datetime taskbox
-    pub fn cleanup() -> Result<()> {
-        let basedir = Config_get!("basedir");
-        println!("[ {} ]", S_fpath!(basedir));
-
-        let mut boxes = Vec::new();
-        let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
-        for entry in fs::read_dir(basedir)? {
-            let path = entry.expect("cannot get dir entry").path();
-            if path.is_file() && re.is_match(path.to_str().unwrap()) {
-                let content = fs::read_to_string(&path)?;
-                if content.lines().count() <= 2 {
-                    boxes.push((String::from(path.file_stem().unwrap().to_str().unwrap()), path))
-                }
-            }
-        }
-        if boxes.is_empty() {
-            println!("{} to cleanup", S_empty!("nothing"));
-            return Ok(())
-        }
-
-        boxes.sort_by(|a,b| a.0.cmp(&b.0)); boxes.reverse();
-        boxes.clone().into_iter().for_each(
-            |(name, path)| {
-                print!("{}  {}",S_checkbox!(TASKBOX), name);
-                let tbox = TaskBox::new(path);
-                if tbox.alias.is_some() {
-                    println!(" ({})", S_hints!(tbox.alias.unwrap()))
-                } else {
-                    println!()
-                }
-            });
-        if inquire::Confirm::new("Going to remove the aboves, are you sure?")
-            .with_default(false)
-            .with_render_config(get_confirm_style())
-            .prompt().unwrap_or(false) {
-            boxes.into_iter().for_each(
-                |(_, path)| {
-                    fs::remove_file(&path).expect("cannot remove file");
-                    println!("{} removed!", S_fpath!(path.display()));
-                }
-            );
-        }
-
-        Ok(())
     }
 }
