@@ -10,6 +10,7 @@ use chrono::*;
 
 use crate::util;
 use crate::util::*;
+use crate::styles::*;
 use crate::conf::*;
 
 const PREFIX :&str  = "- [ ] ";

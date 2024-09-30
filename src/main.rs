@@ -6,8 +6,9 @@ use crossterm::cursor::SetCursorStyle::*;
 use todor::taskbox::*;
 use todor::cli::*;
 use todor::conf::*;
-use todor::util;
+use todor::styles::*;
 use todor::util::*;
+use todor::util;
 
 fn main() {
     let args = Cli::default();
@@ -52,7 +53,7 @@ fn main() {
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
             let selected = inquire::MultiSelect::new("choose to close:", tasks)
-                .with_render_config(util::get_multi_select_style())
+                .with_render_config(get_multi_select_style())
                 .with_vim_mode(true)
                 .with_page_size(10)
                 .with_help_message("j/k | <space> | <enter> | ctrl+c")
@@ -73,7 +74,7 @@ fn main() {
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
             let input = inquire::Text::new("")
-                .with_render_config(util::get_text_input_style())
+                .with_render_config(get_text_input_style())
                 .with_help_message("<enter> | ctrl+c")
                 .with_placeholder("something to do?")
                 .prompt().unwrap_or_else(|_| String::new());
@@ -112,11 +113,11 @@ fn main() {
         Some(Commands::Purge { sort }) => {
             if inquire::Confirm::new("are you sure?")
                 .with_default(false)
-                .with_render_config(util::get_confirm_style())
+                .with_render_config(get_confirm_style())
                 .prompt().unwrap_or(false) {
                 if sort && ! inquire::Confirm::new("Sort can only work well without subtasks, continue?")
                         .with_default(false)
-                        .with_render_config(util::get_confirm_style())
+                        .with_render_config(get_confirm_style())
                         .prompt().unwrap_or(false) { return }
 
                 let mut todo = TaskBox::new(inbox_path);
