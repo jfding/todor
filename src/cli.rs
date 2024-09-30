@@ -95,6 +95,9 @@ pub enum Commands {
         #[arg(value_name = "markdown-file")]
         file: Option<String>,
     },
+
+    /// -> clean up all empty datetime taskbox
+    Cleanup,
 }
 
 impl Default for Cli {
