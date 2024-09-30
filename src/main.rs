@@ -8,7 +8,9 @@ use todor::cli::*;
 use todor::conf::*;
 use todor::styles::*;
 use todor::util::*;
+
 use todor::util;
+use todor::boxops;
 
 fn main() {
     let args = Cli::default();
@@ -91,7 +93,7 @@ fn main() {
         Some(Commands::Edit { diffwith }) => {
             let _todo = TaskBox::new(inbox_path.clone()); // then do nothing, to create the file if it doesn't exist
 
-            todor::util::edit_box(&inbox_path, diffwith);
+            boxops::edit_box(&inbox_path, diffwith);
         }
 
         Some(Commands::Count) => {
@@ -103,7 +105,7 @@ fn main() {
         }
 
         Some(Commands::Glance) => {
-            todor::util::glance_all()
+            boxops::glance_all()
         }
 
         Some(Commands::Listbox) => {

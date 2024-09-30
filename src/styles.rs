@@ -1,7 +1,6 @@
 use inquire::ui::{ Styled, RenderConfig, Color, StyleSheet, Attributes };
 use clap::builder::styling;
 
-pub use crate::*;
 pub use crate::conf::*;
 
 pub const CHECKBOX: &str = "󰄗";

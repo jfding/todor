@@ -8,7 +8,6 @@ use anyhow::Result;
 
 use chrono::*;
 
-use crate::util;
 use crate::util::*;
 use crate::styles::*;
 use crate::conf::*;
@@ -392,7 +391,7 @@ impl TaskBox {
     // specified markdown file -> cur
     pub fn import(&mut self, file: Option<String>) {
         #[allow(clippy::redundant_closure)]
-        let mdfile= file.unwrap_or_else(|| util::pick_file());
+        let mdfile= file.unwrap_or_else(|| super::util::pick_file());
 
         let fpath = Path::new(&mdfile);
         if ! fpath.is_file() {
@@ -478,7 +477,7 @@ impl TaskBox {
             });
         if inquire::Confirm::new("Going to remove the aboves, are you sure?")
             .with_default(false)
-            .with_render_config(util::get_confirm_style())
+            .with_render_config(get_confirm_style())
             .prompt().unwrap_or(false) {
             boxes.into_iter().for_each(
                 |(_, path)| {
