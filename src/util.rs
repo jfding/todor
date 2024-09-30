@@ -1,11 +1,15 @@
 use std::path::{Path, PathBuf};
 use std::env;
+use std::fs;
+use chrono::*;
+use std::ops::*;
 use cmd_lib::*;
 use colored::Colorize;
 use inquire::ui::{ Styled, RenderConfig, Color, StyleSheet, Attributes };
 use clap::builder::styling;
 
 pub use crate::*;
+pub use crate::conf::*;
 
 pub const CHECKBOX: &str = "󰄗";
 pub const CHECKED: &str = "󰄲";
@@ -164,7 +168,7 @@ pub fn pick_file() -> String {
     )
 }
 
-pub fn path_normalize(path_str: String) -> PathBuf {
+pub fn path_normalize(path_str: String) -> String {
     let conf_path;
     if path_str.starts_with("~/") {
         conf_path = PathBuf::from(path_str
@@ -185,5 +189,52 @@ pub fn path_normalize(path_str: String) -> PathBuf {
         conf_path = PathBuf::from(path_str);
     }
 
-    conf_path
+    conf_path.to_str().expect("wrong path").into()
+}
+
+pub fn get_today() -> String {
+    Local::now().date_naive().to_string()
+}
+pub fn get_yesterday() -> String {
+    Local::now().add(chrono::Duration::days(-1)).date_naive().to_string()
+}
+pub fn get_tomorrow() -> String {
+    Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
+}
+
+pub fn get_box_alias(name_in: Option<String>) -> Option<String> {
+    let alias = match name_in {
+        Some(name) if name == get_today() => "today",
+        Some(name) if name == get_tomorrow() => "tomorrow",
+        Some(name) if name == get_yesterday() => "yesterday",
+        _ => "",
+    };
+
+    if alias.is_empty() { None }
+    else { Some(alias.to_string()) }
+}
+
+pub fn get_default_basedir() -> String {
+    // for windows compatibility
+    let rel_base :PathBuf = DATA_BASE.split("/").collect();
+    dirs::home_dir()
+        .expect("cannot get home dir")
+        .join(rel_base)
+        .to_str()
+        .expect("cannot convert path to string")
+        .to_string()
+}
+
+pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
+    let basedir = PathBuf::from(CONFIG.read().unwrap().basedir.clone().unwrap());
+    fs::create_dir_all(&basedir).expect("Failed to create base directory");
+
+    let inbox_name = match inbox.as_deref() {
+        Some("today") => get_today(),
+        Some("tomorrow") => get_tomorrow(),
+        Some("yesterday") => get_yesterday(),
+        None => INBOX_NAME.to_string(),
+        _ => inbox.unwrap(),
+    };
+    basedir.join(inbox_name).with_extension("md")
 }

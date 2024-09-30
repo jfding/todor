@@ -25,8 +25,12 @@ fn main() {
         let conf = Config::load(args.config);
         g_conf.update_with(&conf);
     }
+    if let Some(dir) = args.dir {
+        let mut g_conf = CONFIG.write().unwrap();
+        g_conf.basedir = Some(util::path_normalize(dir));
+    }
 
-    let inbox_path = get_inbox_file(args.dir.or(CONFIG.read().unwrap().basedir.clone()), inbox);
+    let inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
         Some(Commands::List) | None => {

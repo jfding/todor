@@ -32,7 +32,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            basedir: Some("~/.local/share/todor".into()),
+            basedir: Some(util::get_default_basedir()),
             blink: Some(true),
         }
     }
@@ -50,12 +50,14 @@ impl Config {
     }
 
     pub fn load(path_str: Option<String>) -> Self {
+        let mut work_conf = Config::default();
+
         let confp;
         if let Some(path_str) = path_str {
-            confp = util::path_normalize(path_str);
+            confp = PathBuf::from(util::path_normalize(path_str));
             if !confp.exists() {
                 eprintln!("config file not found, ignore and use defaults");
-                return Config::default();
+                return work_conf;
             }
         } else {
             let rel_base :PathBuf = DEF_CONFIG_PATH.split("/").collect();
@@ -72,22 +74,15 @@ impl Config {
             }
         }
 
-        let conf :Config = toml::from_str(
+        let mut conf :Config = toml::from_str(
                  &std::fs::read_to_string(&confp)
                 .expect("cannot read config file"))
             .expect("cannot parse config file");
-
-        let mut work_conf = Config::default();
-        work_conf.update_with(&conf);
-
-        if let Some(basedir) = work_conf.basedir {
-            work_conf.basedir = Some(util::path_normalize(basedir)
-                                .to_str()
-                                .unwrap()
-                                .to_string()
-                               )
+        if let Some(basedir) = conf.basedir {
+            conf.basedir = Some(util::path_normalize(basedir))
         }
 
+        work_conf.update_with(&conf);
         work_conf
     }
 }

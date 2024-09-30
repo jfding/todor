@@ -1,60 +1,16 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::ffi::OsStr;
 use regex::Regex;
 use colored::Colorize;
-use dirs;
 use inquire;
 use anyhow::Result;
 
 use chrono::*;
-use std::ops::*;
 
 use crate::util;
 use crate::util::*;
 use crate::conf::*;
-
-pub fn get_inbox_file(dir: Option<String>, inbox: Option<String>) -> PathBuf {
-    // for windows compatibility
-    let rel_base :PathBuf = DATA_BASE.split("/").collect();
-
-    let base_path = dir.map(PathBuf::from).unwrap_or_else(|| {
-        dirs::home_dir()
-            .expect("cannot get home directory")
-            .join(rel_base)
-    });
-    fs::create_dir_all(&base_path).expect("Failed to create base directory");
-
-    let inbox_name = match inbox.as_deref() {
-        Some("today") => get_today(),
-        Some("tomorrow") => get_tomorrow(),
-        Some("yesterday") => get_yesterday(),
-        None => INBOX_NAME.to_string(),
-        _ => inbox.unwrap(),
-    };
-    base_path.join(inbox_name).with_extension("md")
-}
-
-pub fn get_today() -> String {
-    Local::now().date_naive().to_string()
-}
-pub fn get_yesterday() -> String {
-    Local::now().add(chrono::Duration::days(-1)).date_naive().to_string()
-}
-pub fn get_tomorrow() -> String {
-    Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
-}
-
-fn get_alias(name_in: Option<String>) -> Option<String> {
-    let alias = match name_in {
-        Some(name) if name == get_today() => "today",
-        Some(name) if name == get_tomorrow() => "tomorrow",
-        Some(name) if name == get_yesterday() => "yesterday",
-        _ => "",
-    };
-
-    if alias.is_empty() { None }
-    else { Some(alias.to_string()) }
-}
 
 const PREFIX :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
@@ -80,7 +36,7 @@ impl TaskBox {
         Self {
             fpath,
             title: None, // None means not loaded
-            alias: get_alias(Some(title)),
+            alias: get_box_alias(Some(title)),
             tasks: Vec::new(),
         }
     }
@@ -468,7 +424,7 @@ impl TaskBox {
         let mut boxes = Vec::new();
         for entry in fs::read_dir(basedir).expect("cannot read dir") {
             let path = entry.expect("cannot get entry").path();
-            if path.is_file() && path.extension().unwrap() == "md" {
+            if path.is_file() && path.extension() == Some(OsStr::new("md")) {
                 boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
             }
         }
