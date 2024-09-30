@@ -38,5 +38,5 @@
 
 These four commands: `sink`, `shift`, `collect`, `postp` are designed to move tasks around in the list. And below is a diagram to show how they work.
 
-![tasks-flow](./assets/tasks-flow.png)
+![tasks-flow](./docs/assets/tasks-flow.png)
 
