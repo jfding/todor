@@ -9,23 +9,33 @@ use crate::util::*;
 
 const DEF_CONFIG_CONTENT: &str = r#"# config for todor in toml
 
-## base directory for todor data, if not set, use default as below
-#basedir = "~/.local/share/todor"
+## base directory for todor data
+basedir = "~/.local/share/todor"
 
-#blink = true
+## blink the icons of items or not
+blink = true
 "#;
 
 lazy_static! {
     pub static ref CONFIG: RwLock<Config> = RwLock::new(Config::load(None));
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug)]
 pub struct Config {
     /// base directory for todor data
     pub basedir: Option<String>,
 
     /// blink the icons of items or not
     pub blink: Option<bool>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            basedir: Some("~/.local/share/todor".into()),
+            blink: Some(true),
+        }
+    }
 }
 
 impl Config {
@@ -44,7 +54,7 @@ impl Config {
         if let Some(path_str) = path_str {
             confp = util::path_normalize(path_str);
             if !confp.exists() {
-                eprintln!("specified config file not found, ignore it");
+                eprintln!("config file not found, ignore and use defaults");
                 return Config::default();
             }
         } else {
@@ -62,19 +72,22 @@ impl Config {
             }
         }
 
-        let mut conf :Config = toml::from_str(
+        let conf :Config = toml::from_str(
                  &std::fs::read_to_string(&confp)
                 .expect("cannot read config file"))
             .expect("cannot parse config file");
 
-        if let Some(basedir) = conf.basedir {
-            conf.basedir = Some(util::path_normalize(basedir)
+        let mut work_conf = Config::default();
+        work_conf.update_with(&conf);
+
+        if let Some(basedir) = work_conf.basedir {
+            work_conf.basedir = Some(util::path_normalize(basedir)
                                 .to_str()
                                 .unwrap()
                                 .to_string()
                                )
         }
 
-        conf
+        work_conf
     }
 }

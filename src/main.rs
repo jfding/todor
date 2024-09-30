@@ -137,5 +137,9 @@ fn main() {
             let mut todo = TaskBox::new(inbox_path);
             todo.import(file)
         }
+
+        Some(Commands::Cleanup) => {
+            TaskBox::cleanup().expect("failed")
+        }
     }
 }
