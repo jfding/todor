@@ -99,6 +99,13 @@ pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
         .with_extension("md")
 }
 
+pub fn confirm(question: &str) -> bool {
+    inquire::Confirm::new(question)
+        .with_default(false)
+        .with_render_config(get_confirm_style())
+        .prompt().unwrap_or(false)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

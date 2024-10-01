@@ -36,14 +36,21 @@ fn main() {
     let inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
-        Some(Commands::List) | None => {
-            let mut todo = TaskBox::new(inbox_path);
-            todo.list(false);
+        Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
+        Some(Commands::Listall)           => TaskBox::new(inbox_path).list(true),
+        Some(Commands::Count)             => TaskBox::new(inbox_path).count(),
+        Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
+        Some(Commands::Purge { sort }) => {
+            if confirm("are you sure?") {
+                if sort && ! confirm("sort cannot handle subtasks well, continue?") { return }
+                TaskBox::new(inbox_path).purge(sort)
+            }
         }
-        Some(Commands::Listall) => {
-            let mut todo = TaskBox::new(inbox_path);
-            todo.list(true);
-        }
+
+        Some(Commands::Sink { all })      => TaskBox::sink(all),
+        Some(Commands::Shift)             => TaskBox::shift(),
+        Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
+        Some(Commands::Postp)             => TaskBox::postp(),
 
         Some(Commands::Mark) => {
             let mut todo = TaskBox::new(inbox_path);
@@ -68,56 +75,24 @@ fn main() {
         Some(Commands::Add { what, date }) => {
             let mut todo = TaskBox::new(inbox_path);
 
-            if let Some(input) = what {
-                todo.add(input, date);
-                println!("{}", S_success!("Task added successfully!"));
-                return
-            }
-
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            let input = inquire::Text::new("")
-                .with_render_config(get_text_input_style())
-                .with_help_message("<enter> | ctrl+c")
-                .with_placeholder("something to do?")
-                .prompt().unwrap_or_else(|_| String::new());
+            let mut input = what.unwrap_or_else(|| {
+                inquire::Text::new("")
+                    .with_render_config(get_text_input_style())
+                    .with_help_message("<enter> | ctrl+c")
+                    .with_placeholder("something to do?")
+                    .prompt().unwrap_or_else(|_| String::new())
+            });
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
 
+            input = input.trim().to_string();
             if !input.is_empty() {
                 todo.add(input, date);
                 println!("{}", S_success!("Task added successfully!"));
             } else {
-                println!("{}", S_empty!("No task added. Input was empty."));
+                println!("{}", S_empty!("Empty input, skip."));
             }
         }
-
-        Some(Commands::Count) => {
-            let mut todo = TaskBox::new(inbox_path);
-            let count = todo.count();
-            if count > 0 {
-                println!("{}", count);
-            }
-        }
-
-        Some(Commands::Purge { sort }) => {
-            if inquire::Confirm::new("are you sure?")
-                .with_default(false)
-                .with_render_config(get_confirm_style())
-                .prompt().unwrap_or(false) {
-                if sort && ! inquire::Confirm::new("Sort can only work well without subtasks, continue?")
-                        .with_default(false)
-                        .with_render_config(get_confirm_style())
-                        .prompt().unwrap_or(false) { return }
-
-                let mut todo = TaskBox::new(inbox_path);
-                todo.purge(sort);
-            }
-        }
-
-        Some(Commands::Sink { all })      => TaskBox::sink(all),
-        Some(Commands::Shift)             => TaskBox::shift(),
-        Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
-        Some(Commands::Postp)             => TaskBox::postp(),
-        Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
 
         Some(Commands::Edit { diffwith }) => {
             // just to touch the file
