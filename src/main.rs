@@ -33,7 +33,7 @@ fn main() {
         g_conf.basedir = Some(util::path_normalize(&dir));
     }
 
-    let inbox_path = util::get_inbox_file(inbox);
+    let mut inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
         Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
@@ -72,7 +72,11 @@ fn main() {
             todo.mark(selected);
         }
 
-        Some(Commands::Add { what, date }) => {
+        Some(Commands::Add { what, date_stamp, routine }) => {
+            if routine.is_some() {
+                inbox_path = util::get_routine_box_file()
+            }
+
             let mut todo = TaskBox::new(inbox_path);
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
@@ -87,7 +91,7 @@ fn main() {
 
             input = input.trim().to_string();
             if !input.is_empty() {
-                todo.add(input, date);
+                todo.add(input, routine, date_stamp);
                 println!("{}", S_success!("Task added successfully!"));
             } else {
                 println!("{}", S_empty!("Empty input, skip."));

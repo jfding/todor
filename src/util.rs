@@ -90,6 +90,10 @@ pub fn get_default_basedir() -> String {
         .to_string()
 }
 
+pub fn get_routine_box_file() -> PathBuf {
+    get_inbox_file(Some(ROUTINE_BOXNAME.into()))
+}
+
 pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
     let basedir = PathBuf::from(Config_get!("basedir"));
     fs::create_dir_all(&basedir).expect("Failed to create base directory");

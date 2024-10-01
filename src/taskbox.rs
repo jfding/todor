@@ -3,14 +3,21 @@ use std::path::{Path, PathBuf};
 use regex::Regex;
 use colored::Colorize;
 use chrono::*;
+use lazy_static::lazy_static;
 
+use crate::cli::*;
 use crate::util::*;
 use crate::styles::*;
 use crate::conf::*;
 
-const PREFIX :&str  = "- [ ] ";
+lazy_static! {
+    static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
+    static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
+}
+
+const PREFIX_OPEN :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
-const SUB_PREFIX :&str  = " 󱞩 ";
+const PREFIX_SUBT :&str  = " 󱞩 ";
 
 #[derive(Debug)]
 pub struct TaskBox {
@@ -58,10 +65,10 @@ impl TaskBox {
                 title = line.trim_start_matches("# ").to_string();
 
             } else if line.starts_with("- [") {
-                if let Some(stripped) = line.strip_prefix(PREFIX) {
-                    tasks.push((stripped.to_string(), false))
-                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
-                    tasks.push((stripped.to_string(), true))
+                if let Some(caps) = RE_PREFIX_OPEN.captures(line) {
+                    tasks.push((caps[1].to_string(), false))
+                } else if let Some(caps) = RE_PREFIX_DONE.captures(line) {
+                    tasks.push((caps[1].to_string(), true))
                 } else { continue }
 
                 if last_is_sub {
@@ -72,10 +79,10 @@ impl TaskBox {
                 // might be sub-tasks
                 let line = line.trim_start();
 
-                if let Some(stripped) = line.strip_prefix(PREFIX) {
-                    tasks.push((SUB_PREFIX.to_owned() + stripped + &postfix_sub, false))
-                } else if let Some(stripped) = line.strip_prefix(PREFIX_DONE) {
-                    tasks.push((SUB_PREFIX.to_owned() + stripped + &postfix_sub, true))
+                if let Some(caps) = RE_PREFIX_OPEN.captures(line) {
+                    tasks.push((PREFIX_SUBT.to_owned() + &caps[1] + &postfix_sub, false))
+                } else if let Some(caps) = RE_PREFIX_DONE.captures(line) {
+                    tasks.push((PREFIX_SUBT.to_owned() + &caps[1] + &postfix_sub, true))
                 } else { continue }
 
                 last_is_sub = true;
@@ -90,7 +97,7 @@ impl TaskBox {
         let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
         for (mut task, done) in self.tasks.clone() {
-            if let Some(left) = task.strip_prefix(SUB_PREFIX) {
+            if let Some(left) = task.strip_prefix(PREFIX_SUBT) {
                 content.push_str("  ");
                 task = left.trim_end().to_string();
             }
@@ -98,7 +105,7 @@ impl TaskBox {
             if done {
                 content.push_str(PREFIX_DONE)
             } else {
-                content.push_str(PREFIX)
+                content.push_str(PREFIX_OPEN)
             }
             content.push_str(&(task + "\n"))
         }
@@ -114,7 +121,7 @@ impl TaskBox {
         let mut last_major_task: Option<(String, bool)> = None;
 
         for (task, done) in self.tasks.iter() {
-            if task.starts_with(SUB_PREFIX) {
+            if task.starts_with(PREFIX_SUBT) {
                 if *done {
                     if let Some((ref last_major, lm_done)) = last_major_task {
                         if !lm_done {
@@ -170,12 +177,22 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn add(&mut self, what: String, add_date: bool) {
+    pub fn add(&mut self, what: String, routine: Option<Routine>, add_date: bool) {
         self._load();
 
-        if add_date { self.tasks.push((format!("{} [󰃵 {}]", what, get_today()), false))
-        } else {      self.tasks.push((what, false)) }
+        let task = match routine {
+            Some(Routine::Daily)    => format!("{{󰃵:d {}}} {}", get_today(), what),
+            Some(Routine::Weekly)   => format!("{{󰃵:w {}}} {}", get_today(), what),
+            Some(Routine::Biweekly) => format!("{{󰃵:b {}}} {}", get_today(), what),
+            Some(Routine::Qweekly)  => format!("{{󰃵:q {}}} {}", get_today(), what),
+            Some(Routine::Monthly ) => format!("{{󰃵:m {}}} {}", get_today(), what),
+            _ => {
+                if add_date { format!("{} [󰃵 {}]", what, get_today()) }
+                else { what }
+            }
+        };
 
+        self.tasks.push((task, false));
         self._dump();
     }
 
@@ -192,7 +209,7 @@ impl TaskBox {
         let mut tasks = Vec::new();
         let mut last_major_task :Option<(String, bool)> = None;
         for (t, done) in &self.tasks {
-            if t.starts_with(SUB_PREFIX) {
+            if t.starts_with(PREFIX_SUBT) {
                 if let Some((ref last_major, lm_done)) = last_major_task {
                     if lm_done && !done {
                         tasks.push(WARN.to_owned() + " " + last_major);
@@ -229,11 +246,11 @@ impl TaskBox {
 
             for (t, done) in &self.tasks {
                 msg = format!("{}  ", S_blink!(S_checkbox!(CHECKBOX)));
-                if t.starts_with(SUB_PREFIX) {
+                if t.starts_with(PREFIX_SUBT) {
                     if *done { continue }
 
                     msg = format!("{} {}", S_blink!(SUBTASK), msg);
-                    msg += t.strip_prefix(SUB_PREFIX).unwrap();
+                    msg += t.strip_prefix(PREFIX_SUBT).unwrap();
                     last_is_sub = true;
 
                     if let Some((ref last_major, lm_done)) = last_major_task {
@@ -402,7 +419,7 @@ impl TaskBox {
             let line = rline.trim();
             if line.is_empty() { continue }
 
-            if let Some(stripped) = line.strip_prefix(PREFIX) {
+            if let Some(stripped) = line.strip_prefix(PREFIX_OPEN) {
                 println!("  {} : {}", S_checkbox!(CHECKBOX), stripped);
                 newt.push((stripped.to_string(), false))
             }
