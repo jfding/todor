@@ -1,4 +1,5 @@
 use std::io;
+use std::path;
 use colored::Colorize;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
@@ -14,14 +15,19 @@ use todor::boxops;
 
 fn main() {
     let args = Cli::default();
-    let mut inbox = args.inbox.unwrap_or_else(|| INBOX_NAME.into());
+    let arg0 = std::env::args().next().unwrap();
 
-    let clicmd = std::env::args().next().expect("cannot get arg0");
-    if clicmd.ends_with("today") {
-        inbox = get_today()
-    } else if clicmd.ends_with("tomorrow") {
-        inbox = get_tomorrow()
-    }
+    let inbox =
+        if let Some(boxname) = args.inbox {
+            &boxname.clone()
+        } else {
+            let cmdname = arg0.split(path::MAIN_SEPARATOR).last().unwrap();
+            if cmdname == "todor" {
+                "inbox"
+            } else {
+                cmdname.split('.').last().unwrap()
+            }
+        };
 
     if args.config.is_some() {
         let mut g_conf = CONFIG.write().unwrap();
@@ -33,7 +39,7 @@ fn main() {
         g_conf.basedir = Some(util::path_normalize(&dir));
     }
 
-    let mut inbox_path = util::get_inbox_file(&inbox);
+    let mut inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
         Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
@@ -74,7 +80,7 @@ fn main() {
 
         Some(Commands::Add { what, date_stamp, routine }) => {
             if routine.is_some() {
-                inbox_path = get_inbox_file(ROUTINE_BOXNAME)
+                inbox_path = get_inbox_file("routine")
             }
 
             let mut todo = TaskBox::new(inbox_path);
@@ -98,12 +104,11 @@ fn main() {
             }
         }
 
-        Some(Commands::Edit { diffwith, routines }) => {
-            if routines { inbox = ROUTINE_BOXNAME.into() }
-            boxops::edit_box(&inbox, diffwith)
-        }
         Some(Commands::Glance)  => boxops::glance_all(),
         Some(Commands::Listbox) => boxops::list_boxes(),
         Some(Commands::Cleanup) => boxops::cleanup().expect("failed"),
+        Some(Commands::Edit { diffwith, routines }) => boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
+
+        Some(Commands::Check)  => boxops::check(),
     }
 }
