@@ -167,25 +167,31 @@ impl TaskBox {
         let tasks = todo_in._get_all_to_mark();
         if tasks.is_empty() { return }
 
+        // print title line
         let from = if todo_in.alias.is_some() {
             todo_in.alias.as_ref()
         } else {
             todo_in.title.as_ref()
-        };
+        }.unwrap();
         let to = if self.alias.is_some() {
             self.alias.as_ref()
         } else {
             self.title.as_ref()
-        };
-
-        println!("{} {} {} {}", S_movefrom!(from.unwrap()), MOVING,
-                                S_moveto!(to.unwrap()), PROGRESS);
+        }.unwrap();
+        println!("{} {} {} {}", S_movefrom!(from), MOVING,
+                                S_moveto!(to), PROGRESS);
 
         for task in tasks {
             let pair = if task.contains(WARN) {
                 println!("  {} : {}", S_checkbox!(CHECKED), task);
                 (task.clone(), true)
             } else if let Some(caps) = RE_ROUTINES.captures(&task) {
+                if from != ROUTINE_BOXNAME || to != "today" {
+                    eprintln!("  {} : unexpected routine task move: {}",
+                            S_failure!(WARN),
+                            S_failure!(task));
+                    (task.clone(), false)
+                } else {
                     if ! util::match_routine(&caps[1], &caps[2]) { continue }
 
                     let kind = match &caps[1] {
@@ -200,6 +206,7 @@ impl TaskBox {
 
                     println!("  {} : {}", S_checkbox!(CALENDAR), newtask);
                     (newtask, false)
+                }
             } else {
                 println!("  {} : {}", S_checkbox!(CHECKBOX), task);
                 (task.clone(), false)
