@@ -68,6 +68,9 @@ pub enum Commands {
         #[arg(short, long)]
         #[arg(value_name = "another-taskbox")]
         diffwith: Option<String>,
+
+        #[arg(short = 'r', long)]
+        routines: bool,
     },
 
     /// -> count items in inbox

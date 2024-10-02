@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::fs;
 use chrono::*;
 use std::ops::*;
 use cmd_lib::*;
@@ -79,28 +78,10 @@ pub fn get_box_unalias(alias: &str) -> String {
     }
 }
 
-pub fn get_default_basedir() -> String {
-    // for windows compatibility
-    let rel_base :PathBuf = DATA_BASE.split("/").collect();
-    dirs::home_dir()
-        .expect("cannot get home dir")
-        .join(rel_base)
-        .to_str()
-        .expect("cannot convert path to string")
-        .to_string()
-}
-
-pub fn get_routine_box_file() -> PathBuf {
-    get_inbox_file(Some(ROUTINE_BOXNAME.into()))
-}
-
-pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
+pub fn get_inbox_file(inbox: &str) -> PathBuf {
     let basedir = PathBuf::from(Config_get!("basedir"));
-    fs::create_dir_all(&basedir).expect("Failed to create base directory");
 
-    basedir
-        .join(get_box_unalias(&inbox.unwrap_or(INBOX_NAME.into())))
-        .with_extension("md")
+    basedir.join(get_box_unalias(inbox)).with_extension("md")
 }
 
 pub fn confirm(question: &str) -> bool {
@@ -113,11 +94,6 @@ pub fn confirm(question: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_get_default_basedir() {
-        assert!(get_default_basedir().contains(".local/share/todor"));
-    }
 
     #[test]
     fn test_aliases() {

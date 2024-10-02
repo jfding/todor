@@ -14,13 +14,13 @@ use todor::boxops;
 
 fn main() {
     let args = Cli::default();
-    let mut inbox = args.inbox;
+    let mut inbox = args.inbox.unwrap_or_else(|| INBOX_NAME.into());
 
     let clicmd = std::env::args().next().expect("cannot get arg0");
     if clicmd.ends_with("today") {
-        inbox = Some(get_today())
+        inbox = get_today()
     } else if clicmd.ends_with("tomorrow") {
-        inbox = Some(get_tomorrow())
+        inbox = get_tomorrow()
     }
 
     if args.config.is_some() {
@@ -33,7 +33,7 @@ fn main() {
         g_conf.basedir = Some(util::path_normalize(&dir));
     }
 
-    let mut inbox_path = util::get_inbox_file(inbox);
+    let mut inbox_path = util::get_inbox_file(&inbox);
 
     match args.command {
         Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
@@ -74,7 +74,7 @@ fn main() {
 
         Some(Commands::Add { what, date_stamp, routine }) => {
             if routine.is_some() {
-                inbox_path = util::get_routine_box_file()
+                inbox_path = get_inbox_file(ROUTINE_BOXNAME)
             }
 
             let mut todo = TaskBox::new(inbox_path);
@@ -98,11 +98,9 @@ fn main() {
             }
         }
 
-        Some(Commands::Edit { diffwith }) => {
-            // just to touch the file
-            let _todo = TaskBox::new(inbox_path.clone());
-
-            boxops::edit_box(&inbox_path, diffwith);
+        Some(Commands::Edit { diffwith, routines }) => {
+            if routines { inbox = ROUTINE_BOXNAME.into() }
+            boxops::edit_box(&inbox, diffwith)
         }
         Some(Commands::Glance)  => boxops::glance_all(),
         Some(Commands::Listbox) => boxops::list_boxes(),

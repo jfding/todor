@@ -15,6 +15,9 @@ lazy_static! {
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
 }
 
+pub const INBOX_NAME :&str  = "INBOX";
+pub const ROUTINE_BOXNAME :&str  = "ROUTINES";
+
 const PREFIX_OPEN :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
 const PREFIX_SUBT :&str  = " 󱞩 ";
@@ -35,6 +38,7 @@ impl TaskBox {
                          .to_string();
 
         if !fpath.exists() {
+            fs::create_dir_all(fpath.parent().unwrap()).expect("Failed to create basedir");
             fs::File::create(&fpath).expect("Failed to create file");
             fs::write(&fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
         }
