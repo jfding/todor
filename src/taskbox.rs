@@ -11,8 +11,11 @@ use crate::styles::*;
 use crate::conf::*;
 
 lazy_static! {
+    static ref RE_DATEBOX :Regex = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
+    static ref RE_ROUTINES    :Regex =
+        Regex::new(r"\{󰃵:([dDwWbBqQmMoO]) (\d{4}-\d{2}-\d{2})\} (.*)").unwrap();
 }
 
 pub const INBOX_NAME :&str  = "INBOX";
@@ -121,6 +124,9 @@ impl TaskBox {
     fn _drain(&mut self) {
         self._load();
 
+        // "ROUTINES" not drain
+        if self.title == Some("ROUTINES".into()) { return }
+
         let mut newtasks = Vec::new();
         let mut last_major_task: Option<(String, bool)> = None;
 
@@ -165,15 +171,34 @@ impl TaskBox {
             self.title.as_ref()
         };
 
-        println!("{} {} {} {}", S_movefrom!(from.unwrap()), MOVING, S_moveto!(to.unwrap()), PROGRESS);
+        println!("{} {} {} {}", S_movefrom!(from.unwrap()), MOVING,
+                                S_moveto!(to.unwrap()), PROGRESS);
 
         for task in tasks {
-            if task.contains(WARN) {
+            let pair = if task.contains(WARN) {
                 println!("  {} : {}", S_checkbox!(CHECKED), task);
-                self.tasks.push((task.clone(), true));
+                (task.clone(), true)
+            } else if let Some(caps) = RE_ROUTINES.captures(&task) {
+                    if ! util::match_routine(&caps[1], &caps[2]) { continue }
+
+                    let kind = match &caps[1] {
+                        "d" => "daily",
+                        "w" => "weekly",
+                        "b" => "biweekly",
+                        "q" => "qweekly",
+                        "m" => "monthly",
+                        _ => "unknown",
+                    };
+                    let newtask = format!("{} {{󰃵:{} by {}}}", &caps[3], kind, &caps[2]);
+
+                    println!("  {} : {}", S_checkbox!(CALENDAR), newtask);
+                    (newtask, false)
             } else {
                 println!("  {} : {}", S_checkbox!(CHECKBOX), task);
-                self.tasks.push((task.clone(), false));
+                (task.clone(), false)
+            };
+            if ! self.tasks.contains(&pair) {
+                self.tasks.push(pair)
             }
         }
 
@@ -343,14 +368,13 @@ impl TaskBox {
     // outdated -> today
     // flag:all -- whether sink future (mainly tomorrow)
     pub fn sink(all: bool) {
-        let basedir = PathBuf::from(Config_get!("basedir"));
-        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
+        let basedir = Config_get!("basedir");
+        let mut today_todo = TaskBox::new(util::get_inbox_file("today"));
 
-        let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
         let mut boxes = Vec::new();
         for entry in fs::read_dir(basedir).expect("cannot read dir") {
             let path = entry.expect("cannot get entry").path();
-            if path.is_file() && re.is_match(path.to_str().unwrap()) { 
+            if path.is_file() && RE_DATEBOX.is_match(path.to_str().unwrap()) { 
                 boxes.push(path)
             }
         }
@@ -363,47 +387,37 @@ impl TaskBox {
                 "%Y-%m-%d").expect("something wrong!");
 
             if boxdate < today || (all && boxdate != today) {
-                let mut todo = TaskBox::new(taskbox);
-                today_todo._move_in(&mut todo);
+                today_todo._move_in(&mut TaskBox::new(taskbox));
             }
         }
     }
 
     // today -> tomorrow
     pub fn shift() {
-        let basedir = PathBuf::from(Config_get!("basedir"));
-
-        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut tomor_todo = TaskBox::new(basedir.join(get_tomorrow()).with_extension("md"));
-        tomor_todo._move_in(&mut today_todo)
+        TaskBox::new(util::get_inbox_file("tomorrow"))
+            ._move_in(&mut
+        TaskBox::new(util::get_inbox_file("today")))
     }
 
     // INBOX -> today
     pub fn collect(inbox_from: Option<String>) {
-        let basedir = PathBuf::from(Config_get!("basedir"));
+        let from = inbox_from.unwrap_or("inbox".into());
 
-        if inbox_from == Some(get_today()) {
+        if from == get_today() || from == "today" {
             println!("{} is not a valid source", S_moveto!("today"));
             return
         }
 
-        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut from_todo = if let Some(from_name) = inbox_from {
-            TaskBox::new(basedir.join(from_name).with_extension("md"))
-        } else {
-            TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"))
-        };
-
-        today_todo._move_in(&mut from_todo)
+        TaskBox::new(util::get_inbox_file("today"))
+            ._move_in(&mut
+        TaskBox::new(util::get_inbox_file(&from)))
     }
 
     // today -> INBOX
     pub fn postp() {
-        let basedir = PathBuf::from(Config_get!("basedir"));
-
-        let mut today_todo = TaskBox::new(basedir.join(get_today()).with_extension("md"));
-        let mut inbox_todo = TaskBox::new(basedir.join(INBOX_NAME).with_extension("md"));
-        inbox_todo._move_in(&mut today_todo)
+        TaskBox::new(util::get_inbox_file("inbox"))
+            ._move_in(&mut
+        TaskBox::new(util::get_inbox_file("today")))
     }
 
     // specified markdown file -> cur

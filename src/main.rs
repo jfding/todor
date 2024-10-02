@@ -25,6 +25,7 @@ fn main() {
             if cmdname == "todor" {
                 "inbox"
             } else {
+                // e.g. "today", "tomorrow", "yesterday", "t.read", "todo.working"
                 cmdname.split('.').last().unwrap()
             }
         };
@@ -107,8 +108,7 @@ fn main() {
         Some(Commands::Glance)  => boxops::glance_all(),
         Some(Commands::Listbox) => boxops::list_boxes(),
         Some(Commands::Cleanup) => boxops::cleanup().expect("failed"),
-        Some(Commands::Edit { diffwith, routines }) => boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
-
-        Some(Commands::Check)  => boxops::check(),
+        Some(Commands::Edit { diffwith, routines }) =>
+            boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
     }
 }
