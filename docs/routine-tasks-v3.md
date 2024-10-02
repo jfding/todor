@@ -6,7 +6,6 @@
 3. bi-weekly
 4. monthly-on-date
 5. monthly-on-weekday (4 weeks)
-6. outdated
 
 ## How to store them in markdown
 - [ ] {󰃵:d yyyy-mm-dd} daily
@@ -14,7 +13,6 @@
 - [ ] {󰃵:b yyyy-mm-dd} bi-weekly
 - [ ] {󰃵:q yyyy-mm-dd} monthly-on-weekday
 - [ ] {󰃵:m yyyy-mm-dd} monthly-on-date
-- [ ] {󰃵:o yyyy-mm-dd} outdated
 
 ## Where to save
 There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure will be:
@@ -42,7 +40,7 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
   * actually its an alias of `collect --inbox routines`
 * when to run `today` cli with any command, will have a daily-once hook to run `check`
 * command `edit` will have a new flag `-r/--routine` to edit the routine tasks
-* for `import`, will import the (rarely)matched routine tasks, but with warnings
+* for `import`, will import the (rarely)matched routine tasks to "ROUTINES" box
 * for `list` and `listall`, list them with special flags
 * for `collect` (INBOX/other -> today) and `postp` (today -> INBOX) will ignore the routine tasks
   * but `collect --inbox routines` is specific for routine tasks

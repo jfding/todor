@@ -15,7 +15,7 @@ lazy_static! {
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
     static ref RE_ROUTINES    :Regex =
-        Regex::new(r"\{󰃵:([dDwWbBqQmMoO]) (\d{4}-\d{2}-\d{2})\} (.*)").unwrap();
+        Regex::new(r"\{󰃯:([dDwWbBqQmM]) (\d{4}-\d{2}-\d{2})\} (.*)").unwrap();
 }
 
 pub const INBOX_NAME :&str  = "INBOX";
@@ -51,6 +51,13 @@ impl TaskBox {
             title: None, // None means not loaded
             alias: get_box_alias(&title),
             tasks: Vec::new(),
+        }
+    }
+
+    fn _addone(&mut self, task: String) {
+        let pair = (task, false);
+        if ! self.tasks.contains(&pair) {
+            self.tasks.push(pair)
         }
     }
 
@@ -189,7 +196,7 @@ impl TaskBox {
                         "m" => "monthly",
                         _ => "unknown",
                     };
-                    let newtask = format!("{} {{󰃵:{} by {}}}", &caps[3], kind, &caps[2]);
+                    let newtask = format!("{} {{{}:{} by {}}}", &caps[3], CALENDAR, kind, &caps[2]);
 
                     println!("  {} : {}", S_checkbox!(CALENDAR), newtask);
                     (newtask, false)
@@ -209,19 +216,23 @@ impl TaskBox {
     pub fn add(&mut self, what: String, routine: Option<Routine>, add_date: bool) {
         self._load();
 
-        let task = match routine {
-            Some(Routine::Daily)    => format!("{{󰃵:d {}}} {}", get_today(), what),
-            Some(Routine::Weekly)   => format!("{{󰃵:w {}}} {}", get_today(), what),
-            Some(Routine::Biweekly) => format!("{{󰃵:b {}}} {}", get_today(), what),
-            Some(Routine::Qweekly)  => format!("{{󰃵:q {}}} {}", get_today(), what),
-            Some(Routine::Monthly ) => format!("{{󰃵:m {}}} {}", get_today(), what),
-            _ => {
-                if add_date { format!("{} [󰃵 {}]", what, get_today()) }
-                else { what }
-            }
-        };
+        let task = if let Some(routine) = routine {
+            format!("{{{}:{} {}}} {}",
+                CALENDAR, 
+                match routine {
+                    Routine::Daily    => "d",
+                    Routine::Weekly   => "w",
+                    Routine::Biweekly => "b",
+                    Routine::Qweekly  => "q",
+                    Routine::Monthly  => "m",
+                },
+                get_today(), what)
 
-        self.tasks.push((task, false));
+        } else if add_date {
+            format!("{} [{} {}]", what, CALENDAR, get_today())
+        } else { what };
+
+        self._addone(task);
         self._dump();
     }
 
@@ -433,22 +444,37 @@ impl TaskBox {
         println!("importing {} {}", S_fpath!(mdfile), PROGRESS);
 
         let mut newt = Vec::new();
+        let mut newr = Vec::new();
         for rline in fs::read_to_string(fpath).expect("cannot read file").lines() {
             let line = rline.trim();
             if line.is_empty() { continue }
 
             if let Some(stripped) = line.strip_prefix(PREFIX_OPEN) {
-                println!("  {} : {}", S_checkbox!(CHECKBOX), stripped);
-                newt.push((stripped.to_string(), false))
+                if RE_ROUTINES.is_match(stripped) {
+                    println!("  {} : {}", S_checkbox!(CALENDAR), stripped);
+                    newr.push(stripped.to_string())
+                } else {
+                    println!("  {} : {}", S_checkbox!(CHECKBOX), stripped);
+                    newt.push(stripped.to_string())
+                }
             }
         }
 
-        if newt.is_empty() {
+        if newt.is_empty() && newr.is_empty() {
             println!("{} found!", S_empty!("nothing"));
-        } else {
+            return
+        }
+
+        if ! newt.is_empty() {
             self._load();
-            self.tasks.append(&mut newt);
+            newt.iter().for_each(|t| self._addone(t.to_string()));
             self._dump();
+        }
+        if ! newr.is_empty() {
+            let mut rbox = TaskBox::new(util::get_inbox_file("routine"));
+            rbox._load();
+            newr.iter().for_each(|t| rbox._addone(t.to_string()));
+            rbox._dump();
         }
     }
 }
