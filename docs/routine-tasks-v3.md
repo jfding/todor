@@ -39,11 +39,13 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
 * use `add` command to add a new routine task with option, and it will be store in ROUTINES md file with proper *routine-prefix* and current date, available options are:
   * `-r/--routine <daily | weekly | biweekly | qweekly | monthly>`
 * add a new command `check` to pick up any matched routine tasks to "today" box, still with expanded routine info (details TBD)
+  * actually its an alias of `collect --inbox routines`
 * when to run `today` cli with any command, will have a daily-once hook to run `check`
 * command `edit` will have a new flag `-r/--routine` to edit the routine tasks
 * for `import`, will import the (rarely)matched routine tasks, but with warnings
 * for `list` and `listall`, list them with special flags
 * for `collect` (INBOX/other -> today) and `postp` (today -> INBOX) will ignore the routine tasks
+  * but `collect --inbox routines` is specific for routine tasks
 * for `shift` (today -> tomorrow) and `sink` (old days -> today), will ignore the _daily_ tasks, but move the other routines tasks as _outdated_ tasks
   * but if move from tomorrow back to today, will re-check the matching, if matched then change back to regular routine flags
 * no affect: `count`, `mark`, `purge`, `glance`, `listbox`
