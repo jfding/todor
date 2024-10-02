@@ -115,8 +115,8 @@ pub enum Commands {
     /// -> clean up all empty datetime taskbox
     Cleanup,
 
-    /// -> as alias of 'collect --inbox routine'
-    Check,
+    /// -> checkout routine tasks to "today"(collect --inbox routine)
+    Checkout,
 }
 
 impl Default for Cli {

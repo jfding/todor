@@ -57,7 +57,7 @@ fn main() {
         Some(Commands::Sink { all })      => TaskBox::sink(all),
         Some(Commands::Shift)             => TaskBox::shift(),
         Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
-        Some(Commands::Check)             => TaskBox::collect(Some("routine".into())),
+        Some(Commands::Checkout)          => TaskBox::collect(Some("routine".into())),
         Some(Commands::Postp)             => TaskBox::postp(),
 
         Some(Commands::Mark) => {
