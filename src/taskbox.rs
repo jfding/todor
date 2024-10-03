@@ -614,7 +614,7 @@ mod tests {
 
         tb2._move_in(&mut tb1);
 
-        let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb2 file");
+        let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
         assert_eq!(test1_output, test1_actual);
 
         let test2_actual = fs::read_to_string(&tb2.fpath).expect("Failed to read tb2 file");
@@ -669,11 +669,67 @@ mod tests {
 
         tb2._move_in(&mut tb1);
 
-        let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb2 file");
+        let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
         assert_eq!(test1_output, test1_actual);
 
         let test2_actual = fs::read_to_string(&tb2.fpath).expect("Failed to read tb2 file");
         assert_eq!(test2_output, test2_actual);
+    }
+
+    #[test]
+    fn test_move_in_with_dup_sub() {
+        let (mut tb1, _dir1) = setup_test_taskbox("test1");
+        let (mut tb2, _dir2) = setup_test_taskbox("test2");
+
+        // Load prepared markdown files as test input
+        let test1_input = r#"# test1
+
+- [ ] Task to move
+  - [ ] SubTask1 to move
+  - [ ] SubTask1 to move
+- [ ] Task2 to move
+  - [x] SubTask1 to move
+  - [ ] SubTask1 to move
+- [ ] Task3 to move
+  - [x] SubTask1 to move
+  - [x] SubTask1 to move
+- [x] Task4 to move
+  - [ ] SubTask1 to move
+  - [x] SubTask1 to move
+"#;
+        let test1_output = r#"# test1
+
+- [x] Task2 to move
+  - [x] SubTask1 to move
+- [x] Task3 to move
+  - [x] SubTask1 to move
+  - [x] SubTask1 to move
+- [x] Task4 to move
+  - [x] SubTask1 to move
+"#;
+        let test2_output = r#"# test2
+
+- [ ] Task to move
+  - [ ] SubTask1 to move
+  - [ ] SubTask1 to move
+- [ ] Task2 to move
+  - [ ] SubTask1 to move
+- [ ] Task3 to move
+- [ ] 󰼈 Task4 to move
+  - [ ] SubTask1 to move
+"#;
+
+        std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
+        tb1._load();
+
+        tb2._move_in(&mut tb1);
+
+        let test2_actual = fs::read_to_string(&tb2.fpath).expect("Failed to read tb2 file");
+        assert_eq!(test2_output, test2_actual);
+
+        let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
+        // will failed, TODO to fix it with a design
+        assert_eq!(test1_output, test1_actual);
     }
 
     #[test]
