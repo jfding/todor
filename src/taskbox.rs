@@ -207,6 +207,10 @@ impl TaskBox {
                     if ! self.tasks.contains(&pair) {
                         self.tasks.push(pair)
                     }
+                } else {
+                    eprintln!("  {} ignore non-routine task: {}",
+                            S_failure!(WARN),
+                            S_failure!(task));
                 }
 
             } else {
@@ -214,7 +218,7 @@ impl TaskBox {
                 if task.contains(WARN) {
                     println!("  {} : {}", S_checkbox!(CHECKED), task);
                 } else if caps.is_some() {
-                    eprintln!("  {} : unexpected routine task move: {}",
+                    println!("  {} : unexpected routine task move: {}",
                             S_failure!(WARN),
                             S_failure!(task));
                 } else {
