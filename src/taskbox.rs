@@ -16,6 +16,8 @@ lazy_static! {
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
     static ref RE_ROUTINES :Regex =
         Regex::new(r"\{󰃯:([dDwWbBqQmM]) (\d{4}-\d{2}-\d{2})\} (.*)").unwrap();
+    static ref RE_ROUTINES_CHECKOUT :Regex =
+        Regex::new(r"\{󰃯:(daily|weekly|biweekly|qweekly|monthly)\} (.*)").unwrap();
 }
 
 pub const INBOX_NAME :&str  = "INBOX";
@@ -51,13 +53,6 @@ impl TaskBox {
             title: None, // None means not loaded
             alias: get_box_alias(&title),
             tasks: Vec::new(),
-        }
-    }
-
-    fn _addone(&mut self, task: String) {
-        let pair = (task, false);
-        if ! self.tasks.contains(&pair) {
-            self.tasks.push(pair)
         }
     }
 
@@ -127,72 +122,77 @@ impl TaskBox {
         fs::write(&self.fpath, content).expect("cannot write file")
     }
 
-    /// drain all uncompelted tasks
-    fn _drain(&mut self) {
-        self._load();
+    // mark the task which has "done" subtask as "done"
+    // return whether happened
+    fn _mark_task_with_done_subtask(&mut self, task: &str) -> bool {
+        if task.starts_with(PREFIX_SUBT) { return false }
 
-        // "ROUTINES" not drain
-        if self.title == Some("ROUTINES".into()) { return }
-
-        let mut newtasks = Vec::new();
-        let mut last_major_task: Option<(String, bool)> = None;
-
-        for (task, done) in self.tasks.iter() {
-
-            if task.starts_with(PREFIX_SUBT) {
-                if *done {
-                    if let Some((ref last_major, lm_done)) = last_major_task {
-                        if !lm_done {
-                            newtasks.push((last_major.to_string(), true));
-                            last_major_task = None;
-                        }
-                    }
+        let mut found = false;
+        let mut task_status :Option<&mut bool> = None;
+        for (t, done) in self.tasks.iter_mut() {
+            if ! found {
+                if t == task && ! *done {
+                    found = true;
+                    task_status = Some(done);
                 }
-            } else {
-                last_major_task = Some((task.clone(), *done));
-            }
+                continue
 
-            if *done {
-                newtasks.push((task.clone(), true));
+            } else if ! t.starts_with(PREFIX_SUBT) {
+                return false
+            } else if *done {
+                // found done sub-task for this major task
+                if task_status.is_some() {
+                    *task_status.unwrap() = true;
+                }
+                return true
             }
         }
-
-        self.tasks = newtasks;
-        self._dump();
+        false
     }
 
-    fn _move_in(&mut self, todo_in: &mut TaskBox) {
-        self._load();
-        todo_in._load();
+    fn _addone(&mut self, task: String) {
+        let pair = (task, false);
+        if ! self.tasks.contains(&pair) {
+            self.tasks.push(pair)
+        }
+    }
+    fn _append1(&mut self, task: String) {
+        self.tasks.push((task, false));
+    }
 
-        let tasks = todo_in._get_all_to_mark();
+    fn _move_one(&mut self, from: &mut TaskBox, task: &str) {
+        // add new one to self
+        self._append1(task.to_string());
+
+        if ! from._mark_task_with_done_subtask(task) {
+            // remove the one from "from"
+            from.tasks.retain(|(t, _)| t != task)
+        }
+    }
+
+    fn _move_in(&mut self, todo_from: &mut TaskBox) {
+        self._load(); todo_from._load();
+
+        let tasks = todo_from._get_all_to_mark();
         if tasks.is_empty() { return }
 
         // print title line
-        let from = if todo_in.alias.is_some() {
-            todo_in.alias.as_ref()
-        } else {
-            todo_in.title.as_ref()
-        }.unwrap();
-        let to = if self.alias.is_some() {
-            self.alias.as_ref()
-        } else {
-            self.title.as_ref()
-        }.unwrap();
+        let from = todo_from.alias.clone().unwrap_or(todo_from.title.clone().unwrap());
+        let to = self.alias.clone().unwrap_or(self.title.clone().unwrap());
         println!("{} {} {} {}", S_movefrom!(from), MOVING,
                                 S_moveto!(to), PROGRESS);
 
         for task in tasks {
-            let pair = if task.contains(WARN) {
+            if task.contains(WARN) {
                 println!("  {} : {}", S_checkbox!(CHECKED), task);
-                (task.clone(), true)
+                self._move_one(todo_from, &task);
             } else if let Some(caps) = RE_ROUTINES.captures(&task) {
                 if from != ROUTINE_BOXNAME || to != "today" {
                     // only "collect --inbox routines" (routines -> today) is valid
                     eprintln!("  {} : unexpected routine task move: {}",
                             S_failure!(WARN),
                             S_failure!(task));
-                    (task.clone(), false)
+                    self._move_one(todo_from, &task);
                 } else {
                     if ! util::match_routine(&caps[1], &caps[2]) { continue }
 
@@ -207,18 +207,18 @@ impl TaskBox {
                     let newtask = format!("{{{}:{}}} {} [{} {}]", ROUTINES, kind, &caps[3], CALENDAR, get_today());
 
                     println!("  {} : {}", S_checkbox!(ROUTINES), newtask);
-                    (newtask, false)
+                    self._move_one(todo_from, &newtask);
                 }
             } else {
                 println!("  {} : {}", S_checkbox!(CHECKBOX), task);
-                (task.clone(), false)
-            };
-            if ! self.tasks.contains(&pair) {
-                self.tasks.push(pair)
+                self._move_one(todo_from, &task);
             }
         }
 
-        todo_in._drain();
+        // "ROUTINES" not drain
+        if from != ROUTINE_BOXNAME {
+            todo_from._dump();
+        }
         self._dump();
     }
 
