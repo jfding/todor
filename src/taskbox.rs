@@ -555,6 +555,7 @@ mod tests {
         assert_eq!(tb1.tasks.len(), 3);
 
         tb2._move_in(&mut tb1);
+
         tb2._load();
         assert_eq!(tb2.tasks.len(), 2);
         assert_eq!(tb2.tasks[0].0, "Task to move");
@@ -563,6 +564,28 @@ mod tests {
         tb1._load();
         assert_eq!(tb1.tasks.len(), 1);
         assert_eq!(tb1.tasks[0].0, "Task not to move");
+    }
+
+    #[test]
+    fn test_move_in_with_warn_msg() {
+        let (mut tb1, _dir1) = setup_test_taskbox("test1");
+        let (mut tb2, _dir2) = setup_test_taskbox("test2");
+
+        tb1.add("Task to move".to_string(), None, false);
+        tb1.add("Daily routine".to_string(), Some(Routine::Daily), false);
+        tb1._load();
+
+        assert_eq!(tb1.tasks.len(), 2);
+
+        tb2._move_in(&mut tb1);
+        tb2._load();
+        assert_eq!(tb2.tasks.len(), 2);
+        assert_eq!(tb2.tasks[0].0, "Task to move");
+        assert!(tb2.tasks[1].0.starts_with("{󰃯:d "));
+        assert!(tb2.tasks[1].0.ends_with("} Daily routine"));
+
+        tb1._load();
+        assert_eq!(tb1.tasks.len(), 0);
     }
 
     #[test]
