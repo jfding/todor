@@ -14,7 +14,7 @@ lazy_static! {
     static ref RE_DATEBOX :Regex = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
-    static ref RE_ROUTINES    :Regex =
+    static ref RE_ROUTINES :Regex =
         Regex::new(r"\{󰃯:([dDwWbBqQmM]) (\d{4}-\d{2}-\d{2})\} (.*)").unwrap();
 }
 
@@ -138,6 +138,7 @@ impl TaskBox {
         let mut last_major_task: Option<(String, bool)> = None;
 
         for (task, done) in self.tasks.iter() {
+
             if task.starts_with(PREFIX_SUBT) {
                 if *done {
                     if let Some((ref last_major, lm_done)) = last_major_task {
@@ -187,6 +188,7 @@ impl TaskBox {
                 (task.clone(), true)
             } else if let Some(caps) = RE_ROUTINES.captures(&task) {
                 if from != ROUTINE_BOXNAME || to != "today" {
+                    // only "collect --inbox routines" (routines -> today) is valid
                     eprintln!("  {} : unexpected routine task move: {}",
                             S_failure!(WARN),
                             S_failure!(task));
@@ -202,9 +204,9 @@ impl TaskBox {
                         "m" => "monthly",
                         _ => "unknown",
                     };
-                    let newtask = format!("{} {{{}:{} by {}}}", &caps[3], CALENDAR, kind, &caps[2]);
+                    let newtask = format!("{{{}:{}}} {} [{} {}]", ROUTINES, kind, &caps[3], CALENDAR, get_today());
 
-                    println!("  {} : {}", S_checkbox!(CALENDAR), newtask);
+                    println!("  {} : {}", S_checkbox!(ROUTINES), newtask);
                     (newtask, false)
                 }
             } else {
@@ -225,7 +227,7 @@ impl TaskBox {
 
         let task = if let Some(routine) = routine {
             format!("{{{}:{} {}}} {}",
-                CALENDAR, 
+                ROUTINES, 
                 match routine {
                     Routine::Daily    => "d",
                     Routine::Weekly   => "w",
@@ -243,13 +245,6 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn _get_all(&mut self) -> (Vec<String> ,Vec<String>) {
-        self._load();
-        (
-            self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect(),
-            self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect()
-        )
-    }
     pub fn _get_all_to_mark(&mut self) -> Vec<String> {
         self._load();
 
@@ -275,7 +270,9 @@ impl TaskBox {
     }
 
     pub fn list(&mut self, listall: bool) {
-        let (left, dones) = self._get_all();
+        self._load();
+        let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
+        let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
 
         if listall && !dones.is_empty() {
             for t in dones {
@@ -458,7 +455,7 @@ impl TaskBox {
 
             if let Some(stripped) = line.strip_prefix(PREFIX_OPEN) {
                 if RE_ROUTINES.is_match(stripped) {
-                    println!("  {} : {}", S_checkbox!(CALENDAR), stripped);
+                    println!("  {} : {}", S_checkbox!(ROUTINES), stripped);
                     newr.push(stripped.to_string())
                 } else {
                     println!("  {} : {}", S_checkbox!(CHECKBOX), stripped);

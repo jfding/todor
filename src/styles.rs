@@ -13,7 +13,8 @@ pub const SUBTASK: &str = "󱞩";
 pub const PROGRESS: &str = "󰓌";
 pub const WARN: &str = "󰼈";
 pub const QUESTION: &str = "󱜹";
-pub const CALENDAR: &str = "󰃯"; // 󰃵
+pub const ROUTINES: &str = "󰃯";
+pub const CALENDAR: &str = "󰃵";
 // S means Style
 #[macro_export]
 macro_rules! S_fpath { ($e:expr) => { $e.to_string().purple() }; }
