@@ -221,6 +221,12 @@ impl TaskBox {
                     println!("  {} : unexpected routine task move: {}",
                             S_failure!(WARN),
                             S_failure!(task));
+                } else if RE_ROUTINES_CHECKOUT.is_match(&task) && to == INBOX_NAME {
+                    eprintln!("  {} ignore checkout routine task: {}",
+                            S_failure!(WARN),
+                            S_failure!(task));
+                    continue
+
                 } else {
                     println!("  {} : {}", S_checkbox!(CHECKBOX), task);
                 }
