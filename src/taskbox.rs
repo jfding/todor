@@ -45,8 +45,8 @@ impl TaskBox {
         }
     }
 
-    pub fn _load(&mut self) {
-        if self.title.is_some() { return } // avoid _load() twice
+    pub fn load(&mut self) {
+        if self.title.is_some() { return } // avoid load() twice
                                            //
         if !self.fpath.exists() {
             let fpath = &self.fpath;
@@ -69,7 +69,7 @@ impl TaskBox {
                 let  guard = StdoutOverride::override_file(null).unwrap();
                 let eguard = StderrOverride::override_file(null).unwrap();
 
-                self._move_in(&mut
+                self.move_in(&mut
                         TaskBox::new(util::get_inbox_file(ROUTINE_BOXNAME)));
 
                 drop(guard); drop(eguard);
@@ -184,10 +184,10 @@ impl TaskBox {
         }
     }
 
-    pub fn _move_in(&mut self, todo_from: &mut TaskBox) {
-        self._load(); todo_from._load();
+    pub fn move_in(&mut self, todo_from: &mut TaskBox) {
+        self.load(); todo_from.load();
 
-        let tasks = todo_from._get_all_to_mark();
+        let tasks = todo_from.get_all_to_mark();
         if tasks.is_empty() { return }
 
         // print title line
@@ -257,7 +257,7 @@ impl TaskBox {
     }
 
     pub fn add(&mut self, what: String, routine: Option<Routine>, add_date: bool) {
-        self._load();
+        self.load();
 
         let task = if let Some(routine) = routine {
             format!("{{{}:{} {}}} {}",
@@ -279,8 +279,8 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn _get_all_to_mark(&mut self) -> Vec<String> {
-        self._load();
+    pub fn get_all_to_mark(&mut self) -> Vec<String> {
+        self.load();
 
         let mut tasks = Vec::new();
         let mut last_major_task :Option<(String, bool)> = None;
@@ -304,7 +304,7 @@ impl TaskBox {
     }
 
     pub fn list(&mut self, listall: bool) {
-        self._load();
+        self.load();
         let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
         let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
 
@@ -355,13 +355,13 @@ impl TaskBox {
     }
 
     pub fn count(&mut self) {
-        self._load();
+        self.load();
         let cc = self.tasks.iter().filter(|(_, done)| !done).count();
         if cc > 0 { println!("{}", cc) }
     }
 
     pub fn mark(&mut self, items: Vec<String>) {
-        self._load();
+        self.load();
 
         if items.is_empty() || self.tasks.is_empty() {
             return
@@ -380,7 +380,7 @@ impl TaskBox {
     pub fn purge(&mut self, sort: bool) {
         use std::collections::HashSet;
 
-        self._load();
+        self.load();
         if self.tasks.is_empty() { return }
 
         // rules: to keep the original order,
@@ -436,7 +436,7 @@ impl TaskBox {
                 "%Y-%m-%d").expect("something wrong!");
 
             if boxdate < today || (all && boxdate != today) {
-                today_todo._move_in(&mut TaskBox::new(taskbox));
+                today_todo.move_in(&mut TaskBox::new(taskbox));
             }
         }
     }
@@ -444,7 +444,7 @@ impl TaskBox {
     // today -> tomorrow
     pub fn shift() {
         TaskBox::new(util::get_inbox_file("tomorrow"))
-            ._move_in(&mut
+            .move_in(&mut
         TaskBox::new(util::get_inbox_file("today")))
     }
 
@@ -458,14 +458,14 @@ impl TaskBox {
         }
 
         TaskBox::new(util::get_inbox_file("today"))
-            ._move_in(&mut
+            .move_in(&mut
         TaskBox::new(util::get_inbox_file(&from)))
     }
 
     // today -> INBOX
     pub fn pool() {
         TaskBox::new(util::get_inbox_file("inbox"))
-            ._move_in(&mut
+            .move_in(&mut
         TaskBox::new(util::get_inbox_file("today")))
     }
 
@@ -504,13 +504,13 @@ impl TaskBox {
         }
 
         if ! newt.is_empty() {
-            self._load();
+            self.load();
             newt.iter().for_each(|t| self._addone(t.to_string()));
             self._dump();
         }
         if ! newr.is_empty() {
             let mut rbox = TaskBox::new(util::get_inbox_file("routine"));
-            rbox._load();
+            rbox.load();
             newr.iter().for_each(|t| rbox._addone(t.to_string()));
             rbox._dump();
         }

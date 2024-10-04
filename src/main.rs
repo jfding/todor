@@ -62,7 +62,7 @@ fn main() {
 
         Some(Commands::Mark) => {
             let mut todo = TaskBox::new(inbox_path);
-            let tasks = todo._get_all_to_mark();
+            let tasks = todo.get_all_to_mark();
             if tasks.is_empty() {
                 println!(" {} left!", S_empty!("nothing"));
                 return

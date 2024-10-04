@@ -34,7 +34,7 @@ fn test_add_and_list() {
     tb.add("Test task".to_string(), None, false);
     tb.add("Test task with date".to_string(), None, true);
 
-    tb._load();
+    tb.load();
     assert_eq!(tb.tasks.len(), 2);
     assert!(tb.tasks.contains(&("Test task".to_string(), false)));
     assert!(tb.tasks.iter().any(|(task, _)| task.starts_with("Test task with date")));
@@ -48,7 +48,7 @@ fn test_mark() {
     tb.add("Task 3".to_string(), None, false);
 
     tb.mark(vec!["Task 1".to_string(), "Task 3".to_string()]);
-    tb._load();
+    tb.load();
     assert_eq!(tb.tasks.iter().filter(|(_, done)| *done).count(), 2);
 }
 
@@ -60,7 +60,7 @@ fn test_purge() {
     tb.add("Task 3".to_string(), None, false);
 
     tb.purge(false);
-    tb._load();
+    tb.load();
     assert_eq!(tb.tasks.len(), 2);
 }
 
@@ -77,17 +77,17 @@ fn test_move_in_basic() {
 - [ ] Task2 to move
 "#;
     std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
-    tb1._load();
+    tb1.load();
     assert_eq!(tb1.tasks.len(), 3);
 
-    tb2._move_in(&mut tb1);
+    tb2.move_in(&mut tb1);
 
-    tb2._load();
+    tb2.load();
     assert_eq!(tb2.tasks.len(), 2);
     assert_eq!(tb2.tasks[0].0, "Task to move");
     assert_eq!(tb2.tasks[1].0, "Task2 to move");
 
-    tb1._load();
+    tb1.load();
     assert_eq!(tb1.tasks.len(), 1);
     assert_eq!(tb1.tasks[0].0, "Task not to move");
 }
@@ -99,18 +99,18 @@ fn test_move_in_with_warn_msg() {
 
     tb1.add("Task to move".to_string(), None, false);
     tb1.add("Daily routine".to_string(), Some(Routine::Daily), false);
-    tb1._load();
+    tb1.load();
 
     assert_eq!(tb1.tasks.len(), 2);
 
-    tb2._move_in(&mut tb1);
-    tb2._load();
+    tb2.move_in(&mut tb1);
+    tb2.load();
     assert_eq!(tb2.tasks.len(), 2);
     assert_eq!(tb2.tasks[0].0, "Task to move");
     assert!(tb2.tasks[1].0.starts_with("{󰃯:d "));
     assert!(tb2.tasks[1].0.ends_with("} Daily routine"));
 
-    tb1._load();
+    tb1.load();
     assert_eq!(tb1.tasks.len(), 0);
 }
 
@@ -135,10 +135,10 @@ fn test_move_in_with_sub() {
 "#;
 
     std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
-    tb1._load();
+    tb1.load();
     assert_eq!(tb1.tasks.len(), 2);
 
-    tb2._move_in(&mut tb1);
+    tb2.move_in(&mut tb1);
 
     let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
     assert_eq!(test1_output, test1_actual);
@@ -191,9 +191,9 @@ fn test_move_in_with_sub_done() {
 "#;
 
     std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
-    tb1._load();
+    tb1.load();
 
-    tb2._move_in(&mut tb1);
+    tb2.move_in(&mut tb1);
 
     let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
     assert_eq!(test1_output, test1_actual);
@@ -246,9 +246,9 @@ fn test_move_in_with_dup_sub() {
 "#;
 
     std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
-    tb1._load();
+    tb1.load();
 
-    tb2._move_in(&mut tb1);
+    tb2.move_in(&mut tb1);
 
     let test2_actual = fs::read_to_string(&tb2.fpath).expect("Failed to read tb2 file");
     assert_eq!(test2_output, test2_actual);
@@ -263,7 +263,7 @@ fn test_add_routine() {
     let (mut tb, _dir) = setup_test_taskbox("test");
     tb.add("Daily routine".to_string(), Some(Routine::Daily), false);
 
-    tb._load();
+    tb.load();
     assert_eq!(tb.tasks.len(), 1);
     assert!(tb.tasks[0].0.starts_with("{󰃯:d "));
     assert!(tb.tasks[0].0.ends_with("} Daily routine"));
@@ -277,24 +277,24 @@ fn test_checkout() {
     routine.add("Daily routine".to_string(), Some(Routine::Daily), false);
     routine.add("ignore not routine".to_string(), None, false);
 
-    routine._load();
+    routine.load();
     assert_eq!(routine.tasks.len(), 2);
     assert!(routine.tasks[0].0.starts_with("{󰃯:d "));
     assert!(routine.tasks[0].0.ends_with("} Daily routine"));
 
-    today._move_in(&mut routine);
+    today.move_in(&mut routine);
 
-    today._load();
+    today.load();
     assert_eq!(today.tasks.len(), 1);
     assert!(today.tasks[0].0.starts_with("{󰃯:daily} "));
     assert!(today.tasks[0].0.contains("} Daily routine"));
     assert!(today.tasks[0].0.contains(" [󰃵 "));
 
-    tb._move_in(&mut routine);
-    tb._load();
+    tb.move_in(&mut routine);
+    tb.load();
     assert_eq!(tb.tasks.len(), 0);
 
-    today._move_in(&mut routine);
-    today._load();
+    today.move_in(&mut routine);
+    today.load();
     assert_eq!(today.tasks.len(), 1);
 }
