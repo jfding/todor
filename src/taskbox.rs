@@ -254,7 +254,10 @@ impl TaskBox {
         self._dump();
     }
 
-    pub fn add(&mut self, what: String, routine: Option<Routine>, add_date: bool) {
+    pub fn add(&mut self, what: String,
+                          routine: Option<Routine>,
+                          add_date: bool,
+                          start_date: &str) {
         self.load();
 
         let task = if let Some(routine) = routine {
@@ -267,7 +270,7 @@ impl TaskBox {
                     Routine::Qweekly  => "q",
                     Routine::Monthly  => "m",
                 },
-                get_today(), what)
+                start_date, what)
 
         } else if add_date {
             format!("{} [{} {}]", what, CALENDAR, get_today())

@@ -33,8 +33,8 @@ fn test_taskbox_new() {
 #[test]
 fn test_add_and_list() {
     let (mut tb, _dir) = setup_test_taskbox("test");
-    tb.add("Test task".to_string(), None, false);
-    tb.add("Test task with date".to_string(), None, true);
+    tb.add("Test task".to_string(), None, false, "");
+    tb.add("Test task with date".to_string(), None, true, "");
 
     tb.load();
     assert_eq!(tb.tasks.len(), 2);
@@ -45,9 +45,9 @@ fn test_add_and_list() {
 #[test]
 fn test_mark() {
     let (mut tb, _dir) = setup_test_taskbox("test");
-    tb.add("Task 1".to_string(), None, false);
-    tb.add("Task 2".to_string(), None, false);
-    tb.add("Task 3".to_string(), None, false);
+    tb.add("Task 1".to_string(), None, false, "");
+    tb.add("Task 2".to_string(), None, false, "");
+    tb.add("Task 3".to_string(), None, false, "");
 
     tb.mark(vec!["Task 1".to_string(), "Task 3".to_string()]);
     tb.load();
@@ -57,9 +57,9 @@ fn test_mark() {
 #[test]
 fn test_purge() {
     let (mut tb, _dir) = setup_test_taskbox("test");
-    tb.add("Task 1".to_string(), None, false);
-    tb.add("Task 1".to_string(), None, false);
-    tb.add("Task 3".to_string(), None, false);
+    tb.add("Task 1".to_string(), None, false, "");
+    tb.add("Task 1".to_string(), None, false, "");
+    tb.add("Task 3".to_string(), None, false, "");
 
     tb.purge(false);
     tb.load();
@@ -99,8 +99,8 @@ fn test_move_in_with_warn_msg() {
     let (mut tb1, _dir1) = setup_test_taskbox("test1");
     let (mut tb2, _dir2) = setup_test_taskbox("test2");
 
-    tb1.add("Task to move".to_string(), None, false);
-    tb1.add("Daily routine".to_string(), Some(Routine::Daily), false);
+    tb1.add("Task to move".to_string(), None, false, "");
+    tb1.add("Daily routine".to_string(), Some(Routine::Daily), false, "");
     tb1.load();
 
     assert_eq!(tb1.tasks.len(), 2);
@@ -263,7 +263,7 @@ fn test_move_in_with_dup_sub() {
 #[test]
 fn test_add_routine() {
     let (mut tb, _dir) = setup_test_taskbox("test");
-    tb.add("Daily routine".to_string(), Some(Routine::Daily), false);
+    tb.add("Daily routine".to_string(), Some(Routine::Daily), false, &get_today());
 
     tb.load();
     assert_eq!(tb.tasks.len(), 1);
@@ -276,8 +276,8 @@ fn test_checkout() {
     let (mut tb, _dir) = setup_test_taskbox("test");
     let (mut today, _dir) = setup_test_taskbox(&get_today());
     let (mut routine, _dir) = setup_test_taskbox(ROUTINE_BOXNAME);
-    routine.add("Daily routine".to_string(), Some(Routine::Daily), false);
-    routine.add("ignore not routine".to_string(), None, false);
+    routine.add("Daily routine".to_string(), Some(Routine::Daily), false, &get_today());
+    routine.add("ignore not routine".to_string(), None, false, "");
 
     routine.load();
     assert_eq!(routine.tasks.len(), 2);
@@ -315,9 +315,9 @@ fn test_pool_today_to_inbox() {
     std::fs::write(&today.fpath, today_input).expect("Failed to write test input to file");
     today.load();
 
-    today.add("Wrong daily routine".to_string(), Some(Routine::Daily), false);
-    inbox.add("old task".to_string(), None, false);
-    routine.add("Daily routine".to_string(), Some(Routine::Daily), false);
+    today.add("Wrong daily routine".to_string(), Some(Routine::Daily), false, &get_today());
+    inbox.add("old task".to_string(), None, false, "");
+    routine.add("Daily routine".to_string(), Some(Routine::Daily), false, &get_today());
 
     today.load(); inbox.load(); routine.load();
     assert_eq!(today.tasks.len(), 2);
@@ -358,8 +358,8 @@ fn test_import_somefile_to_inbox() {
     let fpath = dir.path().join("import-input").with_extension("md");
     std::fs::write(&fpath, md_input).expect("Failed to write test input to file");
 
-    inbox.add("old task".to_string(), None, false);
-    routine.add("old Daily routine".to_string(), Some(Routine::Daily), false);
+    inbox.add("old task".to_string(), None, false, "");
+    routine.add("old Daily routine".to_string(), Some(Routine::Daily), false, "");
     inbox.load(); routine.load();
     assert_eq!(inbox.tasks.len(), 1);
     assert_eq!(routine.tasks.len(), 1);

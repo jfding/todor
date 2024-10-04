@@ -1,4 +1,4 @@
-use inquire::ui::{ Styled, RenderConfig, Color, StyleSheet, Attributes };
+use inquire::ui::{ Styled, RenderConfig, Color, StyleSheet, Attributes, calendar };
 use clap::builder::styling;
 
 pub use crate::conf::*;
@@ -15,6 +15,7 @@ pub const WARN: &str = "󰼈";
 pub const QUESTION: &str = "󱜹";
 pub const ROUTINES: &str = "󰃯";
 pub const CALENDAR: &str = "󰃵";
+pub const WEEKLINE: &str = "󰕶";
 // S means Style
 #[macro_export]
 macro_rules! S_fpath { ($e:expr) => { $e.to_string().purple() }; }
@@ -34,6 +35,8 @@ macro_rules! S_hints { ($e:expr) => { $e.to_string().bright_black().blink() }; }
 macro_rules! S_success { ($e:expr) => { $e.to_string().green().bold() }; }
 #[macro_export]
 macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
+#[macro_export]
+macro_rules! S_routine { ($e:expr) => { $e.to_string().purple().italic() }; }
 #[macro_export]
 macro_rules! S_blink { ($e:expr) => {
     if std::env::var("NO_BLINK").is_ok() || 
@@ -106,4 +109,32 @@ pub fn get_multi_select_style() -> RenderConfig<'static> {
             .with_fg(Color::DarkBlue)
             .with_attr(Attributes::BOLD)
         )
+}
+pub fn get_date_input_style() -> RenderConfig<'static> {
+    let mut cal_conf = calendar::CalendarRenderConfig::default_colored()
+            .with_prefix(
+                 Styled::new(WEEKLINE)
+                .with_fg(Color::DarkGrey)
+            );
+    cal_conf.week_header = StyleSheet::default()
+            .with_bg(Color::DarkGrey)
+            .with_attr(Attributes::ITALIC);
+
+    RenderConfig::default()
+        .with_prompt_prefix(
+             Styled::new(ROUTINES)
+            .with_fg(Color::LightYellow)
+         )
+        .with_answered_prompt_prefix(ROUTINES.into())
+        .with_help_message(
+             StyleSheet::default()
+            .with_fg(Color::DarkGrey)
+            .with_attr(Attributes::ITALIC)
+        )
+        .with_answer(
+             StyleSheet::default()
+            .with_fg(Color::DarkBlue)
+            .with_attr(Attributes::BOLD)
+        )
+        .with_calendar_config(cal_conf)
 }

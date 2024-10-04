@@ -44,6 +44,10 @@ pub enum Commands {
 
         #[arg(short, long, value_enum)]
         routine: Option<Routine>,
+
+        /// interactive mode to select start-date for routine tasks
+        #[arg(short, long)]
+        interactive: bool,
     },
 
     /// -> mark item as done

@@ -80,7 +80,7 @@ fn main() {
             todo.mark(selected);
         }
 
-        Some(Commands::Add { what, date_stamp, routine }) => {
+        Some(Commands::Add { what, date_stamp, routine, interactive }) => {
             if routine.is_some() {
                 inbox_path = get_inbox_file("routine")
             }
@@ -99,7 +99,26 @@ fn main() {
 
             input = input.trim().to_string();
             if !input.is_empty() {
-                todo.add(input, routine, date_stamp);
+                let mut start_date = get_today();
+                if routine.is_some() && interactive {
+                    let kind= match routine {
+                            Some(Routine::Daily)    => "daily",
+                            Some(Routine::Weekly)   => "weekly",
+                            Some(Routine::Biweekly) => "biweekly",
+                            Some(Routine::Qweekly)  => "qweekly",
+                            Some(Routine::Monthly)  => "monthly",
+                            _ => "",
+                            };
+
+                    start_date = inquire::DateSelect::new(&format!(" {} from:",S_routine!(kind)))
+                        .with_render_config(get_date_input_style())
+                        .with_help_message("h/j/k/l | <enter> | ctrl+c")
+                        .prompt().unwrap_or_else(|_| {
+                                println!("{}", S_empty!("No starting date selected, skip."));
+                                std::process::exit(1)
+                            }).to_string();
+                }
+                todo.add(input, routine, date_stamp, &start_date);
                 println!("{}", S_success!("Task added successfully!"));
             } else {
                 println!("{}", S_empty!("Empty input, skip."));
