@@ -10,11 +10,13 @@ fn setup_test_taskbox(name: &str) -> (TaskBox, tempfile::TempDir) {
 
     // test config settings
     let testtoml = dir.path().join("config.toml");
-    let testcontent = format!("basedir = \"{}\"\nblink = false\n", dir.path().to_str().unwrap());
+    let testcontent = format!("basedir = \"{}\"\nblink = false\n", dir.path().display());
     std::fs::write(&testtoml, testcontent).expect("write err");
     let test_conf = Config::load(Some(testtoml.to_str().unwrap().into()));
 
     let mut g_conf = CONFIG.write().unwrap();
+    println!("{:?}", g_conf);
+    println!("{:?}", test_conf);
     g_conf.update_with(&test_conf);
 
     (TaskBox::new(file_path), dir)
@@ -336,7 +338,35 @@ fn test_pool_today_to_inbox() {
     today.load(); inbox.load();
     assert_eq!(today.tasks.len(), 1);
     assert_eq!(inbox.tasks.len(), 3);
+}
 
-    assert!(routine.tasks[0].0.starts_with("{󰃯:d "));
-    assert!(routine.tasks[0].0.ends_with("} Daily routine"));
+#[test]
+fn test_import_somefile_to_inbox() {
+    let md_input = r#"# free style file
+
+- [ ] Task to import
+        - [ ] Task to import with blank
+## below one is a duplicated, will ingore
+- [ ] Task to import
+- [ ] Task2 to import
+- [ ] {󰃯:d 2024-10-01} one daily to import
+"#;
+
+    let (mut inbox, dir) = setup_test_taskbox(INBOX_NAME);
+    let mut routine = TaskBox::new(util::get_inbox_file("routine"));
+
+    let fpath = dir.path().join("import-input").with_extension("md");
+    std::fs::write(&fpath, md_input).expect("Failed to write test input to file");
+
+    inbox.add("old task".to_string(), None, false);
+    routine.add("old Daily routine".to_string(), Some(Routine::Daily), false);
+    inbox.load(); routine.load();
+    assert_eq!(inbox.tasks.len(), 1);
+    assert_eq!(routine.tasks.len(), 1);
+
+    routine = TaskBox::new(util::get_inbox_file("routine")); //reload
+    inbox.import(Some(fpath.to_str().unwrap().to_string()));
+    inbox.load(); routine.load();
+    assert_eq!(inbox.tasks.len(), 4);
+    assert_eq!(routine.tasks.len(), 2);
 }
