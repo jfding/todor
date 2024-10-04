@@ -103,8 +103,8 @@ pub enum Commands {
         inbox: Option<String>,
     },
 
-    /// -> postpone all uncompeleted of today to INBOX
-    Postp,
+    /// -> pooling all uncompeleted of today to INBOX
+    Pool,
 
     /// -> import uncompeleted task in any markdown file to current
     Import{

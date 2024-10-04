@@ -56,7 +56,7 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
 * for `count`, count in the routine ones
 * for `import`, will ignore the (exceptional)matched routine tasks
 * for `list` and `listall`, list them with special flag chars
-* for `collect` (INBOX/other -> today) and `postp` (today -> INBOX) will ignore the routine tasks
+* for `collect` (INBOX/other -> today) and `pool` (today -> INBOX) will ignore the routine tasks
 * for `shift` (today -> tomorrow) and `sink` (old days -> today), will ignore the _daily_ tasks, but move the other routines tasks as _outdated_ tasks with flag char "o"
   * but if move from tomorrow back to today, will re-check the routine tasks (if not found, still keep [o])
 * no affect: `purge`, `glance`, `listbox`

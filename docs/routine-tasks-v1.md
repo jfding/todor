@@ -49,7 +49,7 @@ then:
 * for `import`, will import the matched routine tasks
 * for `list` and `listall`, list them with special flag chars
 * for `collect` command(INBOX/other -> today), only collect the *daily* tasks, and clear INBOX
-* for `postp` command(today -> INBOX), will NOT postpone routine tasks to INBOX
+* for `pool` command(today -> INBOX), will NOT pooling routine tasks to INBOX
 * for `shift` command(today -> tomorrow), will clone a _normal_ task to tomorrow and today unchanged
 * [ :sparkles: ] for `sink` command(old days -> today), when scanning old days boxes, in reverse order:
 ```

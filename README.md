@@ -27,7 +27,7 @@
 - commands: 
   - list(default), listall, add, mark, edit, count
   - purge, glance, listbox
-  - sink, shift, collect, postp
+  - sink, shift, collect, pool
   - import
   - cleanup
 
@@ -36,7 +36,7 @@
 
 ## How the tasks are moving around
 
-These four commands: `sink`, `shift`, `collect`, `postp` are designed to move tasks around in the list. And below is a diagram to show how they work.
+These four commands: `sink`, `shift`, `collect`, `pool` are designed to move tasks around in the list. And below is a diagram to show how they work.
 
 ![tasks-flow](./docs/assets/tasks-flow.png)
 

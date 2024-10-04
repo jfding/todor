@@ -466,7 +466,7 @@ impl TaskBox {
     }
 
     // today -> INBOX
-    pub fn postp() {
+    pub fn pool() {
         TaskBox::new(util::get_inbox_file("inbox"))
             ._move_in(&mut
         TaskBox::new(util::get_inbox_file("today")))

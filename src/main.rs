@@ -58,7 +58,7 @@ fn main() {
         Some(Commands::Shift)             => TaskBox::shift(),
         Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
         Some(Commands::Checkout)          => TaskBox::collect(Some("routine".into())),
-        Some(Commands::Postp)             => TaskBox::postp(),
+        Some(Commands::Pool)              => TaskBox::pool(),
 
         Some(Commands::Mark) => {
             let mut todo = TaskBox::new(inbox_path);
