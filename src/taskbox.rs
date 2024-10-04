@@ -59,9 +59,6 @@ impl TaskBox {
             fs::File::create(fpath).expect("Failed to create file");
             fs::write(fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
 
-            self.alias = get_box_alias(&title);
-            self.title = Some(title);
-
             // if it's "today" box, run 'checkout' once
             if self.title == Some(get_today()) {
                 use stdio_override::{StdoutOverride, StderrOverride};
@@ -115,6 +112,7 @@ impl TaskBox {
             }
         }
 
+        self.alias = get_box_alias(&title);
         self.title = Some(title);
         self.tasks = tasks;
     }
@@ -222,7 +220,7 @@ impl TaskBox {
                         self.tasks.push(pair)
                     }
                 } else {
-                    eprintln!("  {} ignore non-routine task: {}",
+                    eprintln!("  {} : ignore non-routine task: {}",
                             S_failure!(WARN),
                             S_failure!(task));
                 }
@@ -236,7 +234,7 @@ impl TaskBox {
                             S_failure!(WARN),
                             S_failure!(task));
                 } else if RE_ROUTINES_CHECKOUT.is_match(&task) && to == INBOX_NAME {
-                    eprintln!("  {} ignore checkout routine task: {}",
+                    eprintln!("  {} : ignore checkout routine task: {}",
                             S_failure!(WARN),
                             S_failure!(task));
                     continue

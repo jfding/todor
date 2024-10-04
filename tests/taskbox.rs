@@ -298,3 +298,45 @@ fn test_checkout() {
     today.load();
     assert_eq!(today.tasks.len(), 1);
 }
+
+#[test]
+fn test_pool_today_to_inbox() {
+    let today_input = format!(r#"# {}
+
+- [ ] Task to move
+"#, get_today());
+
+    let (mut today, _dir) = setup_test_taskbox(&get_today());
+    let (mut inbox, _dir) = setup_test_taskbox(INBOX_NAME);
+    let (mut routine, _dir) = setup_test_taskbox(ROUTINE_BOXNAME);
+
+    std::fs::write(&today.fpath, today_input).expect("Failed to write test input to file");
+    today.load();
+
+    today.add("Wrong daily routine".to_string(), Some(Routine::Daily), false);
+    inbox.add("old task".to_string(), None, false);
+    routine.add("Daily routine".to_string(), Some(Routine::Daily), false);
+
+    today.load(); inbox.load(); routine.load();
+    assert_eq!(today.tasks.len(), 2);
+    assert_eq!(inbox.tasks.len(), 1);
+    assert_eq!(routine.tasks.len(), 1);
+
+    // check out
+    today.move_in(&mut routine);
+
+    today.load(); inbox.load(); routine.load();
+    assert_eq!(today.tasks.len(), 3);
+    assert_eq!(inbox.tasks.len(), 1);
+    assert_eq!(routine.tasks.len(), 1);
+
+    // pool
+    inbox.move_in(&mut today);
+
+    today.load(); inbox.load();
+    assert_eq!(today.tasks.len(), 1);
+    assert_eq!(inbox.tasks.len(), 3);
+
+    assert!(routine.tasks[0].0.starts_with("{󰃯:d "));
+    assert!(routine.tasks[0].0.ends_with("} Daily routine"));
+}
