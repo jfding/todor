@@ -37,27 +37,44 @@ pub struct TaskBox {
 
 impl TaskBox {
     pub fn new (fpath: PathBuf) -> Self {
-        let title = fpath.file_stem()
-                         .and_then(|s| s.to_str())
-                         .unwrap()
-                         .to_string();
-
-        if !fpath.exists() {
-            fs::create_dir_all(fpath.parent().unwrap()).expect("Failed to create basedir");
-            fs::File::create(&fpath).expect("Failed to create file");
-            fs::write(&fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
-        }
-
         Self {
             fpath,
             title: None, // None means not loaded
-            alias: get_box_alias(&title),
+            alias: None,
             tasks: Vec::new(),
         }
     }
 
     fn _load(&mut self) {
         if self.title.is_some() { return } // avoid _load() twice
+                                           //
+        if !self.fpath.exists() {
+            let fpath = &self.fpath;
+            let title = fpath.file_stem()
+                             .and_then(|s| s.to_str())
+                             .unwrap()
+                             .to_string();
+
+            fs::create_dir_all(fpath.parent().unwrap()).expect("Failed to create basedir");
+            fs::File::create(fpath).expect("Failed to create file");
+            fs::write(fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
+
+            self.alias = get_box_alias(&title);
+            self.title = Some(title);
+
+            // if it's "today" box, run 'checkout' once
+            if self.title == Some(get_today()) {
+                use stdio_override::{StdoutOverride, StderrOverride};
+                let null = if cfg!(windows) { "nul" } else { "/dev/null" };
+                let  guard = StdoutOverride::override_file(null).unwrap();
+                let eguard = StderrOverride::override_file(null).unwrap();
+
+                self._move_in(&mut
+                        TaskBox::new(util::get_inbox_file(ROUTINE_BOXNAME)));
+
+                drop(guard); drop(eguard);
+            }
+        }
 
         let mut tasks = Vec::new();
         let mut title = String::new();
@@ -511,14 +528,24 @@ mod tests {
     fn setup_test_taskbox(name: &str) -> (TaskBox, tempfile::TempDir) {
         let dir = tempdir().unwrap();
         let file_path = dir.path().join(name).with_extension("md");
+
+        // test config settings
+        let testtoml = dir.path().join("config.toml");
+        let testcontent = format!("basedir = \"{}\"\nblink = false\n", dir.path().to_str().unwrap());
+        std::fs::write(&testtoml, testcontent).expect("write err");
+        let test_conf = Config::load(Some(testtoml.to_str().unwrap().into()));
+
+        let mut g_conf = CONFIG.write().unwrap();
+        g_conf.update_with(&test_conf);
+
         (TaskBox::new(file_path), dir)
     }
 
     #[test]
     fn test_taskbox_new() {
         let (tb, _dir) = setup_test_taskbox("test");
-        assert!(tb.fpath.exists());
         assert_eq!(tb.title, None);
+        assert_eq!(tb.alias, None);
         assert_eq!(tb.tasks.len(), 0);
     }
 
