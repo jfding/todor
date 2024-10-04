@@ -1,11 +1,9 @@
 use std::path::PathBuf;
-use std::fs;
 use chrono::*;
 use std::ops::*;
 use cmd_lib::*;
 
 pub use crate::*;
-pub use crate::conf::*;
 pub use crate::styles::*;
 
 #[macro_export]
@@ -59,6 +57,28 @@ pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
 
+pub fn match_routine(kind: &str, s_date_str: &str) -> bool {
+    let mut s_date = NaiveDate::parse_from_str(s_date_str, "%Y-%m-%d").unwrap();
+    if kind == "m" {
+        while s_date < Local::now().date_naive() {
+            s_date = s_date + chrono::Months::new(1);
+        }
+    } else {
+        let steps = match kind {
+            "d" => 1,
+            "w" => 7,
+            "b" => 14,
+            "q" => 28,
+            _ => panic!("unknown routine kind"),
+        };
+        while s_date < Local::now().date_naive() {
+            s_date += chrono::Duration::days(steps);
+        }
+    }
+
+    s_date == Local::now().date_naive()
+}
+
 pub fn get_box_alias(name_in: &str) -> Option<String> {
     let alias = match name_in {
         _ if name_in == get_today() => "today",
@@ -70,33 +90,21 @@ pub fn get_box_alias(name_in: &str) -> Option<String> {
     if alias.is_empty() { None }
     else { Some(alias.to_string()) }
 }
+
 pub fn get_box_unalias(alias: &str) -> String {
     match alias {
         "today" => get_today(),
         "yesterday" => get_yesterday(),
         "tomorrow" => get_tomorrow(),
+        "inbox" => taskbox::INBOX_NAME.into(),
+        "routine" | "routines" => taskbox::ROUTINE_BOXNAME.into(),
         _ => alias.into(),
     }
 }
 
-pub fn get_default_basedir() -> String {
-    // for windows compatibility
-    let rel_base :PathBuf = DATA_BASE.split("/").collect();
-    dirs::home_dir()
-        .expect("cannot get home dir")
-        .join(rel_base)
-        .to_str()
-        .expect("cannot convert path to string")
-        .to_string()
-}
-
-pub fn get_inbox_file(inbox: Option<String>) -> PathBuf {
+pub fn get_inbox_file(inbox: &str) -> PathBuf {
     let basedir = PathBuf::from(Config_get!("basedir"));
-    fs::create_dir_all(&basedir).expect("Failed to create base directory");
-
-    basedir
-        .join(get_box_unalias(&inbox.unwrap_or(INBOX_NAME.into())))
-        .with_extension("md")
+    basedir.join(get_box_unalias(inbox)).with_extension("md")
 }
 
 pub fn confirm(question: &str) -> bool {
@@ -109,11 +117,6 @@ pub fn confirm(question: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_get_default_basedir() {
-        assert!(get_default_basedir().contains(".local/share/todor"));
-    }
 
     #[test]
     fn test_aliases() {

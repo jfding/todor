@@ -7,6 +7,8 @@ use lazy_static::lazy_static;
 
 use crate::util::*;
 
+const DEF_CONFIG_PATH : &str = ".config/todor/todor.toml";
+const DATA_BASE : &str = ".local/share/todor";
 const DEF_CONFIG_CONTENT: &str = r#"# config for todor in toml
 
 ## base directory for todor data
@@ -18,6 +20,17 @@ blink = true
 
 lazy_static! {
     pub static ref CONFIG: RwLock<Config> = RwLock::new(Config::load(None));
+}
+
+pub fn get_default_basedir() -> String {
+    // for windows compatibility
+    let rel_base :PathBuf = DATA_BASE.split("/").collect();
+    dirs::home_dir()
+        .expect("cannot get home dir")
+        .join(rel_base)
+        .to_str()
+        .expect("cannot convert path to string")
+        .to_string()
 }
 
 #[derive(Deserialize, Debug)]
@@ -32,7 +45,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            basedir: Some(util::get_default_basedir()),
+            basedir: Some(get_default_basedir()),
             blink: Some(true),
         }
     }
@@ -92,21 +105,27 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_get_default_basedir() {
+        assert!(get_default_basedir().contains(".local/share/todor"));
+    }
+
+    #[test]
     fn test_config_load() {
-        let testtoml = "/tmp/.todor.toml";
-        let testcontent = r#"basedir = "/tmp/todor"
+        let temp_dir = tempfile::tempdir().unwrap();
+        let testtoml = temp_dir.path().join("config.toml");
+        let testcontent = r#"basedir = "/tmp/.todor-test/"
         blink = false
         "#;
-        std::fs::write(PathBuf::from(testtoml), testcontent).expect("write err");
-        let conf = Config::load(Some(testtoml.into()));
-        assert_eq!(conf.basedir, Some("/tmp/todor".into()));
+        std::fs::write(&testtoml, testcontent).expect("write err");
+        let conf = Config::load(Some(testtoml.to_str().unwrap().into()));
+        assert_eq!(conf.basedir, Some("/tmp/.todor-test/".into()));
         assert_eq!(conf.blink, Some(false));
     }
 
     #[test]
     fn test_config_default() {
         let conf = Config::default();
-        assert_eq!(conf.basedir, Some(util::get_default_basedir()));
+        assert_eq!(conf.basedir, Some(get_default_basedir()));
         assert_eq!(conf.blink, Some(true));
     }
 

@@ -1,11 +1,11 @@
-use std::path::Path;
 use cmd_lib::*;
 use colored::Colorize;
 use anyhow::Result;
 use regex::Regex;
 use std::ffi::OsStr;
 
-pub use crate::util::*;
+use crate::util::*;
+use crate::taskbox::*;
 
 pub fn glance_all() {
     if cfg!(windows) {
@@ -25,7 +25,10 @@ pub fn glance_all() {
         ).unwrap_or_else(|_| std::process::exit(1)));
 }
 
-pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
+pub fn edit_box(cur_box: &str, diffwith: Option<String>) {
+    let boxpath = get_inbox_file(cur_box);
+    _ = TaskBox::new(boxpath.clone()); // only touch file
+
     if let Some(other) = diffwith {
         let otherf = if other.ends_with(".md") {
             &other
@@ -33,9 +36,9 @@ pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
             &format!("{}/{}.md", Config_get!("basedir"), get_box_unalias(&other))
         };
 
-        println!("editing : {} v.s. {}", S_fpath!(inbox_path.display()), S_fpath!(otherf));
+        println!("editing : {} v.s. {}", S_fpath!(boxpath.display()), S_fpath!(otherf));
         if run_cmd!(
-            vimdiff $inbox_path $otherf 2>/dev/null
+            vimdiff $boxpath $otherf 2>/dev/null
         ).is_err() {
             println!("cannot launch vimdiff, ignore --diffwith option");
         }
@@ -54,9 +57,9 @@ pub fn edit_box(inbox_path: &Path, diffwith: Option<String>) {
                           "/dev/null"
                       };
 
-        println!("editing : {}", S_fpath!(inbox_path.display()));
+        println!("editing : {}", S_fpath!(boxpath.display()));
         run_cmd!(
-            $editor $inbox_path 2> $nulldev
+            $editor $boxpath 2> $nulldev
         ).expect("cannot launch $EDITOR or default editor")
     }
 }

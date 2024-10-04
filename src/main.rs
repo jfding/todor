@@ -1,4 +1,5 @@
 use std::io;
+use std::path;
 use colored::Colorize;
 use crossterm::execute;
 use crossterm::cursor::SetCursorStyle::*;
@@ -14,14 +15,20 @@ use todor::boxops;
 
 fn main() {
     let args = Cli::default();
-    let mut inbox = args.inbox;
+    let arg0 = std::env::args().next().unwrap();
 
-    let clicmd = std::env::args().next().expect("cannot get arg0");
-    if clicmd.ends_with("today") {
-        inbox = Some(get_today())
-    } else if clicmd.ends_with("tomorrow") {
-        inbox = Some(get_tomorrow())
-    }
+    let inbox =
+        if let Some(boxname) = args.inbox {
+            &boxname.clone()
+        } else {
+            let cmdname = arg0.split(path::MAIN_SEPARATOR).last().unwrap();
+            if cmdname == "todor" {
+                "inbox"
+            } else {
+                // e.g. "today", "tomorrow", "yesterday", "t.read", "todo.working"
+                cmdname.split('.').last().unwrap()
+            }
+        };
 
     if args.config.is_some() {
         let mut g_conf = CONFIG.write().unwrap();
@@ -33,7 +40,7 @@ fn main() {
         g_conf.basedir = Some(util::path_normalize(&dir));
     }
 
-    let inbox_path = util::get_inbox_file(inbox);
+    let mut inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
         Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
@@ -50,6 +57,7 @@ fn main() {
         Some(Commands::Sink { all })      => TaskBox::sink(all),
         Some(Commands::Shift)             => TaskBox::shift(),
         Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
+        Some(Commands::Checkout)          => TaskBox::collect(Some("routine".into())),
         Some(Commands::Postp)             => TaskBox::postp(),
 
         Some(Commands::Mark) => {
@@ -72,7 +80,11 @@ fn main() {
             todo.mark(selected);
         }
 
-        Some(Commands::Add { what, date }) => {
+        Some(Commands::Add { what, date_stamp, routine }) => {
+            if routine.is_some() {
+                inbox_path = get_inbox_file("routine")
+            }
+
             let mut todo = TaskBox::new(inbox_path);
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
@@ -87,21 +99,17 @@ fn main() {
 
             input = input.trim().to_string();
             if !input.is_empty() {
-                todo.add(input, date);
+                todo.add(input, routine, date_stamp);
                 println!("{}", S_success!("Task added successfully!"));
             } else {
                 println!("{}", S_empty!("Empty input, skip."));
             }
         }
 
-        Some(Commands::Edit { diffwith }) => {
-            // just to touch the file
-            let _todo = TaskBox::new(inbox_path.clone());
-
-            boxops::edit_box(&inbox_path, diffwith);
-        }
         Some(Commands::Glance)  => boxops::glance_all(),
         Some(Commands::Listbox) => boxops::list_boxes(),
         Some(Commands::Cleanup) => boxops::cleanup().expect("failed"),
+        Some(Commands::Edit { diffwith, routines }) =>
+            boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
     }
 }

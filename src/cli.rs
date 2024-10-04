@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use crate::util;
 
 #[derive(Debug, Clone, Parser)]
@@ -22,6 +22,15 @@ pub struct Cli {
     pub command: Option<Commands>,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+pub enum Routine {
+    Daily,
+    Weekly,
+    Biweekly,
+    Qweekly,
+    Monthly,
+}
+
 #[derive(Debug, Clone, Subcommand)]
 pub enum Commands {
     /// -> add todo item to inbox
@@ -29,8 +38,12 @@ pub enum Commands {
     Add {
         #[arg(value_name = "TASK")]
         what: Option<String>,
-        #[arg(short, long)]
-        date: bool,
+
+        #[arg(short = 'd', long)]
+        date_stamp: bool,
+
+        #[arg(short, long, value_enum)]
+        routine: Option<Routine>,
     },
 
     /// -> mark item as done
@@ -55,6 +68,9 @@ pub enum Commands {
         #[arg(short, long)]
         #[arg(value_name = "another-taskbox")]
         diffwith: Option<String>,
+
+        #[arg(short = 'r', long)]
+        routines: bool,
     },
 
     /// -> count items in inbox
@@ -98,6 +114,9 @@ pub enum Commands {
 
     /// -> clean up all empty datetime taskbox
     Cleanup,
+
+    /// -> checkout routine tasks to "today"(collect --inbox routine)
+    Checkout,
 }
 
 impl Default for Cli {
