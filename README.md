@@ -27,12 +27,53 @@
 - commands: 
   - list(default), listall, add, mark, edit, count
   - purge, browse, listbox
-  - sink, shift, collect, pool
+  - sink, shift, collect, pool(old: postp)
   - import
   - cleanup
 
   - [ ] sync with iCloud
   - [ ] sync with MS-TODO
+
+## Usage
+```
+Usage: todor [OPTIONS] [COMMAND]
+
+Commands:
+  add       -> add todo item to inbox [aliases: a]
+  mark      -> mark item as done [aliases: m]
+  list      -> list all uncompeleted tasks in box [aliases: l, ls]
+  listall   -> list all(including compeleted) tasks [aliases: la]
+  listbox   -> list all todo box in working dir [aliases: lb]
+  edit      -> edit todo inbox file [aliases: e, ed]
+  count     -> count items in inbox [aliases: c]
+  browse    -> show items in all inboxes [aliases: b]
+  purge     -> purge all the duplicated lines
+  sink      -> sink all outdated uncompeleted to "today"
+  shift     -> shift all uncompeleted in "today" to "tomorrow"
+  collect   -> collect all uncompeleted in INBOX(or --inbox <which>) to "today"
+  pool      -> pooling all uncompeleted of today to INBOX
+  import    -> import uncompeleted task in any markdown file to current
+  cleanup   -> clean up all empty datetime taskbox
+  checkout  -> checkout routine tasks to "today"(collect --inbox routine)
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+  -c, --config <CONF>  config file
+  -d, --dir <FOLDER>   working dir
+  -i, --inbox <FILE>   inbox file
+  -h, --help           Print help
+  -V, --version        Print version
+
+```
+and with a trick:
+```
+ln -sf todor today
+ln -sf todor tomorrow
+ln -sf todor t.reading
+ln -sf todor todo.coding
+
+```
+these symlinks(execuables) will help you to locate the corresponding task-box quickly. ("today", "tomorrow", "reading", "coding", respectively)
 
 ## How the tasks are moving around
 

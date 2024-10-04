@@ -21,9 +21,11 @@ inquire = { version = "0.7.5", features = ["date"] }
 lazy_static = "1.5.0"
 regex = "1.10.6"
 serde = { version = "1.0.210", features = ["derive"] }
-stdio-override = "0.1.3"
 toml = "0.8.19"
 which = "6.0.3"
+
+[target.'cfg(unix)'.dependencies]
+stdio-override = "0.1.3"
 
 [profile.release-with-symbols]
 inherits = "release"

@@ -47,7 +47,7 @@ impl TaskBox {
 
     pub fn load(&mut self) {
         if self.title.is_some() { return } // avoid load() twice
-                                           //
+
         if !self.fpath.exists() {
             let fpath = &self.fpath;
             let title = fpath.file_stem()
@@ -59,10 +59,11 @@ impl TaskBox {
             fs::File::create(fpath).expect("Failed to create file");
             fs::write(fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
 
-            // if it's "today" box, run 'checkout' once
-            if self.title == Some(get_today()) {
+            // if it's "today" box, run 'checkout' once [only Unix]
+            #[cfg(unix)]
+            if title == get_today() {
                 use stdio_override::{StdoutOverride, StderrOverride};
-                let null = if cfg!(windows) { "nul" } else { "/dev/null" };
+                let null = "/dev/null";
                 let  guard = StdoutOverride::override_file(null).unwrap();
                 let eguard = StderrOverride::override_file(null).unwrap();
 
