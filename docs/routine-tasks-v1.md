@@ -62,6 +62,6 @@ if found a routine task:
             and mark it as normal undone ([ ])
 
 ```
-* no affect: `purge`, `glance`, `listbox`
+* no affect: `purge`, `browse`, `listbox`
 
 

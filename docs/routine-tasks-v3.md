@@ -44,6 +44,6 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
 * cmd `pool` (today -> INBOX) will ignore the checkout routine tasks
 * cmd `collect` (INBOX/other -> today) will only checkout routine tasks from ROUTINES box to "today" box, otherwise just move without checkout operation
   * and `collect --inbox routines` is dedicated for routine tasks checkout
-* no affect: `count`, `mark`, `purge`, `glance`, `listbox`, `shift`, `sink`
+* no affect: `count`, `mark`, `purge`, `browse`, `listbox`, `shift`, `sink`
 * (optional) for `list` and `listall`, list them with special flags
 * (optional) new cmd `routines` to list all the routine tasks

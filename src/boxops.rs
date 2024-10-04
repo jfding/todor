@@ -2,27 +2,34 @@ use cmd_lib::*;
 use colored::Colorize;
 use anyhow::Result;
 use regex::Regex;
+use which::which;
 use std::ffi::OsStr;
 
 use crate::util::*;
 use crate::taskbox::*;
 
-pub fn glance_all() {
+pub fn browse() -> Result<()> {
     if cfg!(windows) {
         println!("Sorry, this feature is not supported on Windows.");
-        return;
+        return Ok(());
     }
 
     let wildpat = format!("{}/*.md", Config_get!("basedir"));
-    let pager = "bat --paging=always -l md";
-    let pager_fallback = "less";
+    let pager = which("glow").unwrap_or(
+                which("bat").unwrap_or(
+                which("less").unwrap_or(
+                which("more")?)));
+    let pager_args = match pager.to_str().unwrap() {
+        p if p.ends_with("glow") => "--style=dark | less -r",
+        p if p.ends_with("bat") => "-l md --paging=never",
+        p if p.ends_with("less") => "-r",
+        _ => ""
+    };
 
     run_cmd!(
-      sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager 2>/dev/null"
-    ).unwrap_or_else(|_|
-        run_cmd!(
-          sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager_fallback"
-        ).unwrap_or_else(|_| std::process::exit(1)));
+      sh -c "cat $wildpat | sed  's/^#/\\n✅/' | $pager $pager_args 2>/dev/null"
+    )?;
+    Ok(())
 }
 
 pub fn edit_box(cur_box: &str, diffwith: Option<String>) {

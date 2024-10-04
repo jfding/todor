@@ -59,5 +59,5 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
 * for `collect` (INBOX/other -> today) and `pool` (today -> INBOX) will ignore the routine tasks
 * for `shift` (today -> tomorrow) and `sink` (old days -> today), will ignore the _daily_ tasks, but move the other routines tasks as _outdated_ tasks with flag char "o"
   * but if move from tomorrow back to today, will re-check the routine tasks (if not found, still keep [o])
-* no affect: `purge`, `glance`, `listbox`
+* no affect: `purge`, `browse`, `listbox`
 * (optional) new cmd `routines` to list all the routine tasks

@@ -26,7 +26,7 @@
 
 - commands: 
   - list(default), listall, add, mark, edit, count
-  - purge, glance, listbox
+  - purge, browse, listbox
   - sink, shift, collect, pool
   - import
   - cleanup

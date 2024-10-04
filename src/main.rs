@@ -106,9 +106,9 @@ fn main() {
             }
         }
 
-        Some(Commands::Glance)  => boxops::glance_all(),
+        Some(Commands::Browse)  => boxops::browse().unwrap(),
         Some(Commands::Listbox) => boxops::list_boxes(),
-        Some(Commands::Cleanup) => boxops::cleanup().expect("failed"),
+        Some(Commands::Cleanup) => boxops::cleanup().unwrap(),
         Some(Commands::Edit { diffwith, routines }) =>
             boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
     }
