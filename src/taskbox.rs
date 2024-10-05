@@ -34,7 +34,7 @@ pub struct TaskBox {
     pub title: Option<String>,
     pub alias: Option<String>,
     pub tasks: Vec<(String, bool)>,
-    pub selected: Vec<String>,
+    pub selected: Option<Vec<String>>,
 }
 
 impl TaskBox {
@@ -44,7 +44,7 @@ impl TaskBox {
             title: None, // None means not loaded
             alias: None,
             tasks: vec![],
-            selected: vec![],
+            selected: None,
         }
     }
 
@@ -207,6 +207,10 @@ impl TaskBox {
         let tasks = todo_from.get_all_to_mark();
         if tasks.is_empty() { return }
 
+        if let Some(ref selected) = todo_from.selected {
+            if selected.is_empty() { return }
+        }
+
         // print title line
         let from = todo_from.alias.clone().unwrap_or(todo_from.title.clone().unwrap());
         let to = self.alias.clone().unwrap_or(self.title.clone().unwrap());
@@ -214,6 +218,10 @@ impl TaskBox {
                                 S_moveto!(to), PROGRESS);
 
         for task in tasks {
+            if let Some(ref selected) = todo_from.selected {
+                if ! selected.contains(&task) { continue }
+            }
+
             let caps = RE_ROUTINES.captures(&task);
 
             if from == ROUTINE_BOXNAME {
@@ -475,9 +483,9 @@ impl TaskBox {
     }
 
     // INBOX -> today
-    pub fn collect(&mut self, inbox_from: &str) {
+    pub fn collect(&mut self, tb_from: &mut TaskBox) {
         // double check
-        if inbox_from == get_today() || inbox_from == "today" {
+        if tb_from.alias == Some("today".into()) {
             println!("{} is not a valid source", S_moveto!("today"));
             return
         }
@@ -488,7 +496,7 @@ impl TaskBox {
             return
         }
 
-        self.move_in(&mut TaskBox::new(util::get_inbox_file(inbox_from)))
+        self.move_in(tb_from)
     }
 
     // today -> INBOX

@@ -57,7 +57,9 @@ fn main() {
         Some(Commands::Sink { all })      => TaskBox::sink(all),
         Some(Commands::Shift)             => TaskBox::shift(),
         Some(Commands::Pool)              => TaskBox::pool(),
-        Some(Commands::Checkout)          => TaskBox::new(util::get_inbox_file("today")).collect("routine"),
+        Some(Commands::Checkout)          => TaskBox::new(util::get_inbox_file("today"))
+                               .collect(&mut TaskBox::new(util::get_inbox_file("routine"))),
+
         Some(Commands::Collect { boxname, interactive }) => {
 
             let from = boxname.unwrap_or("inbox".into());
@@ -66,8 +68,9 @@ fn main() {
                 return
             }
 
+            let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
+
             if interactive {
-                let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
                 let tasks = tb_from.get_all_to_mark();
 
                 execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
@@ -78,12 +81,11 @@ fn main() {
                     .with_help_message("j/k | <space> | <enter> | ctrl+c")
                     .prompt().unwrap_or_else(|_| Vec::new());
                 selected.retain(|x| !x.contains(WARN));
+                tb_from.selected = Some(selected);
                 execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-
-                if !selected.is_empty() { tb_from.selected = selected }
             }
 
-            TaskBox::new(util::get_inbox_file("today")).collect(&from)
+            TaskBox::new(util::get_inbox_file("today")).collect(&mut tb_from)
         }
 
         Some(Commands::Mark) => {
