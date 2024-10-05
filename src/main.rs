@@ -43,7 +43,12 @@ fn main() {
     match args.command {
         Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
         Some(Commands::Listall)           => TaskBox::new(inbox_path).list(true),
-        Some(Commands::Count)             => TaskBox::new(inbox_path).count(),
+
+        Some(Commands::Count)             => {
+            let cc = TaskBox::new(inbox_path).count();
+            if cc > 0 { println!("{}", cc) }
+        }
+
         Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
         Some(Commands::Purge { sort }) => {
             if i_confirm("are you sure?") {
@@ -79,7 +84,7 @@ fn main() {
 
                 if boxdate < today {
                     let mut tb_from = TaskBox::new(taskbox);
-                    //if tb_from.count() == 0 { continue }
+                    if tb_from.count() == 0 { continue }
 
                     if interactive {
                         tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),

@@ -388,10 +388,9 @@ impl TaskBox {
         }
     }
 
-    pub fn count(&mut self) {
+    pub fn count(&mut self) -> usize {
         self.load();
-        let cc = self.tasks.iter().filter(|(_, done)| !done).count();
-        if cc > 0 { println!("{}", cc) }
+        self.tasks.iter().filter(|(_, done)| !done).count()
     }
 
     pub fn mark(&mut self, items: Vec<String>) {
