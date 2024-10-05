@@ -79,10 +79,14 @@ fn main() {
 
                 if boxdate < today {
                     let mut tb_from = TaskBox::new(taskbox);
+                    //if tb_from.count() == 0 { continue }
+
                     if interactive {
-                        tb_from.selected = Some(i_select(tb_from.get_all_to_mark()));
+                        tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),
+                                                &format!("choose from {}", boxdate)));
                     }
-                    tb_today.collect_from(&mut tb_from)
+                    tb_today.collect_from(&mut tb_from);
+                    println!();
                 }
             }
         }
@@ -90,7 +94,7 @@ fn main() {
         Some(Commands::Shift { interactive }) => { // today -> tomorrow
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             if interactive {
-                tb_today.selected = Some(i_select(tb_today.get_all_to_mark()));
+                tb_today.selected = Some(i_select(tb_today.get_all_to_mark(), "choose from TODAY"));
             }
             TaskBox::new(util::get_inbox_file("tomorrow")).collect_from(&mut tb_today)
         }
@@ -98,7 +102,7 @@ fn main() {
         Some(Commands::Pool { interactive }) => { // today -> INBOX
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             if interactive {
-                tb_today.selected = Some(i_select(tb_today.get_all_to_mark()));
+                tb_today.selected = Some(i_select(tb_today.get_all_to_mark(), "choose from TODAY"));
             }
 
             TaskBox::new(util::get_inbox_file("inbox")).collect_from(&mut tb_today)
@@ -114,7 +118,8 @@ fn main() {
             let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
 
             if interactive {
-                tb_from.selected = Some(i_select(tb_from.get_all_to_mark()));
+                tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),
+                                                 &format!("choose from {}", from)));
             }
 
             TaskBox::new(util::get_inbox_file("today")).collect_from(&mut tb_from)
@@ -128,7 +133,7 @@ fn main() {
                 return
             }
 
-            todo.mark(i_select(tasks));
+            todo.mark(i_select(tasks, "choose to close:"));
         }
 
         Some(Commands::Add { what, date_stamp, routine, interactive }) => {
@@ -137,12 +142,12 @@ fn main() {
             }
             let mut todo = TaskBox::new(inbox_path);
 
-            let input = what.unwrap_or(i_text());
+            let input = what.unwrap_or(i_gettext());
             if !input.is_empty() {
                 let mut start_date = get_today();
 
                 if routine.is_some() && interactive {
-                    start_date = i_date(match routine {
+                    start_date = i_getdate(match routine {
                             Some(Routine::Daily)    => "daily",
                             Some(Routine::Weekly)   => "weekly",
                             Some(Routine::Biweekly) => "biweekly",

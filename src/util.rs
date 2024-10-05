@@ -117,7 +117,7 @@ pub fn i_confirm(question: &str) -> bool {
         .prompt().unwrap_or(false)
 }
 
-pub fn i_text() -> String {
+pub fn i_gettext() -> String {
     execute!(std::io::stdout(), BlinkingBlock).expect("failed to set cursor");
     let input = inquire::Text::new("")
             .with_render_config(get_text_input_style())
@@ -128,9 +128,9 @@ pub fn i_text() -> String {
     input.trim().to_string()
 }
 
-pub fn i_select(tasks: Vec<String>) -> Vec<String> {
+pub fn i_select(tasks: Vec<String>, title: &str) -> Vec<String> {
     execute!(std::io::stdout(), BlinkingBlock).expect("failed to set cursor");
-    let mut selected = inquire::MultiSelect::new("choose to close:", tasks)
+    let mut selected = inquire::MultiSelect::new(title, tasks)
         .with_render_config(get_multi_select_style())
         .with_vim_mode(true)
         .with_page_size(10)
@@ -141,7 +141,7 @@ pub fn i_select(tasks: Vec<String>) -> Vec<String> {
     selected
 }
 
-pub fn i_date(routine_kind: &str) -> String {
+pub fn i_getdate(routine_kind: &str) -> String {
     inquire::DateSelect::new(&format!(" {} from:",S_routine!(routine_kind)))
         .with_render_config(get_date_input_style())
         .with_help_message("h/j/k/l | <enter> | ctrl+c")
