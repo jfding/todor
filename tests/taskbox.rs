@@ -65,7 +65,7 @@ fn test_purge() {
 }
 
 #[test]
-fn test_move_in_basic() {
+fn test_collect_from_basic() {
     let (mut tb1, _dir1) = setup_test_taskbox("test1");
     let (mut tb2, _dir2) = setup_test_taskbox("test2");
 
@@ -80,7 +80,7 @@ fn test_move_in_basic() {
     tb1.load();
     assert_eq!(tb1.tasks.len(), 3);
 
-    tb2.move_in(&mut tb1);
+    tb2.collect_from(&mut tb1);
 
     tb2.load();
     assert_eq!(tb2.tasks.len(), 2);
@@ -93,7 +93,7 @@ fn test_move_in_basic() {
 }
 
 #[test]
-fn test_move_in_with_warn_msg() {
+fn test_collect_from_with_warn_msg() {
     let (mut tb1, _dir1) = setup_test_taskbox("test1");
     let (mut tb2, _dir2) = setup_test_taskbox("test2");
 
@@ -103,7 +103,7 @@ fn test_move_in_with_warn_msg() {
 
     assert_eq!(tb1.tasks.len(), 2);
 
-    tb2.move_in(&mut tb1);
+    tb2.collect_from(&mut tb1);
     tb2.load();
     assert_eq!(tb2.tasks.len(), 2);
     assert_eq!(tb2.tasks[0].0, "Task to move");
@@ -115,7 +115,7 @@ fn test_move_in_with_warn_msg() {
 }
 
 #[test]
-fn test_move_in_with_sub() {
+fn test_collect_from_with_sub() {
     let (mut tb1, _dir1) = setup_test_taskbox("test1");
     let (mut tb2, _dir2) = setup_test_taskbox("test2");
 
@@ -138,7 +138,7 @@ fn test_move_in_with_sub() {
     tb1.load();
     assert_eq!(tb1.tasks.len(), 2);
 
-    tb2.move_in(&mut tb1);
+    tb2.collect_from(&mut tb1);
 
     let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
     assert_eq!(test1_output, test1_actual);
@@ -148,7 +148,7 @@ fn test_move_in_with_sub() {
 }
 
 #[test]
-fn test_move_in_with_sub_done() {
+fn test_collect_from_with_sub_done() {
     let (mut tb1, _dir1) = setup_test_taskbox("test1");
     let (mut tb2, _dir2) = setup_test_taskbox("test2");
 
@@ -193,7 +193,7 @@ fn test_move_in_with_sub_done() {
     std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
     tb1.load();
 
-    tb2.move_in(&mut tb1);
+    tb2.collect_from(&mut tb1);
 
     let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
     assert_eq!(test1_output, test1_actual);
@@ -203,7 +203,7 @@ fn test_move_in_with_sub_done() {
 }
 
 #[test]
-fn test_move_in_with_dup_sub() {
+fn test_collect_from_with_dup_sub() {
     let (mut tb1, _dir1) = setup_test_taskbox("test1");
     let (mut tb2, _dir2) = setup_test_taskbox("test2");
 
@@ -248,7 +248,7 @@ fn test_move_in_with_dup_sub() {
     std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
     tb1.load();
 
-    tb2.move_in(&mut tb1);
+    tb2.collect_from(&mut tb1);
 
     let test2_actual = fs::read_to_string(&tb2.fpath).expect("Failed to read tb2 file");
     assert_eq!(test2_output, test2_actual);
@@ -282,7 +282,7 @@ fn test_checkout() {
     assert!(routine.tasks[0].0.starts_with("{󰃯:d "));
     assert!(routine.tasks[0].0.ends_with("} Daily routine"));
 
-    today.move_in(&mut routine);
+    today.collect_from(&mut routine);
 
     today.load();
     assert_eq!(today.tasks.len(), 1);
@@ -290,11 +290,11 @@ fn test_checkout() {
     assert!(today.tasks[0].0.contains("} Daily routine"));
     assert!(today.tasks[0].0.contains(" [󰃵 "));
 
-    tb.move_in(&mut routine);
+    tb.collect_from(&mut routine);
     tb.load();
     assert_eq!(tb.tasks.len(), 0);
 
-    today.move_in(&mut routine);
+    today.collect_from(&mut routine);
     today.load();
     assert_eq!(today.tasks.len(), 1);
 }
@@ -323,7 +323,7 @@ fn test_pool_today_to_inbox() {
     assert_eq!(routine.tasks.len(), 1);
 
     // check out
-    today.move_in(&mut routine);
+    today.collect_from(&mut routine);
 
     today.load(); inbox.load(); routine.load();
     assert_eq!(today.tasks.len(), 3);
@@ -331,7 +331,7 @@ fn test_pool_today_to_inbox() {
     assert_eq!(routine.tasks.len(), 1);
 
     // pool
-    inbox.move_in(&mut today);
+    inbox.collect_from(&mut today);
 
     today.load(); inbox.load();
     assert_eq!(today.tasks.len(), 1);
