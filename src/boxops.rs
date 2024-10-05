@@ -124,7 +124,7 @@ pub fn cleanup() -> Result<()> {
                 println!()
             }
         });
-    if util::confirm("Going to remove the aboves, are you sure?") {
+    if util::i_confirm("Going to remove the aboves, are you sure?") {
         boxes.into_iter().for_each(
             |(_, path)| {
                 std::fs::remove_file(&path).expect("cannot remove file");

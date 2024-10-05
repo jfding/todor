@@ -1,13 +1,9 @@
-use std::io;
 use std::path;
 use colored::Colorize;
-use crossterm::execute;
-use crossterm::cursor::SetCursorStyle::*;
 
 use todor::taskbox::*;
 use todor::cli::*;
 use todor::conf::*;
-use todor::styles::*;
 use todor::util::*;
 
 use todor::util;
@@ -48,8 +44,8 @@ fn main() {
         Some(Commands::Count)             => TaskBox::new(inbox_path).count(),
         Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
         Some(Commands::Purge { sort }) => {
-            if confirm("are you sure?") {
-                if sort && ! confirm("sort cannot handle subtasks well, continue?") { return }
+            if i_confirm("are you sure?") {
+                if sort && ! i_confirm("sort cannot handle subtasks well, continue?") { return }
                 TaskBox::new(inbox_path).purge(sort)
             }
         }
@@ -71,18 +67,7 @@ fn main() {
             let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
 
             if interactive {
-                let tasks = tb_from.get_all_to_mark();
-
-                execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-                let mut selected = inquire::MultiSelect::new("choose to move:", tasks)
-                    .with_render_config(get_multi_select_style())
-                    .with_vim_mode(true)
-                    .with_page_size(10)
-                    .with_help_message("j/k | <space> | <enter> | ctrl+c")
-                    .prompt().unwrap_or_else(|_| Vec::new());
-                selected.retain(|x| !x.contains(WARN));
-                tb_from.selected = Some(selected);
-                execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
+                tb_from.selected = Some(i_select(tb_from.get_all_to_mark()));
             }
 
             TaskBox::new(util::get_inbox_file("today")).collect(&mut tb_from)
@@ -96,57 +81,30 @@ fn main() {
                 return
             }
 
-            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            let mut selected = inquire::MultiSelect::new("choose to close:", tasks)
-                .with_render_config(get_multi_select_style())
-                .with_vim_mode(true)
-                .with_page_size(10)
-                .with_help_message("j/k | <space> | <enter> | ctrl+c")
-                .prompt().unwrap_or_else(|_| Vec::new());
-                selected.retain(|x| !x.contains(WARN));
-            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-
-            todo.mark(selected)
+            todo.mark(i_select(tasks));
         }
 
         Some(Commands::Add { what, date_stamp, routine, interactive }) => {
             if routine.is_some() {
                 inbox_path = get_inbox_file("routine")
             }
-
             let mut todo = TaskBox::new(inbox_path);
 
-            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            let mut input = what.unwrap_or_else(|| {
-                inquire::Text::new("")
-                    .with_render_config(get_text_input_style())
-                    .with_help_message("<enter> | ctrl+c")
-                    .with_placeholder("something to do?")
-                    .prompt().unwrap_or_else(|_| String::new())
-            });
-            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-
-            input = input.trim().to_string();
+            let input = what.unwrap_or(i_text());
             if !input.is_empty() {
                 let mut start_date = get_today();
+
                 if routine.is_some() && interactive {
-                    let kind= match routine {
+                    start_date = i_date(match routine {
                             Some(Routine::Daily)    => "daily",
                             Some(Routine::Weekly)   => "weekly",
                             Some(Routine::Biweekly) => "biweekly",
                             Some(Routine::Qweekly)  => "qweekly",
                             Some(Routine::Monthly)  => "monthly",
                             _ => "",
-                            };
-
-                    start_date = inquire::DateSelect::new(&format!(" {} from:",S_routine!(kind)))
-                        .with_render_config(get_date_input_style())
-                        .with_help_message("h/j/k/l | <enter> | ctrl+c")
-                        .prompt().unwrap_or_else(|_| {
-                                println!("{}", S_empty!("No starting date selected, skip."));
-                                std::process::exit(1)
-                            }).to_string();
+                            })
                 }
+
                 todo.add(input, routine, date_stamp, &start_date);
                 println!("{}", S_success!("Task added successfully!"));
             } else {
