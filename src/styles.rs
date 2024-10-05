@@ -36,6 +36,8 @@ macro_rules! S_success { ($e:expr) => { $e.to_string().green().bold() }; }
 #[macro_export]
 macro_rules! S_failure { ($e:expr) => { $e.to_string().red().blink() }; }
 #[macro_export]
+macro_rules! S_warning { ($e:expr) => { $e.to_string().yellow() }; }
+#[macro_export]
 macro_rules! S_routine { ($e:expr) => { $e.to_string().purple().italic() }; }
 #[macro_export]
 macro_rules! S_blink { ($e:expr) => {

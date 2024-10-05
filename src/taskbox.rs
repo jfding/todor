@@ -221,9 +221,13 @@ impl TaskBox {
                         self.tasks.push(pair)
                     }
                 } else {
-                    eprintln!("  {} : ignore non-routine task: {}",
+                    // ignore non-routine task
+                    println!("{} {} : {} {}",
                             S_failure!(WARN),
-                            S_failure!(task));
+                            S_checkbox!(CHECKBOX),
+                            S_warning!("skip:"),
+                            task);
+                    continue
                 }
 
             } else {
@@ -231,13 +235,17 @@ impl TaskBox {
                 if task.contains(WARN) {
                     println!("  {} : {}", S_checkbox!(CHECKED), task);
                 } else if caps.is_some() {
-                    println!("  {} : unexpected routine task move: {}",
+                    println!("{} {} : {}",
                             S_failure!(WARN),
-                            S_failure!(task));
+                            S_checkbox!(CHECKBOX),
+                            task);
                 } else if RE_ROUTINES_CHECKOUT.is_match(&task) && to == INBOX_NAME {
-                    eprintln!("  {} : ignore checkout routine task: {}",
+                    // ignore checkout routine task
+                    println!("{} {} : {} {}",
                             S_failure!(WARN),
-                            S_failure!(task));
+                            S_checkbox!(CHECKBOX),
+                            S_warning!("skip:"),
+                            task);
                     continue
 
                 } else {
