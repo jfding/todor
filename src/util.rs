@@ -135,7 +135,7 @@ pub fn i_select(tasks: Vec<String>, title: &str) -> Vec<String> {
         .with_vim_mode(true)
         .with_page_size(10)
         .with_help_message("h/j/k/l | ←↑↓→ | <space> | <enter> | ctrl+c")
-        .prompt().unwrap_or_else(|_| Vec::new());
+        .prompt().unwrap_or_else(|_| std::process::exit(1));
     execute!(std::io::stdout(), DefaultUserShape).expect("failed to set cursor");
     selected.retain(|x| !x.contains(WARN));
     selected
