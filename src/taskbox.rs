@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::collections::HashSet;
 use regex::Regex;
 use colored::Colorize;
-use chrono::*;
 use lazy_static::lazy_static;
 
 use crate::cli::*;
@@ -12,7 +11,6 @@ use crate::styles::*;
 use crate::conf::*;
 
 lazy_static! {
-    static ref RE_DATEBOX :Regex = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
     static ref RE_ROUTINES :Regex =
@@ -446,33 +444,6 @@ impl TaskBox {
 
         self.tasks = newtasks;
         self._dump();
-    }
-
-    // outdated -> today
-    // flag:all -- whether sink future (mainly tomorrow)
-    pub fn sink(all: bool) {
-        let basedir = Config_get!("basedir");
-        let mut today_todo = TaskBox::new(util::get_inbox_file("today"));
-
-        let mut boxes = Vec::new();
-        for entry in fs::read_dir(basedir).expect("cannot read dir") {
-            let path = entry.expect("cannot get entry").path();
-            if path.is_file() && RE_DATEBOX.is_match(path.to_str().unwrap()) { 
-                boxes.push(path)
-            }
-        }
-        boxes.sort(); boxes.reverse();
-
-        let today =  Local::now().date_naive();
-        for taskbox in boxes {
-            let boxdate = NaiveDate::parse_from_str(
-                taskbox.file_stem().unwrap().to_str().unwrap(),
-                "%Y-%m-%d").expect("something wrong!");
-
-            if boxdate < today || (all && boxdate != today) {
-                today_todo.collect_from(&mut TaskBox::new(taskbox));
-            }
-        }
     }
 
     // specified markdown file -> cur

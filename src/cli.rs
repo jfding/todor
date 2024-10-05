@@ -93,9 +93,6 @@ pub enum Commands {
 
     /// -> sink all outdated uncompeleted to "today"
     Sink {
-        #[arg(short, long)]
-        all: bool,
-
         /// interactive mode to select items to move
         #[arg(short, long)]
         interactive: bool,

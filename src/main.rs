@@ -1,5 +1,7 @@
 use std::path;
 use colored::Colorize;
+use chrono::*;
+use regex::Regex;
 
 use todor::taskbox::*;
 use todor::cli::*;
@@ -55,7 +57,35 @@ fn main() {
                   .collect_from(&mut TaskBox::new(util::get_inbox_file("routine")))
         }
 
-        Some(Commands::Sink { all, interactive }) => TaskBox::sink(all),
+        Some(Commands::Sink { interactive }) => { // outdated -> today
+            let basedir = Config_get!("basedir");
+            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
+
+            let mut boxes = Vec::new();
+            let re_date_box = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
+            for entry in std::fs::read_dir(basedir).expect("cannot read dir") {
+                let path = entry.expect("cannot get entry").path();
+                if path.is_file() && re_date_box.is_match(path.to_str().unwrap()) { 
+                    boxes.push(path)
+                }
+            }
+            boxes.sort(); boxes.reverse();
+
+            let today =  Local::now().date_naive();
+            for taskbox in boxes {
+                let boxdate = NaiveDate::parse_from_str(
+                    taskbox.file_stem().unwrap().to_str().unwrap(),
+                    "%Y-%m-%d").expect("something wrong!");
+
+                if boxdate < today {
+                    let mut tb_from = TaskBox::new(taskbox);
+                    if interactive {
+                        tb_from.selected = Some(i_select(tb_from.get_all_to_mark()));
+                    }
+                    tb_today.collect_from(&mut tb_from)
+                }
+            }
+        }
 
         Some(Commands::Shift { interactive }) => { // today -> tomorrow
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
