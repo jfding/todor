@@ -475,13 +475,6 @@ impl TaskBox {
         }
     }
 
-    // today -> tomorrow
-    pub fn shift() {
-        TaskBox::new(util::get_inbox_file("tomorrow"))
-            .collect_from(&mut
-        TaskBox::new(util::get_inbox_file("today")))
-    }
-
     // specified markdown file -> cur
     pub fn import(&mut self, file: Option<String>) {
         #[allow(clippy::redundant_closure)]
