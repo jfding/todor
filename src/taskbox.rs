@@ -34,6 +34,7 @@ pub struct TaskBox {
     pub title: Option<String>,
     pub alias: Option<String>,
     pub tasks: Vec<(String, bool)>,
+    pub selected: Vec<String>,
 }
 
 impl TaskBox {
@@ -42,7 +43,8 @@ impl TaskBox {
             fpath,
             title: None, // None means not loaded
             alias: None,
-            tasks: Vec::new(),
+            tasks: vec![],
+            selected: vec![],
         }
     }
 
@@ -473,7 +475,7 @@ impl TaskBox {
     }
 
     // INBOX -> today
-    pub fn collect(&mut self, inbox_from: &str, selected: Vec<String>) {
+    pub fn collect(&mut self, inbox_from: &str) {
         // double check
         if inbox_from == get_today() || inbox_from == "today" {
             println!("{} is not a valid source", S_moveto!("today"));
@@ -485,8 +487,6 @@ impl TaskBox {
             println!("collect target is not \"today\", skipped");
             return
         }
-
-        println!("{:?}", selected);
 
         self.move_in(&mut TaskBox::new(util::get_inbox_file(inbox_from)))
     }

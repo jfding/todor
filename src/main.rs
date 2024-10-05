@@ -57,8 +57,7 @@ fn main() {
         Some(Commands::Sink { all })      => TaskBox::sink(all),
         Some(Commands::Shift)             => TaskBox::shift(),
         Some(Commands::Pool)              => TaskBox::pool(),
-        Some(Commands::Checkout)          => TaskBox::new(util::get_inbox_file("today"))
-                                                            .collect("routine", vec![]),
+        Some(Commands::Checkout)          => TaskBox::new(util::get_inbox_file("today")).collect("routine"),
         Some(Commands::Collect { boxname, interactive }) => {
 
             let from = boxname.unwrap_or("inbox".into());
@@ -67,21 +66,24 @@ fn main() {
                 return
             }
 
-            let mut selected = vec![];
             if interactive {
-                let tasks = TaskBox::new(util::get_inbox_file(&from)).get_all_to_mark();
+                let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
+                let tasks = tb_from.get_all_to_mark();
 
                 execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-                selected = inquire::MultiSelect::new("choose to move:", tasks)
+                let mut selected = inquire::MultiSelect::new("choose to move:", tasks)
                     .with_render_config(get_multi_select_style())
                     .with_vim_mode(true)
                     .with_page_size(10)
                     .with_help_message("j/k | <space> | <enter> | ctrl+c")
                     .prompt().unwrap_or_else(|_| Vec::new());
+                selected.retain(|x| !x.contains(WARN));
                 execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
+
+                if !selected.is_empty() { tb_from.selected = selected }
             }
 
-            TaskBox::new(util::get_inbox_file("today")).collect(&from, selected)
+            TaskBox::new(util::get_inbox_file("today")).collect(&from)
         }
 
         Some(Commands::Mark) => {
