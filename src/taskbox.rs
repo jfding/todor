@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::collections::HashSet;
 use regex::Regex;
 use colored::Colorize;
 use chrono::*;
@@ -74,6 +75,7 @@ impl TaskBox {
             }
         }
 
+        let mut raw_names = HashSet::new();
         let mut tasks = Vec::new();
         let mut title = String::new();
 
@@ -90,7 +92,19 @@ impl TaskBox {
 
             } else if line.starts_with("- [") {
                 if let Some(caps) = RE_PREFIX_OPEN.captures(line) {
-                    tasks.push((caps[1].to_string(), false))
+                    if raw_names.contains(&caps[1]) {
+                        // hack way to avoid duplicate task name troubles
+                        let mut newname = caps[1].to_string() + " ";
+                        while raw_names.contains(&newname) {
+                            // for multiple times duplicating
+                            newname.push(' ')
+                        }
+                        raw_names.insert(String::from(&newname));
+                        tasks.push((newname, false));
+                    } else {
+                        raw_names.insert(String::from(&caps[1]));
+                        tasks.push((caps[1].to_string(), false))
+                    }
                 } else if let Some(caps) = RE_PREFIX_DONE.captures(line) {
                     tasks.push((caps[1].to_string(), true))
                 } else { continue }
@@ -122,9 +136,11 @@ impl TaskBox {
         let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
         for (mut task, done) in self.tasks.clone() {
+            task = task.trim_end().to_string();
+
             if let Some(left) = task.strip_prefix(PREFIX_SUBT) {
                 content.push_str("  ");
-                task = left.trim_end().to_string();
+                task = left.to_string();
             }
 
             if done {
@@ -388,8 +404,6 @@ impl TaskBox {
     }
 
     pub fn purge(&mut self, sort: bool) {
-        use std::collections::HashSet;
-
         self.load();
         if self.tasks.is_empty() { return }
 

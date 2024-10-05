@@ -93,15 +93,16 @@ fn main() {
             }
 
             execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            let selected = inquire::MultiSelect::new("choose to close:", tasks)
+            let mut selected = inquire::MultiSelect::new("choose to close:", tasks)
                 .with_render_config(get_multi_select_style())
                 .with_vim_mode(true)
                 .with_page_size(10)
                 .with_help_message("j/k | <space> | <enter> | ctrl+c")
                 .prompt().unwrap_or_else(|_| Vec::new());
+                selected.retain(|x| !x.contains(WARN));
             execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
 
-            todo.mark(selected);
+            todo.mark(selected)
         }
 
         Some(Commands::Add { what, date_stamp, routine, interactive }) => {
