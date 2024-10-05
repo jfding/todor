@@ -93,22 +93,35 @@ pub enum Commands {
 
     /// -> sink all outdated uncompeleted to "today"
     Sink {
+        /// interactive mode to select items to move
         #[arg(short, long)]
-        all: bool,
+        interactive: bool,
     },
 
     /// -> shift all uncompeleted in "today" to "tomorrow"
-    Shift,
+    Shift {
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
+    },
 
-    /// -> collect all uncompeleted in INBOX(or --inbox <which>) to "today"
+    /// -> collect all uncompeleted in INBOX(or --boxname <?>) to "today"
     Collect {
         #[arg(short, long)]
-        #[arg(value_name = "taskbox-name")]
-        inbox: Option<String>,
+        #[arg(value_name = "task-box-name")]
+        boxname: Option<String>,
+
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
     },
 
     /// -> pooling all uncompeleted of today to INBOX
-    Pool,
+    Pool {
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
+    },
 
     /// -> import uncompeleted task in any markdown file to current
     Import{

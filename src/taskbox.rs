@@ -1,8 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::collections::HashSet;
 use regex::Regex;
 use colored::Colorize;
-use chrono::*;
 use lazy_static::lazy_static;
 
 use crate::cli::*;
@@ -11,7 +11,6 @@ use crate::styles::*;
 use crate::conf::*;
 
 lazy_static! {
-    static ref RE_DATEBOX :Regex = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
     static ref RE_ROUTINES :Regex =
@@ -33,6 +32,7 @@ pub struct TaskBox {
     pub title: Option<String>,
     pub alias: Option<String>,
     pub tasks: Vec<(String, bool)>,
+    pub selected: Option<Vec<String>>,
 }
 
 impl TaskBox {
@@ -41,7 +41,8 @@ impl TaskBox {
             fpath,
             title: None, // None means not loaded
             alias: None,
-            tasks: Vec::new(),
+            tasks: vec![],
+            selected: None,
         }
     }
 
@@ -67,13 +68,14 @@ impl TaskBox {
                 let  guard = StdoutOverride::override_file(null).unwrap();
                 let eguard = StderrOverride::override_file(null).unwrap();
 
-                self.move_in(&mut
+                self.collect_from(&mut
                         TaskBox::new(util::get_inbox_file(ROUTINE_BOXNAME)));
 
                 drop(guard); drop(eguard);
             }
         }
 
+        let mut raw_names = HashSet::new();
         let mut tasks = Vec::new();
         let mut title = String::new();
 
@@ -90,7 +92,19 @@ impl TaskBox {
 
             } else if line.starts_with("- [") {
                 if let Some(caps) = RE_PREFIX_OPEN.captures(line) {
-                    tasks.push((caps[1].to_string(), false))
+                    if raw_names.contains(&caps[1]) {
+                        // hack way to avoid duplicate task name troubles
+                        let mut newname = caps[1].to_string() + " ";
+                        while raw_names.contains(&newname) {
+                            // for multiple times duplicating
+                            newname.push(' ')
+                        }
+                        raw_names.insert(String::from(&newname));
+                        tasks.push((newname, false));
+                    } else {
+                        raw_names.insert(String::from(&caps[1]));
+                        tasks.push((caps[1].to_string(), false))
+                    }
                 } else if let Some(caps) = RE_PREFIX_DONE.captures(line) {
                     tasks.push((caps[1].to_string(), true))
                 } else { continue }
@@ -122,9 +136,11 @@ impl TaskBox {
         let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
         for (mut task, done) in self.tasks.clone() {
+            task = task.trim_end().to_string();
+
             if let Some(left) = task.strip_prefix(PREFIX_SUBT) {
                 content.push_str("  ");
-                task = left.trim_end().to_string();
+                task = left.to_string();
             }
 
             if done {
@@ -183,19 +199,27 @@ impl TaskBox {
         }
     }
 
-    pub fn move_in(&mut self, todo_from: &mut TaskBox) {
-        self.load(); todo_from.load();
+    pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
+        self.load(); tb_from.load();
 
-        let tasks = todo_from.get_all_to_mark();
+        let tasks = tb_from.get_all_to_mark();
         if tasks.is_empty() { return }
 
+        if let Some(ref selected) = tb_from.selected {
+            if selected.is_empty() { return }
+        }
+
         // print title line
-        let from = todo_from.alias.clone().unwrap_or(todo_from.title.clone().unwrap());
+        let from = tb_from.alias.clone().unwrap_or(tb_from.title.clone().unwrap());
         let to = self.alias.clone().unwrap_or(self.title.clone().unwrap());
         println!("{} {} {} {}", S_movefrom!(from), MOVING,
                                 S_moveto!(to), PROGRESS);
 
         for task in tasks {
+            if let Some(ref selected) = tb_from.selected {
+                if ! selected.contains(&task) { continue }
+            }
+
             let caps = RE_ROUTINES.captures(&task);
 
             if from == ROUTINE_BOXNAME {
@@ -221,9 +245,13 @@ impl TaskBox {
                         self.tasks.push(pair)
                     }
                 } else {
-                    eprintln!("  {} : ignore non-routine task: {}",
+                    // ignore non-routine task
+                    println!("{} {} : {} {}",
                             S_failure!(WARN),
-                            S_failure!(task));
+                            S_checkbox!(CHECKBOX),
+                            S_warning!("skip:"),
+                            task);
+                    continue
                 }
 
             } else {
@@ -231,26 +259,30 @@ impl TaskBox {
                 if task.contains(WARN) {
                     println!("  {} : {}", S_checkbox!(CHECKED), task);
                 } else if caps.is_some() {
-                    println!("  {} : unexpected routine task move: {}",
+                    println!("{} {} : {}",
                             S_failure!(WARN),
-                            S_failure!(task));
+                            S_checkbox!(CHECKBOX),
+                            task);
                 } else if RE_ROUTINES_CHECKOUT.is_match(&task) && to == INBOX_NAME {
-                    eprintln!("  {} : ignore checkout routine task: {}",
+                    // ignore checkout routine task
+                    println!("{} {} : {} {}",
                             S_failure!(WARN),
-                            S_failure!(task));
+                            S_checkbox!(CHECKBOX),
+                            S_warning!("skip:"),
+                            task);
                     continue
 
                 } else {
                     println!("  {} : {}", S_checkbox!(CHECKBOX), task);
                 }
 
-                self._move_one(todo_from, &task);
+                self._move_one(tb_from, &task);
             }
         }
 
         // "ROUTINES" not drain
         if from != ROUTINE_BOXNAME {
-            todo_from._dump();
+            tb_from._dump();
         }
         self._dump();
     }
@@ -356,10 +388,9 @@ impl TaskBox {
         }
     }
 
-    pub fn count(&mut self) {
+    pub fn count(&mut self) -> usize {
         self.load();
-        let cc = self.tasks.iter().filter(|(_, done)| !done).count();
-        if cc > 0 { println!("{}", cc) }
+        self.tasks.iter().filter(|(_, done)| !done).count()
     }
 
     pub fn mark(&mut self, items: Vec<String>) {
@@ -380,8 +411,6 @@ impl TaskBox {
     }
 
     pub fn purge(&mut self, sort: bool) {
-        use std::collections::HashSet;
-
         self.load();
         if self.tasks.is_empty() { return }
 
@@ -414,61 +443,6 @@ impl TaskBox {
 
         self.tasks = newtasks;
         self._dump();
-    }
-
-    // outdated -> today
-    // flag:all -- whether sink future (mainly tomorrow)
-    pub fn sink(all: bool) {
-        let basedir = Config_get!("basedir");
-        let mut today_todo = TaskBox::new(util::get_inbox_file("today"));
-
-        let mut boxes = Vec::new();
-        for entry in fs::read_dir(basedir).expect("cannot read dir") {
-            let path = entry.expect("cannot get entry").path();
-            if path.is_file() && RE_DATEBOX.is_match(path.to_str().unwrap()) { 
-                boxes.push(path)
-            }
-        }
-        boxes.sort(); boxes.reverse();
-
-        let today =  Local::now().date_naive();
-        for taskbox in boxes {
-            let boxdate = NaiveDate::parse_from_str(
-                taskbox.file_stem().unwrap().to_str().unwrap(),
-                "%Y-%m-%d").expect("something wrong!");
-
-            if boxdate < today || (all && boxdate != today) {
-                today_todo.move_in(&mut TaskBox::new(taskbox));
-            }
-        }
-    }
-
-    // today -> tomorrow
-    pub fn shift() {
-        TaskBox::new(util::get_inbox_file("tomorrow"))
-            .move_in(&mut
-        TaskBox::new(util::get_inbox_file("today")))
-    }
-
-    // INBOX -> today
-    pub fn collect(inbox_from: Option<String>) {
-        let from = inbox_from.unwrap_or("inbox".into());
-
-        if from == get_today() || from == "today" {
-            println!("{} is not a valid source", S_moveto!("today"));
-            return
-        }
-
-        TaskBox::new(util::get_inbox_file("today"))
-            .move_in(&mut
-        TaskBox::new(util::get_inbox_file(&from)))
-    }
-
-    // today -> INBOX
-    pub fn pool() {
-        TaskBox::new(util::get_inbox_file("inbox"))
-            .move_in(&mut
-        TaskBox::new(util::get_inbox_file("today")))
     }
 
     // specified markdown file -> cur

@@ -1,13 +1,11 @@
-use std::io;
 use std::path;
 use colored::Colorize;
-use crossterm::execute;
-use crossterm::cursor::SetCursorStyle::*;
+use chrono::*;
+use regex::Regex;
 
 use todor::taskbox::*;
 use todor::cli::*;
 use todor::conf::*;
-use todor::styles::*;
 use todor::util::*;
 
 use todor::util;
@@ -45,20 +43,92 @@ fn main() {
     match args.command {
         Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
         Some(Commands::Listall)           => TaskBox::new(inbox_path).list(true),
-        Some(Commands::Count)             => TaskBox::new(inbox_path).count(),
+
+        Some(Commands::Count)             => {
+            let cc = TaskBox::new(inbox_path).count();
+            if cc > 0 { println!("{}", cc) }
+        }
+
         Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
         Some(Commands::Purge { sort }) => {
-            if confirm("are you sure?") {
-                if sort && ! confirm("sort cannot handle subtasks well, continue?") { return }
+            if i_confirm("are you sure?") {
+                if sort && ! i_confirm("sort cannot handle subtasks well, continue?") { return }
                 TaskBox::new(inbox_path).purge(sort)
             }
         }
 
-        Some(Commands::Sink { all })      => TaskBox::sink(all),
-        Some(Commands::Shift)             => TaskBox::shift(),
-        Some(Commands::Collect { inbox }) => TaskBox::collect(inbox),
-        Some(Commands::Checkout)          => TaskBox::collect(Some("routine".into())),
-        Some(Commands::Pool)              => TaskBox::pool(),
+        Some(Commands::Checkout) => { // ROUTINE --(check-out)-> today
+            TaskBox::new(util::get_inbox_file("today"))
+                  .collect_from(&mut TaskBox::new(util::get_inbox_file("routine")))
+        }
+
+        Some(Commands::Sink { interactive }) => { // outdated -> today
+            let basedir = Config_get!("basedir");
+            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
+
+            let mut boxes = Vec::new();
+            let re_date_box = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
+            for entry in std::fs::read_dir(basedir).expect("cannot read dir") {
+                let path = entry.expect("cannot get entry").path();
+                if path.is_file() && re_date_box.is_match(path.to_str().unwrap()) { 
+                    boxes.push(path)
+                }
+            }
+            boxes.sort(); boxes.reverse();
+
+            let today =  Local::now().date_naive();
+            for taskbox in boxes {
+                let boxdate = NaiveDate::parse_from_str(
+                    taskbox.file_stem().unwrap().to_str().unwrap(),
+                    "%Y-%m-%d").expect("something wrong!");
+
+                if boxdate < today {
+                    let mut tb_from = TaskBox::new(taskbox);
+                    if tb_from.count() == 0 { continue }
+
+                    if interactive {
+                        tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),
+                                                &format!("choose from {}", boxdate)));
+                    }
+                    tb_today.collect_from(&mut tb_from);
+                    println!();
+                }
+            }
+        }
+
+        Some(Commands::Shift { interactive }) => { // today -> tomorrow
+            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
+            if interactive {
+                tb_today.selected = Some(i_select(tb_today.get_all_to_mark(), "choose from TODAY"));
+            }
+            TaskBox::new(util::get_inbox_file("tomorrow")).collect_from(&mut tb_today)
+        }
+
+        Some(Commands::Pool { interactive }) => { // today -> INBOX
+            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
+            if interactive {
+                tb_today.selected = Some(i_select(tb_today.get_all_to_mark(), "choose from TODAY"));
+            }
+
+            TaskBox::new(util::get_inbox_file("inbox")).collect_from(&mut tb_today)
+        }
+
+        Some(Commands::Collect { boxname, interactive }) => { // other(def: INBOX) -> today
+            let from = boxname.unwrap_or("inbox".into());
+            if from == get_today() || from == "today" {
+                println!("{} is not a valid source", S_moveto!("today"));
+                return
+            }
+
+            let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
+
+            if interactive {
+                tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),
+                                                 &format!("choose from {}", from)));
+            }
+
+            TaskBox::new(util::get_inbox_file("today")).collect_from(&mut tb_from)
+        }
 
         Some(Commands::Mark) => {
             let mut todo = TaskBox::new(inbox_path);
@@ -68,56 +138,30 @@ fn main() {
                 return
             }
 
-            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            let selected = inquire::MultiSelect::new("choose to close:", tasks)
-                .with_render_config(get_multi_select_style())
-                .with_vim_mode(true)
-                .with_page_size(10)
-                .with_help_message("j/k | <space> | <enter> | ctrl+c")
-                .prompt().unwrap_or_else(|_| Vec::new());
-            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-
-            todo.mark(selected);
+            todo.mark(i_select(tasks, "choose to close:"));
         }
 
         Some(Commands::Add { what, date_stamp, routine, interactive }) => {
             if routine.is_some() {
                 inbox_path = get_inbox_file("routine")
             }
-
             let mut todo = TaskBox::new(inbox_path);
 
-            execute!(io::stdout(), BlinkingBlock).expect("failed to set cursor");
-            let mut input = what.unwrap_or_else(|| {
-                inquire::Text::new("")
-                    .with_render_config(get_text_input_style())
-                    .with_help_message("<enter> | ctrl+c")
-                    .with_placeholder("something to do?")
-                    .prompt().unwrap_or_else(|_| String::new())
-            });
-            execute!(io::stdout(), DefaultUserShape).expect("failed to set cursor");
-
-            input = input.trim().to_string();
+            let input = what.unwrap_or(i_gettext());
             if !input.is_empty() {
                 let mut start_date = get_today();
+
                 if routine.is_some() && interactive {
-                    let kind= match routine {
+                    start_date = i_getdate(match routine {
                             Some(Routine::Daily)    => "daily",
                             Some(Routine::Weekly)   => "weekly",
                             Some(Routine::Biweekly) => "biweekly",
                             Some(Routine::Qweekly)  => "qweekly",
                             Some(Routine::Monthly)  => "monthly",
                             _ => "",
-                            };
-
-                    start_date = inquire::DateSelect::new(&format!(" {} from:",S_routine!(kind)))
-                        .with_render_config(get_date_input_style())
-                        .with_help_message("h/j/k/l | <enter> | ctrl+c")
-                        .prompt().unwrap_or_else(|_| {
-                                println!("{}", S_empty!("No starting date selected, skip."));
-                                std::process::exit(1)
-                            }).to_string();
+                            })
                 }
+
                 todo.add(input, routine, date_stamp, &start_date);
                 println!("{}", S_success!("Task added successfully!"));
             } else {

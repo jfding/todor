@@ -2,6 +2,9 @@ use std::path::PathBuf;
 use chrono::*;
 use std::ops::*;
 use cmd_lib::*;
+use colored::Colorize;
+use crossterm::execute;
+use crossterm::cursor::SetCursorStyle::*;
 
 pub use crate::*;
 pub use crate::styles::*;
@@ -107,11 +110,45 @@ pub fn get_inbox_file(inbox: &str) -> PathBuf {
     basedir.join(get_box_unalias(inbox)).with_extension("md")
 }
 
-pub fn confirm(question: &str) -> bool {
+pub fn i_confirm(question: &str) -> bool {
     inquire::Confirm::new(question)
         .with_default(false)
         .with_render_config(get_confirm_style())
         .prompt().unwrap_or(false)
+}
+
+pub fn i_gettext() -> String {
+    execute!(std::io::stdout(), BlinkingBlock).expect("failed to set cursor");
+    let input = inquire::Text::new("")
+            .with_render_config(get_text_input_style())
+            .with_help_message("<enter> | ctrl+c")
+            .with_placeholder("something to do?")
+            .prompt().unwrap_or_else(|_| String::new());
+    execute!(std::io::stdout(), DefaultUserShape).expect("failed to set cursor");
+    input.trim().to_string()
+}
+
+pub fn i_select(tasks: Vec<String>, title: &str) -> Vec<String> {
+    execute!(std::io::stdout(), BlinkingBlock).expect("failed to set cursor");
+    let mut selected = inquire::MultiSelect::new(title, tasks)
+        .with_render_config(get_multi_select_style())
+        .with_vim_mode(true)
+        .with_page_size(10)
+        .with_help_message("h/j/k/l | ←↑↓→ | <space> | <enter> | ctrl+c")
+        .prompt().unwrap_or_else(|_| std::process::exit(1));
+    execute!(std::io::stdout(), DefaultUserShape).expect("failed to set cursor");
+    selected.retain(|x| !x.contains(WARN));
+    selected
+}
+
+pub fn i_getdate(routine_kind: &str) -> String {
+    inquire::DateSelect::new(&format!(" {} from:",S_routine!(routine_kind)))
+        .with_render_config(get_date_input_style())
+        .with_help_message("h/j/k/l | <enter> | ctrl+c")
+        .prompt().unwrap_or_else(|_| {
+                println!("{}", S_empty!("No starting date selected, skip."));
+                std::process::exit(1)
+            }).to_string()
 }
 
 #[cfg(test)]
