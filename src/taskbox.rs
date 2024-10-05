@@ -70,7 +70,7 @@ impl TaskBox {
                 let  guard = StdoutOverride::override_file(null).unwrap();
                 let eguard = StderrOverride::override_file(null).unwrap();
 
-                self.move_in(&mut
+                self.collect_from(&mut
                         TaskBox::new(util::get_inbox_file(ROUTINE_BOXNAME)));
 
                 drop(guard); drop(eguard);
@@ -201,24 +201,24 @@ impl TaskBox {
         }
     }
 
-    pub fn move_in(&mut self, todo_from: &mut TaskBox) {
-        self.load(); todo_from.load();
+    pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
+        self.load(); tb_from.load();
 
-        let tasks = todo_from.get_all_to_mark();
+        let tasks = tb_from.get_all_to_mark();
         if tasks.is_empty() { return }
 
-        if let Some(ref selected) = todo_from.selected {
+        if let Some(ref selected) = tb_from.selected {
             if selected.is_empty() { return }
         }
 
         // print title line
-        let from = todo_from.alias.clone().unwrap_or(todo_from.title.clone().unwrap());
+        let from = tb_from.alias.clone().unwrap_or(tb_from.title.clone().unwrap());
         let to = self.alias.clone().unwrap_or(self.title.clone().unwrap());
         println!("{} {} {} {}", S_movefrom!(from), MOVING,
                                 S_moveto!(to), PROGRESS);
 
         for task in tasks {
-            if let Some(ref selected) = todo_from.selected {
+            if let Some(ref selected) = tb_from.selected {
                 if ! selected.contains(&task) { continue }
             }
 
@@ -278,13 +278,13 @@ impl TaskBox {
                     println!("  {} : {}", S_checkbox!(CHECKBOX), task);
                 }
 
-                self._move_one(todo_from, &task);
+                self._move_one(tb_from, &task);
             }
         }
 
         // "ROUTINES" not drain
         if from != ROUTINE_BOXNAME {
-            todo_from._dump();
+            tb_from._dump();
         }
         self._dump();
     }
@@ -470,7 +470,7 @@ impl TaskBox {
                 "%Y-%m-%d").expect("something wrong!");
 
             if boxdate < today || (all && boxdate != today) {
-                today_todo.move_in(&mut TaskBox::new(taskbox));
+                today_todo.collect_from(&mut TaskBox::new(taskbox));
             }
         }
     }
@@ -478,31 +478,7 @@ impl TaskBox {
     // today -> tomorrow
     pub fn shift() {
         TaskBox::new(util::get_inbox_file("tomorrow"))
-            .move_in(&mut
-        TaskBox::new(util::get_inbox_file("today")))
-    }
-
-    // INBOX -> today
-    pub fn collect(&mut self, tb_from: &mut TaskBox) {
-        // double check
-        if tb_from.alias == Some("today".into()) {
-            println!("{} is not a valid source", S_moveto!("today"));
-            return
-        }
-
-        self.load();
-        if self.alias != Some("today".to_string()) {
-            println!("collect target is not \"today\", skipped");
-            return
-        }
-
-        self.move_in(tb_from)
-    }
-
-    // today -> INBOX
-    pub fn pool() {
-        TaskBox::new(util::get_inbox_file("inbox"))
-            .move_in(&mut
+            .collect_from(&mut
         TaskBox::new(util::get_inbox_file("today")))
     }
 
