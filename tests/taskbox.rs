@@ -15,8 +15,6 @@ fn setup_test_taskbox(name: &str) -> (TaskBox, tempfile::TempDir) {
     let test_conf = Config::load(Some(testtoml.to_str().unwrap().into()));
 
     let mut g_conf = CONFIG.write().unwrap();
-    println!("{:?}", g_conf);
-    println!("{:?}", test_conf);
     g_conf.update_with(&test_conf);
 
     (TaskBox::new(file_path), dir)

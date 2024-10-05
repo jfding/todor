@@ -451,17 +451,22 @@ impl TaskBox {
     }
 
     // INBOX -> today
-    pub fn collect(inbox_from: Option<String>) {
-        let from = inbox_from.unwrap_or("inbox".into());
-
-        if from == get_today() || from == "today" {
+    pub fn collect(&mut self, inbox_from: &str, selected: Vec<String>) {
+        // double check
+        if inbox_from == get_today() || inbox_from == "today" {
             println!("{} is not a valid source", S_moveto!("today"));
             return
         }
 
-        TaskBox::new(util::get_inbox_file("today"))
-            .move_in(&mut
-        TaskBox::new(util::get_inbox_file(&from)))
+        self.load();
+        if self.alias != Some("today".to_string()) {
+            println!("collect target is not \"today\", skipped");
+            return
+        }
+
+        println!("{:?}", selected);
+
+        self.move_in(&mut TaskBox::new(util::get_inbox_file(inbox_from)))
     }
 
     // today -> INBOX

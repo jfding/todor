@@ -100,11 +100,15 @@ pub enum Commands {
     /// -> shift all uncompeleted in "today" to "tomorrow"
     Shift,
 
-    /// -> collect all uncompeleted in INBOX(or --inbox <which>) to "today"
+    /// -> collect all uncompeleted in INBOX(or --boxname <?>) to "today"
     Collect {
         #[arg(short, long)]
-        #[arg(value_name = "taskbox-name")]
-        inbox: Option<String>,
+        #[arg(value_name = "task-box-name")]
+        boxname: Option<String>,
+
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
     },
 
     /// -> pooling all uncompeleted of today to INBOX
