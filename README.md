@@ -27,7 +27,7 @@
 - commands: 
   - list(default), listall, add, mark, edit, count
   - purge, browse, listbox
-  - sink, shift, collect, pool(old: postp)
+  - sink, shift, collect, pool(old: postp), checkout
   - import
   - cleanup
 
