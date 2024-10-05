@@ -95,10 +95,18 @@ pub enum Commands {
     Sink {
         #[arg(short, long)]
         all: bool,
+
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
     },
 
     /// -> shift all uncompeleted in "today" to "tomorrow"
-    Shift,
+    Shift {
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
+    },
 
     /// -> collect all uncompeleted in INBOX(or --boxname <?>) to "today"
     Collect {
@@ -112,7 +120,11 @@ pub enum Commands {
     },
 
     /// -> pooling all uncompeleted of today to INBOX
-    Pool,
+    Pool {
+        /// interactive mode to select items to move
+        #[arg(short, long)]
+        interactive: bool,
+    },
 
     /// -> import uncompeleted task in any markdown file to current
     Import{

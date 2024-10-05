@@ -50,13 +50,23 @@ fn main() {
             }
         }
 
-        Some(Commands::Sink { all })      => TaskBox::sink(all),
-        Some(Commands::Shift)             => TaskBox::shift(),
-        Some(Commands::Pool)              => TaskBox::pool(),
         Some(Commands::Checkout)          => TaskBox::new(util::get_inbox_file("today"))
-                               .collect(&mut TaskBox::new(util::get_inbox_file("routine"))),
+                          .collect_from(&mut TaskBox::new(util::get_inbox_file("routine"))),
+        Some(Commands::Sink { all, interactive }) => TaskBox::sink(all),
+        Some(Commands::Shift { interactive })     => TaskBox::shift(),
+        Some(Commands::Pool { interactive })      => {
+            // today -> INBOX
+
+            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
+            if interactive {
+                tb_today.selected = Some(i_select(tb_today.get_all_to_mark()));
+            }
+
+            TaskBox::new(util::get_inbox_file("inbox")).collect_from(&mut tb_today)
+        }
 
         Some(Commands::Collect { boxname, interactive }) => {
+            // other(def: INBOX) -> today
 
             let from = boxname.unwrap_or("inbox".into());
             if from == get_today() || from == "today" {
@@ -70,7 +80,7 @@ fn main() {
                 tb_from.selected = Some(i_select(tb_from.get_all_to_mark()));
             }
 
-            TaskBox::new(util::get_inbox_file("today")).collect(&mut tb_from)
+            TaskBox::new(util::get_inbox_file("today")).collect_from(&mut tb_from)
         }
 
         Some(Commands::Mark) => {
