@@ -66,8 +66,8 @@ fn test_purge() {
 
 #[test]
 fn test_collect_from_basic() {
-    let (mut tb1, _dir1) = setup_test_taskbox("test1");
-    let (mut tb2, _dir2) = setup_test_taskbox("test2");
+    let (mut tb1, dir) = setup_test_taskbox("test1");
+    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -94,8 +94,8 @@ fn test_collect_from_basic() {
 
 #[test]
 fn test_collect_from_with_warn_msg() {
-    let (mut tb1, _dir1) = setup_test_taskbox("test1");
-    let (mut tb2, _dir2) = setup_test_taskbox("test2");
+    let (mut tb1, dir) = setup_test_taskbox("test1");
+    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
 
     tb1.add("Task to move".to_string(), None, false, "");
     tb1.add("Daily routine".to_string(), Some(Routine::Daily), false, "");
@@ -116,8 +116,8 @@ fn test_collect_from_with_warn_msg() {
 
 #[test]
 fn test_collect_from_with_sub() {
-    let (mut tb1, _dir1) = setup_test_taskbox("test1");
-    let (mut tb2, _dir2) = setup_test_taskbox("test2");
+    let (mut tb1, dir) = setup_test_taskbox("test1");
+    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -149,8 +149,8 @@ fn test_collect_from_with_sub() {
 
 #[test]
 fn test_collect_from_with_sub_done() {
-    let (mut tb1, _dir1) = setup_test_taskbox("test1");
-    let (mut tb2, _dir2) = setup_test_taskbox("test2");
+    let (mut tb1, dir) = setup_test_taskbox("test1");
+    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -204,8 +204,8 @@ fn test_collect_from_with_sub_done() {
 
 #[test]
 fn test_collect_from_with_dup_sub() {
-    let (mut tb1, _dir1) = setup_test_taskbox("test1");
-    let (mut tb2, _dir2) = setup_test_taskbox("test2");
+    let (mut tb1, dir) = setup_test_taskbox("test1");
+    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -254,8 +254,8 @@ fn test_collect_from_with_dup_sub() {
     assert_eq!(test2_output, test2_actual);
 
     // will failed, TODO to fix it with a design
-    //let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
-    //assert_eq!(test1_output, test1_actual);
+    let test1_actual = fs::read_to_string(&tb1.fpath).expect("Failed to read tb1 file");
+    assert_eq!(test1_output, test1_actual);
 }
 
 #[test]
@@ -271,9 +271,10 @@ fn test_add_routine() {
 
 #[test]
 fn test_checkout() {
-    let (mut tb, _dir) = setup_test_taskbox("test");
-    let (mut today, _dir) = setup_test_taskbox(&get_today());
-    let (mut routine, _dir) = setup_test_taskbox(ROUTINE_BOXNAME);
+    let (mut tb, dir) = setup_test_taskbox("test");
+    let mut today = TaskBox::new(dir.path().join(&get_today()).with_extension("md"));
+    let mut routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
+
     routine.add("Daily routine".to_string(), Some(Routine::Daily), false, &get_today());
     routine.add("ignore not routine".to_string(), None, false, "");
 
@@ -306,9 +307,9 @@ fn test_pool_today_to_inbox() {
 - [ ] Task to move
 "#, get_today());
 
-    let (mut today, _dir) = setup_test_taskbox(&get_today());
-    let (mut inbox, _dir) = setup_test_taskbox(INBOX_NAME);
-    let (mut routine, _dir) = setup_test_taskbox(ROUTINE_BOXNAME);
+    let (mut today, dir) = setup_test_taskbox(&get_today());
+    let mut routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
+    let mut inbox = TaskBox::new(dir.path().join(INBOX_NAME).with_extension("md"));
 
     std::fs::write(&today.fpath, today_input).expect("Failed to write test input to file");
     today.load();
@@ -348,10 +349,11 @@ fn test_import_somefile_to_inbox() {
 - [ ] Task to import
 - [ ] Task2 to import
 - [ ] {󰃯:d 2024-10-01} one daily to import
+- [ ] {󰃯:m 2024-10-31} one montly to import
 "#;
 
     let (mut inbox, dir) = setup_test_taskbox(INBOX_NAME);
-    let mut routine = TaskBox::new(util::get_inbox_file("routine"));
+    let mut routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
 
     let fpath = dir.path().join("import-input").with_extension("md");
     std::fs::write(&fpath, md_input).expect("Failed to write test input to file");
@@ -362,9 +364,9 @@ fn test_import_somefile_to_inbox() {
     assert_eq!(inbox.tasks.len(), 1);
     assert_eq!(routine.tasks.len(), 1);
 
-    routine = TaskBox::new(util::get_inbox_file("routine")); //reload
+    routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
     inbox.import(Some(fpath.to_str().unwrap().to_string()));
     inbox.load(); routine.load();
     assert_eq!(inbox.tasks.len(), 4);
-    //TODO assert_eq!(routine.tasks.len(), 2);
+    assert_eq!(routine.tasks.len(), 3);
 }
