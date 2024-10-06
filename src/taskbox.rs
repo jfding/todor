@@ -192,7 +192,8 @@ impl TaskBox {
 
         if ! from._mark_task_with_done_subtask(task) {
             // remove the one from "from"
-            from.tasks.retain(|(t, _)| t != task)
+            #[allow(clippy::nonminimal_bool)]
+            from.tasks.retain(|(t, d)| ! (t == task && !d));
         }
     }
 
@@ -496,7 +497,8 @@ impl TaskBox {
             self._dump();
         }
         if ! newr.is_empty() {
-            let mut rbox = TaskBox::new(util::get_inbox_file("routine"));
+            // cannot use util:get_inbox_file(), not thread safe
+            let mut rbox = TaskBox::new(self.fpath.parent().unwrap().join(ROUTINE_BOXNAME).with_extension("md"));
             rbox.load();
             newr.iter().for_each(|t| rbox._addone(t.to_string()));
             rbox._dump();
