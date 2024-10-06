@@ -347,6 +347,12 @@ impl TaskBox {
         let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
         let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
 
+        let checkbox_style = if self.title == Some("ROUTINES".into()) {
+            ROUTINES
+        } else {
+            CHECKBOX
+        };
+
         if listall && !dones.is_empty() {
             for t in dones {
                 println!("{}  {}", S_checked!(CHECKED), t.strikethrough())
@@ -362,7 +368,7 @@ impl TaskBox {
             let mut last_is_sub = false;
 
             for (t, done) in &self.tasks {
-                msg = format!("{}  ", S_blink!(S_checkbox!(CHECKBOX)));
+                msg = format!("{}  ", S_blink!(S_checkbox!(checkbox_style)));
                 if t.starts_with(PREFIX_SUBT) {
                     if *done { continue }
 
