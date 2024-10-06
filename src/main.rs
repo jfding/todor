@@ -57,8 +57,9 @@ fn main() {
             }
         }
 
-        Some(Commands::Checkout) => { // ROUTINE --(check-out)-> today
-            TaskBox::new(util::get_inbox_file("today"))
+        Some(Commands::Checkout) => { // ROUTINE --(check-out)-> today/tomorrow
+            let real_inbox = if inbox != "tomorrow" { "today" } else { inbox };
+            TaskBox::new(util::get_inbox_file(real_inbox))
                   .collect_from(&mut TaskBox::new(util::get_inbox_file("routine")))
         }
 

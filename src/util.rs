@@ -60,10 +60,17 @@ pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
 
-pub fn match_routine(kind: &str, s_date_str: &str) -> bool {
+pub fn match_routine(kind: &str, s_date_str: &str, match_to: &str) -> bool {
     let mut s_date = NaiveDate::parse_from_str(s_date_str, "%Y-%m-%d").unwrap();
+    let match_to_date = match match_to {
+        "today" => Local::now().date_naive(),
+        "yesterday" => Local::now().add(chrono::Duration::days(-1)).date_naive(),
+        "tomorrow" => Local::now().add(chrono::Duration::days(1)).date_naive(),
+        _ => panic!("unsupported match_to date(only today/yesterday/tomorrow)"),
+    };
+
     if kind == "m" {
-        while s_date < Local::now().date_naive() {
+        while s_date < match_to_date {
             s_date = s_date + chrono::Months::new(1);
         }
     } else {
@@ -74,12 +81,12 @@ pub fn match_routine(kind: &str, s_date_str: &str) -> bool {
             "q" => 28,
             _ => panic!("unknown routine kind"),
         };
-        while s_date < Local::now().date_naive() {
+        while s_date < match_to_date {
             s_date += chrono::Duration::days(steps);
         }
     }
 
-    s_date == Local::now().date_naive()
+    s_date == match_to_date
 }
 
 pub fn get_box_alias(name_in: &str) -> Option<String> {

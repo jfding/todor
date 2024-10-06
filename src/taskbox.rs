@@ -49,7 +49,7 @@ impl TaskBox {
     pub fn load(&mut self) {
         if self.title.is_some() { return } // avoid load() twice
 
-        if !self.fpath.exists() {
+        if ! self.fpath.exists() {
             let fpath = &self.fpath;
             let title = fpath.file_stem()
                              .and_then(|s| s.to_str())
@@ -62,7 +62,7 @@ impl TaskBox {
 
             // if it's "today" box, run 'checkout' once [only Unix]
             #[cfg(unix)]
-            if title == get_today() {
+            if title == get_today() || title == get_tomorrow() {
                 use stdio_override::{StdoutOverride, StderrOverride};
                 let null = "/dev/null";
                 let  guard = StdoutOverride::override_file(null).unwrap();
@@ -143,11 +143,8 @@ impl TaskBox {
                 task = left.to_string();
             }
 
-            if done {
-                content.push_str(PREFIX_DONE)
-            } else {
-                content.push_str(PREFIX_OPEN)
-            }
+            if done { content.push_str(PREFIX_DONE) }
+            else {    content.push_str(PREFIX_OPEN) }
             content.push_str(&(task + "\n"))
         }
 
@@ -223,10 +220,12 @@ impl TaskBox {
             let caps = RE_ROUTINES.captures(&task);
 
             if from == ROUTINE_BOXNAME {
-                // only "collect --inbox routines" (routines -> today) is valid
                 // non-routine tasks in routine box will be skipped
+                // only "collect --inbox routines" (routines -> today/tomo) is valid
+                if to != "today" && to != "tomorrow" { continue }
+
                 if let Some(caps) = caps {
-                    if to != "today" || !util::match_routine(&caps[1], &caps[2]) {continue}
+                    if ! util::match_routine(&caps[1], &caps[2], &to) {continue}
 
                     let kind = match &caps[1] {
                         "d" => "daily",
@@ -236,7 +235,13 @@ impl TaskBox {
                         "m" => "monthly",
                         _ => "unknown",
                     };
-                    let newtask = format!("{{{}:{}}} {} [{} {}]", ROUTINES, kind, &caps[3], CALENDAR, get_today());
+                    let checkout_date = match to.as_ref() {
+                        "today" => get_today(),
+                        "tomorrow" => get_tomorrow(),
+                        _ => panic!("unsupported checkout date(only today/tomorrow)"),
+                    };
+                    let newtask = format!("{{{}:{}}} {} [{} {}]",
+                                           ROUTINES, kind, &caps[3], CALENDAR, checkout_date);
 
                     println!("  {} : {}", S_checkbox!(ROUTINES), newtask);
 
