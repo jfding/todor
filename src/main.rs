@@ -41,8 +41,9 @@ fn main() {
     let mut inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
-        Some(Commands::List) | None       => TaskBox::new(inbox_path).list(false),
-        Some(Commands::Listall)           => TaskBox::new(inbox_path).list(true),
+        Some(Commands::List) | None => TaskBox::new(inbox_path).list(false),
+        Some(Commands::Listall)     => TaskBox::new(inbox_path).list(true),
+        Some(Commands::Routines)    => TaskBox::new(get_inbox_file(ROUTINE_BOXNAME)).list(true),
 
         Some(Commands::Count)             => {
             let cc = TaskBox::new(inbox_path).count();

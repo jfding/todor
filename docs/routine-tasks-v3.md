@@ -41,9 +41,9 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
 * when to run `today` cli with any command, will have a daily-once hook to run `checkout`
 * command `edit` will have a new flag `-r/--routine` to edit the routine tasks
 * for `import`, will import the (rarely)matched routine tasks to "ROUTINES" box
+* for `list` and `listall`, list them with special flags
+  * new cmd `routines` to list all the routine tasks
 * cmd `pool` (today -> INBOX) will ignore the checkout routine tasks
 * cmd `collect` (INBOX/other -> today) will only checkout routine tasks from ROUTINES box to "today" box, otherwise just move without checkout operation
   * and `collect --inbox routines` is dedicated for routine tasks checkout
 * no affect: `count`, `mark`, `purge`, `browse`, `listbox`, `shift`, `sink`
-* (optional) for `list` and `listall`, list them with special flags
-* (optional) new cmd `routines` to list all the routine tasks

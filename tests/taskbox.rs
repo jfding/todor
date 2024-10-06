@@ -288,7 +288,7 @@ fn test_checkout() {
     assert_eq!(today.tasks.len(), 1);
     assert!(today.tasks[0].0.starts_with("{󰃯:daily} "));
     assert!(today.tasks[0].0.contains("} Daily routine"));
-    assert!(today.tasks[0].0.contains(" [󰃵 "));
+    assert!(today.tasks[0].0.contains(" [󰴹 "));
 
     tb.collect_from(&mut routine);
     tb.load();

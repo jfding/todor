@@ -30,6 +30,7 @@
   - sink, shift, collect, pool(old: postp), checkout
   - import
   - cleanup
+  - routines
 
   - [ ] sync with iCloud
   - [ ] sync with MS-TODO
@@ -55,6 +56,7 @@ Commands:
   import    -> import uncompeleted task in any markdown file to current
   cleanup   -> clean up all empty datetime taskbox
   checkout  -> checkout routine tasks to "today"(collect --inbox routine)
+  routines  -> shortcut command to list all routine tasks [aliases: r, rt]
   help      Print this message or the help of the given subcommand(s)
 
 Options:

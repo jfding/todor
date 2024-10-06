@@ -134,6 +134,10 @@ pub enum Commands {
 
     /// -> checkout routine tasks to "today"(collect --inbox routine)
     Checkout,
+
+    /// -> shortcut command to list all routine tasks
+    #[clap(visible_aliases(["r", "rt"]))]
+    Routines,
 }
 
 impl Default for Cli {
