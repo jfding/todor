@@ -14,7 +14,7 @@ pub const PROGRESS: &str = "󰓌";
 pub const WARN: &str = "󰼈";
 pub const QUESTION: &str = "󱜹";
 pub const ROUTINES: &str = "󰃯";
-pub const CALENDAR: &str = "󰃵";
+pub const DATESTAMP: &str = "󰴹"; // 󰃵
 pub const WEEKLINE: &str = "󰕶";
 // S means Style
 #[macro_export]

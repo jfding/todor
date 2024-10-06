@@ -241,7 +241,7 @@ impl TaskBox {
                         _ => panic!("unsupported checkout date(only today/tomorrow)"),
                     };
                     let newtask = format!("{{{}:{}}} {} [{} {}]",
-                                           ROUTINES, kind, &caps[3], CALENDAR, checkout_date);
+                                           ROUTINES, kind, &caps[3], DATESTAMP, checkout_date);
 
                     println!("  {} : {}", S_checkbox!(ROUTINES), newtask);
 
@@ -311,7 +311,7 @@ impl TaskBox {
                 start_date, what)
 
         } else if add_date {
-            format!("{} [{} {}]", what, CALENDAR, get_today())
+            format!("{} [{} {}]", what, DATESTAMP, get_today())
         } else { what };
 
         self._addone(task);
