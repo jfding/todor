@@ -105,11 +105,11 @@ pub enum Commands {
         interactive: bool,
     },
 
-    /// -> collect all uncompeleted in INBOX(or --boxname <?>) to "today"
+    /// -> collect all uncompeleted in INBOX(or --from <?>) to "today"
     Collect {
         #[arg(short, long)]
         #[arg(value_name = "task-box-name")]
-        boxname: Option<String>,
+        from: Option<String>,
 
         /// interactive mode to select items to move
         #[arg(short, long)]

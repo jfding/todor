@@ -114,8 +114,8 @@ fn main() {
             TaskBox::new(util::get_inbox_file("inbox")).collect_from(&mut tb_today)
         }
 
-        Some(Commands::Collect { boxname, interactive }) => { // other(def: INBOX) -> today
-            let from = boxname.unwrap_or("inbox".into());
+        Some(Commands::Collect { from, interactive }) => { // other(def: INBOX) -> today
+            let from = from.unwrap_or("inbox".into());
             if from == get_today() || from == "today" {
                 println!("{} is not a valid source", S_moveto!("today"));
                 return
