@@ -142,17 +142,17 @@ fn main() {
             todo.mark(i_select(tasks, "choose to close:"));
         }
 
-        Some(Commands::Add { what, date_stamp, routine, interactive }) => {
+        Some(Commands::Add { what, date_stamp, routine, non_interactive }) => {
             if routine.is_some() {
                 inbox_path = get_inbox_file("routine")
             }
             let mut todo = TaskBox::new(inbox_path);
 
             let input = what.unwrap_or(i_gettext());
-            if !input.is_empty() {
+            if ! input.is_empty() {
                 let mut start_date = get_today();
 
-                if routine.is_some() && interactive {
+                if routine.is_some() && !non_interactive {
                     start_date = i_getdate(match routine {
                             Some(Routine::Daily)    => "daily",
                             Some(Routine::Weekly)   => "weekly",
