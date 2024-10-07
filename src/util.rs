@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use chrono::*;
 use std::ops::*;
 use cmd_lib::*;
@@ -18,36 +18,34 @@ macro_rules! Config_get { ($e:expr) => {
     }
 }; }
 
+trait PathExt {
+    fn normalize(&self) -> Option<String>;
+}
+impl PathExt for Path {
+    fn normalize(&self) -> Option<String> {
+        let real_path;
+
+        if self.starts_with("~/") {
+            real_path = dirs::home_dir()?.join(self.strip_prefix("~/").unwrap());
+        } else if self.is_relative() {
+            real_path = std::env::current_dir().expect("cannot get cwd?")
+                    .join(self.strip_prefix("./").unwrap_or(self));
+        } else {
+            real_path = self.to_path_buf()
+        }
+        Some(real_path.to_str()?.into())
+    }
+}
+pub fn path_normalize(path_str: &str) -> String {
+    Path::new(path_str).normalize().unwrap()
+}
+
 pub fn pick_file() -> String {
     run_fun!(
         ls | fzf;
     ).unwrap_or_else(|_|
         std::process::exit(1)
     )
-}
-
-pub fn path_normalize(path_str: &str) -> String {
-    let conf_path;
-    if path_str.starts_with("~/") {
-        conf_path = PathBuf::from(path_str
-                .replace("~", dirs::home_dir()
-                    .expect("cannot get home dir")
-                    .to_str()
-                    .unwrap()));
-
-    } else if path_str.starts_with("./") {
-        conf_path = std::env::current_dir()
-                .expect("cannot get current dir")
-                .join(path_str.to_string().strip_prefix("./").unwrap());
-    } else if !path_str.starts_with("/") {
-        conf_path = std::env::current_dir()
-                .expect("cannot get current dir")
-                .join(path_str);
-    } else {
-        conf_path = PathBuf::from(path_str);
-    }
-
-    conf_path.to_str().expect("wrong path").into()
 }
 
 pub fn get_today() -> String {
@@ -185,14 +183,21 @@ mod tests {
 
     #[test]
     fn test_path_normalize() {
-        assert_eq!(path_normalize("~/dummy"),
+        let op1 = Path::new("~/dummy");
+        let op2 = Path::new("dummy");
+        let op3 = Path::new("~dummy");
+        let op4 = Path::new("./dummy");
+        let op5 = Path::new("/dummy");
+
+        assert_eq!(op1.normalize().unwrap(),
             dirs::home_dir().unwrap().join("dummy").to_str().unwrap());
-        assert_eq!(path_normalize("dummy"),
+        assert_eq!(op2.normalize().unwrap(),
             std::env::current_dir().unwrap().join("dummy").to_str().unwrap());
-        assert_eq!(path_normalize("~dummy"),
+        assert_eq!(op3.normalize().unwrap(),
             std::env::current_dir().unwrap().join("~dummy").to_str().unwrap());
-        assert_eq!(path_normalize("./dummy"),
+        assert_eq!(op4.normalize().unwrap(),
             std::env::current_dir().unwrap().join("dummy").to_str().unwrap());
-        assert_eq!(path_normalize("/dummy"), "/dummy");
+        assert_eq!(op5.normalize().unwrap(),
+            "/dummy");
     }
 }
