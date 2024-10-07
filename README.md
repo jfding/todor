@@ -1,40 +1,5 @@
 # todor - yet another cli TODO in Rust
 
-## Design Points
-
-- cli interface design factors:
-  - add : friendly readline
-  - mark: checklist with hjkl navi key support, <space> to toggle
-  - edit: call vi to edit markdown file directly
-  - colorful!
-
-- how to store the tasks in fs
-  - config need to go XDG_HOME_CONFIG
-  - in MD, not json
-  - file store at: (default) ~/.local/share/todor/*.md
-  - default inbox file will be INBOX.md
-
-- sub-tasks support
-  - Use regular markdown symtax to represent sub-tasks
-  - Need to use `edit` command to edit the markdown file manually to manage the level
-  - `list` works very well with nice outputs
-  - `mark`, `purge` can work well enough
-      - but be careful about `purge --sort`
-  - other commands have no changes or regressions
-
-## Sub commands
-
-- commands: 
-  - list(default), listall, add, mark, edit, count
-  - purge, browse, listbox
-  - sink, shift, collect, pool(old: postp), checkout
-  - import
-  - cleanup
-  - routines
-
-  - [ ] sync with iCloud
-  - [ ] sync with MS-TODO
-
 ## Usage
 ```
 Usage: todor [OPTIONS] [COMMAND]
@@ -83,3 +48,26 @@ These four commands: `sink`, `shift`, `collect`, `pool` are designed to move tas
 
 ![tasks-flow](./docs/assets/tasks-flow.png)
 
+## :sparkles: Design
+
+Many ideas were inspired by <a href="https://github.com/basilioss/mdt">mdt</a>, which is a shell script with <a href="https://github.com/charmbracelet/gum">gum</a> as the UI library. While todor is written in Rust, as a single binary with a lot of more features, meanwhile keeping the simplicity and efficiency.
+
+- cli interface design factors:
+  - add : friendly readline
+  - mark: checklist with hjkl navi key support, <space> to toggle
+  - edit: call vi to edit markdown file directly
+  - colorful!
+
+- how to store the tasks in fs
+  - config need to go XDG_HOME_CONFIG
+  - in MD, not json
+  - file store at: (default) ~/.local/share/todor/*.md
+  - default inbox file will be INBOX.md
+
+- sub-tasks support
+  - Use regular markdown symtax to represent sub-tasks
+  - Need to use `edit` command to edit the markdown file manually to manage the level
+  - `list` works very well with nice outputs
+  - `mark`, `purge` can work well enough
+      - but be careful about `purge --sort`
+  - other commands have no changes or regressions
