@@ -11,7 +11,7 @@ fn setup_test_taskbox(name: &str) -> (TaskBox, tempfile::TempDir) {
     // test config settings
     let testtoml = dir.path().join("config.toml");
     let testcontent = format!("basedir = \"{}\"\nblink = false\n", dir.path().display());
-    std::fs::write(&testtoml, testcontent).expect("write err");
+    fs::write(&testtoml, testcontent).expect("write err");
     let test_conf = Config::load(Some(testtoml.to_str().unwrap().into()));
 
     let mut g_conf = CONFIG.write().unwrap();
@@ -66,8 +66,8 @@ fn test_purge() {
 
 #[test]
 fn test_collect_from_basic() {
-    let (mut tb1, dir) = setup_test_taskbox("test1");
-    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
+    let (mut tb1, _dir) = setup_test_taskbox("test1");
+    let mut tb2 = tb1.sibling("test2");
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -76,7 +76,7 @@ fn test_collect_from_basic() {
 - [x] Task not to move
 - [ ] Task2 to move
 "#;
-    std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
+    fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
     tb1.load();
     assert_eq!(tb1.tasks.len(), 3);
 
@@ -94,8 +94,8 @@ fn test_collect_from_basic() {
 
 #[test]
 fn test_collect_from_with_warn_msg() {
-    let (mut tb1, dir) = setup_test_taskbox("test1");
-    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
+    let (mut tb1, _dir) = setup_test_taskbox("test1");
+    let mut tb2 = tb1.sibling("test2");
 
     tb1.add("Task to move".to_string(), None, false, "");
     tb1.add("Daily routine".to_string(), Some(Routine::Daily), false, "");
@@ -116,8 +116,8 @@ fn test_collect_from_with_warn_msg() {
 
 #[test]
 fn test_collect_from_with_sub() {
-    let (mut tb1, dir) = setup_test_taskbox("test1");
-    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
+    let (mut tb1, _dir) = setup_test_taskbox("test1");
+    let mut tb2 = tb1.sibling("test2");
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -134,7 +134,7 @@ fn test_collect_from_with_sub() {
   - [ ] SubTask1 to move
 "#;
 
-    std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
+    fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
     tb1.load();
     assert_eq!(tb1.tasks.len(), 2);
 
@@ -149,8 +149,8 @@ fn test_collect_from_with_sub() {
 
 #[test]
 fn test_collect_from_with_sub_done() {
-    let (mut tb1, dir) = setup_test_taskbox("test1");
-    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
+    let (mut tb1, _dir) = setup_test_taskbox("test1");
+    let mut tb2 = tb1.sibling("test2");
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -190,7 +190,7 @@ fn test_collect_from_with_sub_done() {
   - [ ] SubTask3 to move
 "#;
 
-    std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
+    fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
     tb1.load();
 
     tb2.collect_from(&mut tb1);
@@ -204,8 +204,8 @@ fn test_collect_from_with_sub_done() {
 
 #[test]
 fn test_collect_from_with_dup_sub() {
-    let (mut tb1, dir) = setup_test_taskbox("test1");
-    let mut tb2 = TaskBox::new(dir.path().join("test2").with_extension("md"));
+    let (mut tb1, _dir) = setup_test_taskbox("test1");
+    let mut tb2 = tb1.sibling("test2");
 
     // Load prepared markdown files as test input
     let test1_input = r#"# test1
@@ -245,7 +245,7 @@ fn test_collect_from_with_dup_sub() {
   - [ ] SubTask1 to move
 "#;
 
-    std::fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
+    fs::write(&tb1.fpath, test1_input).expect("Failed to write test input to file");
     tb1.load();
 
     tb2.collect_from(&mut tb1);
@@ -271,9 +271,9 @@ fn test_add_routine() {
 
 #[test]
 fn test_checkout() {
-    let (mut tb, dir) = setup_test_taskbox("test");
-    let mut today = TaskBox::new(dir.path().join(&get_today()).with_extension("md"));
-    let mut routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
+    let (mut tb, _dir) = setup_test_taskbox("test");
+    let mut today = tb.sibling("today");
+    let mut routine = tb.sibling("routine");
 
     routine.add("Daily routine".to_string(), Some(Routine::Daily), false, &get_today());
     routine.add("ignore not routine".to_string(), None, false, "");
@@ -307,11 +307,11 @@ fn test_pool_today_to_inbox() {
 - [ ] Task to move
 "#, get_today());
 
-    let (mut today, dir) = setup_test_taskbox(&get_today());
-    let mut routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
-    let mut inbox = TaskBox::new(dir.path().join(INBOX_NAME).with_extension("md"));
+    let (mut today, _dir) = setup_test_taskbox(&get_today());
+    let mut routine = today.sibling("routine");
+    let mut inbox = today.sibling("inbox");
 
-    std::fs::write(&today.fpath, today_input).expect("Failed to write test input to file");
+    fs::write(&today.fpath, today_input).expect("Failed to write test input to file");
     today.load();
 
     today.add("Wrong daily routine".to_string(), Some(Routine::Daily), false, &get_today());
@@ -353,10 +353,10 @@ fn test_import_somefile_to_inbox() {
 "#;
 
     let (mut inbox, dir) = setup_test_taskbox(INBOX_NAME);
-    let mut routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
+    let mut routine = inbox.sibling("routine");
 
     let fpath = dir.path().join("import-input").with_extension("md");
-    std::fs::write(&fpath, md_input).expect("Failed to write test input to file");
+    fs::write(&fpath, md_input).expect("Failed to write test input to file");
 
     inbox.add("old task".to_string(), None, false, "");
     routine.add("old Daily routine".to_string(), Some(Routine::Daily), false, "");
@@ -364,9 +364,9 @@ fn test_import_somefile_to_inbox() {
     assert_eq!(inbox.tasks.len(), 1);
     assert_eq!(routine.tasks.len(), 1);
 
-    routine = TaskBox::new(dir.path().join(ROUTINE_BOXNAME).with_extension("md"));
     inbox.import(Some(fpath.to_str().unwrap().to_string()));
-    inbox.load(); routine.load();
+    routine = inbox.sibling("routine"); //reset for force reload
+    routine.load();
     assert_eq!(inbox.tasks.len(), 4);
     assert_eq!(routine.tasks.len(), 3);
 }

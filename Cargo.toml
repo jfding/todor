@@ -21,6 +21,7 @@ inquire = { version = "0.7.5", features = ["date"] }
 lazy_static = "1.5.0"
 regex = "1.11.0"
 serde = { version = "1.0.210", features = ["derive"] }
+ssh2 = "0.9.4"
 toml = "0.8.19"
 which = "6.0.3"
 

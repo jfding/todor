@@ -36,7 +36,7 @@ pub struct TaskBox {
 }
 
 impl TaskBox {
-    pub fn new (fpath: PathBuf) -> Self {
+    pub fn new(fpath: PathBuf) -> Self {
         Self {
             fpath,
             title: None, // None means not loaded
@@ -44,6 +44,11 @@ impl TaskBox {
             tasks: vec![],
             selected: None,
         }
+    }
+
+    pub fn sibling(&self, boxname: &str) -> Self {
+        TaskBox::new(self.fpath.parent().unwrap()
+            .join(get_box_unalias(boxname)).with_extension("md"))
     }
 
     pub fn load(&mut self) {
@@ -68,8 +73,7 @@ impl TaskBox {
                 let  guard = StdoutOverride::override_file(null).unwrap();
                 let eguard = StderrOverride::override_file(null).unwrap();
 
-                self.collect_from(&mut
-                        TaskBox::new(util::get_inbox_file(ROUTINE_BOXNAME)));
+                self.collect_from(&mut self.sibling(ROUTINE_BOXNAME));
 
                 drop(guard); drop(eguard);
             }
@@ -499,8 +503,7 @@ impl TaskBox {
             self._dump();
         }
         if ! newr.is_empty() {
-            // cannot use util:get_inbox_file(), not thread safe
-            let mut rbox = TaskBox::new(self.fpath.parent().unwrap().join(ROUTINE_BOXNAME).with_extension("md"));
+            let mut rbox = self.sibling(ROUTINE_BOXNAME);
             rbox.load();
             newr.iter().for_each(|t| rbox._addone(t.to_string()));
             rbox._dump();
