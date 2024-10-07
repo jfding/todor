@@ -119,6 +119,9 @@ pub fn get_inbox_file(inbox: &str) -> PathBuf {
     basedir.join(get_box_unalias(inbox)).with_extension("md")
 }
 
+// following i_* fn are for "inquire" based wrappers
+// "i" stands for "I would like use Inquire crate to get my Input in an Interactive way"
+
 pub fn i_confirm(question: &str) -> bool {
     inquire::Confirm::new(question)
         .with_default(false)
