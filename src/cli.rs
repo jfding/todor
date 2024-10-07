@@ -105,7 +105,7 @@ pub enum Commands {
         interactive: bool,
     },
 
-    /// -> collect all uncompeleted in INBOX(or --from <?>) to "today"
+    /// -> collect all uncompeleted in INBOX(or --from <box>) to "today"
     Collect {
         #[arg(short, long)]
         #[arg(value_name = "task-box-name")]
@@ -132,7 +132,7 @@ pub enum Commands {
     /// -> clean up all empty datetime taskbox
     Cleanup,
 
-    /// -> checkout routine tasks to "today"(collect --inbox routine)
+    /// -> checkout routine tasks to "today"(collect --from routine)
     Checkout,
 
     /// -> shortcut command to list all routine tasks
