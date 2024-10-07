@@ -96,7 +96,9 @@ jobs:
       - name: archive the exe
         if: contains(matrix.platform.target, 'windows')
         run: |
-          Compress-Archive -Path target/${{ matrix.platform.target }}/release-with-symbols/${{ env.BIN_NAME }}.exe -Destination ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip
+          copy target/${{ matrix.platform.target }}/release-with-symbols/${{ env.BIN_NAME }}.exe target/${{ matrix.platform.target }}/release-with-symbols/today.exe
+          copy target/${{ matrix.platform.target }}/release-with-symbols/${{ env.BIN_NAME }}.exe target/${{ matrix.platform.target }}/release-with-symbols/tomorrow.exe
+          Compress-Archive -Path target/${{ matrix.platform.target }}/release-with-symbols/*.exe -Destination ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip
 
       - name: Store artifact as zip
         uses: actions/upload-artifact@v4
