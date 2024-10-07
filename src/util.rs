@@ -59,6 +59,10 @@ pub fn get_yesterday() -> String {
 pub fn get_tomorrow() -> String {
     Local::now().add(chrono::Duration::days(1)).date_naive().to_string()
 }
+pub fn weekday_from_date(date_str: &str) -> String {
+    if date_str.is_empty() { return "".into(); }
+    NaiveDate::parse_from_str(date_str, "%Y-%m-%d").unwrap().weekday().to_string()
+}
 
 pub fn match_routine(kind: &str, s_date_str: &str, match_to: &str) -> bool {
     let mut s_date = NaiveDate::parse_from_str(s_date_str, "%Y-%m-%d").unwrap();

@@ -348,8 +348,8 @@ fn test_import_somefile_to_inbox() {
 ## below one is a duplicated, will ingore
 - [ ] Task to import
 - [ ] Task2 to import
-- [ ] {󰃯:d 2024-10-01} one daily to import
-- [ ] {󰃯:m 2024-10-31} one montly to import
+- [ ] {󰃯:d 2024-10-01Tue 󰳟} one daily to import
+- [ ] {󰃯:m 2024-10-31Mon 󰳟} one montly to import
 "#;
 
     let (mut inbox, dir) = setup_test_taskbox(INBOX_NAME);

@@ -14,7 +14,7 @@ lazy_static! {
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
     static ref RE_ROUTINES :Regex =
-        Regex::new(r"\{󰃯:([dDwWbBqQmM]) (\d{4}-\d{2}-\d{2})\} (.*)").unwrap();
+        Regex::new(r"\{󰃯:([dDwWbBqQmM]) (\d{4}-\d{2}-\d{2})\w{3} 󰳟\} (.*)").unwrap();
     static ref RE_ROUTINES_CHECKOUT :Regex =
         Regex::new(r"\{󰃯:(daily|weekly|biweekly|qweekly|monthly)\} (.*)").unwrap();
 }
@@ -300,7 +300,7 @@ impl TaskBox {
         self.load();
 
         let task = if let Some(routine) = routine {
-            format!("{{{}:{} {}}} {}",
+            format!("{{{}:{} {}{} 󰳟}} {}",
                 ROUTINES, 
                 match routine {
                     Routine::Daily    => "d",
@@ -309,7 +309,9 @@ impl TaskBox {
                     Routine::Qweekly  => "q",
                     Routine::Monthly  => "m",
                 },
-                start_date, what)
+                start_date,
+                weekday_from_date(start_date),
+                what)
 
         } else if add_date {
             format!("{} [{} {}]", what, DATESTAMP, get_today())
