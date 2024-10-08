@@ -149,7 +149,8 @@ fn main() {
             }
             let mut todo = TaskBox::new(inbox_path);
 
-            let input = what.unwrap_or(i_gettext());
+            #[allow(clippy::redundant_closure)]
+            let input = what.unwrap_or_else(|| i_gettext());
             if ! input.is_empty() {
                 let mut start_date = get_today();
 
