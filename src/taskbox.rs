@@ -47,8 +47,10 @@ impl TaskBox {
     }
 
     pub fn sibling(&self, boxname: &str) -> Self {
-        TaskBox::new(self.fpath.parent().unwrap()
-            .join(get_box_unalias(boxname)).with_extension("md"))
+        let mut sib = TaskBox::new(self.fpath.parent().unwrap()
+            .join(get_box_unalias(boxname)).with_extension("md"));
+        sib.load();
+        sib
     }
 
     pub fn load(&mut self) {
@@ -183,13 +185,6 @@ impl TaskBox {
         false
     }
 
-    fn _addone(&mut self, task: String) {
-        let pair = (task, false);
-        if ! self.tasks.contains(&pair) {
-            self.tasks.push(pair)
-        }
-    }
-
     fn _move_one(&mut self, from: &mut TaskBox, task: &str) {
         // just append it without dup checking, on purpuse
         self.tasks.push((task.to_string(), false));
@@ -199,6 +194,20 @@ impl TaskBox {
             #[allow(clippy::nonminimal_bool)]
             from.tasks.retain(|(t, d)| ! (t == task && !d));
         }
+    }
+
+    fn _addone(&mut self, task: String) {
+        let pair = (task, false);
+        if ! self.tasks.contains(&pair) {
+            self.tasks.push(pair)
+        }
+    }
+
+    fn add_tasks(&mut self, tasks: Vec<String>) {
+        if tasks.is_empty() { return }
+
+        tasks.iter().for_each(|t| self._addone(t.to_string()));
+        self._dump()
     }
 
     pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
@@ -322,7 +331,7 @@ impl TaskBox {
         } else { what };
 
         self._addone(task);
-        self._dump();
+        self._dump()
     }
 
     pub fn get_all_to_mark(&mut self) -> Vec<String> {
@@ -497,16 +506,7 @@ impl TaskBox {
             return
         }
 
-        if ! newt.is_empty() {
-            self.load();
-            newt.iter().for_each(|t| self._addone(t.to_string()));
-            self._dump();
-        }
-        if ! newr.is_empty() {
-            let mut rbox = self.sibling(ROUTINE_BOXNAME);
-            rbox.load();
-            newr.iter().for_each(|t| rbox._addone(t.to_string()));
-            rbox._dump();
-        }
+        self.add_tasks(newt);
+        self.sibling(ROUTINE_BOXNAME).add_tasks(newr);
     }
 }
