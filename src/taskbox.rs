@@ -211,22 +211,31 @@ impl TaskBox {
     }
 
     pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
-        self.load(); tb_from.load();
+        fn _get_nickname(fp: &Path) -> String {
+            let title_from_fp = fp.file_stem()
+                                  .and_then(|s| s.to_str())
+                                  .unwrap()
+                                  .to_string();
+            get_box_alias(&title_from_fp).unwrap_or(title_from_fp)
+        }
 
-        let tasks = tb_from.get_all_to_mark();
-        if tasks.is_empty() { return }
+        let tasks_in = tb_from.get_all_to_mark();
+        if tasks_in.is_empty() { return }
 
         if let Some(ref selected) = tb_from.selected {
             if selected.is_empty() { return }
         }
 
         // print title line
-        let from = tb_from.alias.clone().unwrap_or(tb_from.title.clone().unwrap());
-        let to = self.alias.clone().unwrap_or(self.title.clone().unwrap());
+        let from = _get_nickname(&tb_from.fpath);
+        let to = _get_nickname(&self.fpath);
         println!("{} {} {} {}", S_movefrom!(from), MOVING,
                                 S_moveto!(to), PROGRESS);
 
-        for task in tasks {
+        // postpone self.load() to avoid stdio chaos(from daily hook)
+        self.load();
+
+        for task in tasks_in {
             if let Some(ref selected) = tb_from.selected {
                 if ! selected.contains(&task) { continue }
             }
