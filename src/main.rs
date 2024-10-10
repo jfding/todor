@@ -132,7 +132,7 @@ fn main() {
             TaskBox::new(util::get_inbox_file("today")).collect_from(&mut tb_from)
         }
 
-        Some(Commands::Mark) => {
+        Some(Commands::Mark { delete } ) => {
             let mut todo = TaskBox::new(inbox_path);
             let tasks = todo.get_all_to_mark();
             if tasks.is_empty() {
@@ -140,7 +140,7 @@ fn main() {
                 return
             }
 
-            todo.mark(i_select(tasks, "choose to close:"));
+            todo.mark(i_select(tasks, "choose to close:"), delete);
         }
 
         Some(Commands::Add { what, date_stamp, routine, non_interactive }) => {

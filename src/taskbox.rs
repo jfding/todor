@@ -429,7 +429,7 @@ impl TaskBox {
         self.tasks.iter().filter(|(_, done)| !done).count()
     }
 
-    pub fn mark(&mut self, items: Vec<String>) {
+    pub fn mark(&mut self, items: Vec<String>, delete: bool) {
         self.load();
 
         if items.is_empty() || self.tasks.is_empty() {
@@ -441,6 +441,10 @@ impl TaskBox {
             if items.contains(task) {
                 *done = true;
             }
+        }
+
+        if delete {
+            self.tasks.retain(|(task, done)| !done || !items.contains(task))
         }
 
         self._dump();

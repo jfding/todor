@@ -52,7 +52,10 @@ pub enum Commands {
 
     /// -> mark item as done
     #[clap(visible_alias("m"))]
-    Mark,
+    Mark {
+        #[arg(short, long)]
+        delete: bool,
+    },
 
     /// -> list all uncompeleted tasks in box
     #[clap(visible_aliases(["l", "ls"]))]
