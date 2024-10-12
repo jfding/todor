@@ -32,7 +32,7 @@ Options:
   -V, --version        Print version
 
 ```
-and with a trick:
+and with a trick: the last part of execuables' name is the task-box name, so you can create some symlinks like:
 ```
 ln -sf todor today
 ln -sf todor tomorrow
@@ -40,7 +40,7 @@ ln -sf todor t.reading
 ln -sf todor todo.coding
 
 ```
-these symlinks(execuables) will help you to locate the corresponding task-box quickly. ("today", "tomorrow", "reading", "coding", respectively)
+which will help you to locate the corresponding task-box quickly. ("today", "tomorrow", "reading", "coding", respectively)
 
 ## How the tasks are moving around
 
@@ -71,3 +71,5 @@ Many ideas were inspired by <a href="https://github.com/basilioss/mdt">mdt</a>, 
   - `mark`, `purge` can work well enough
       - but be careful about `purge --sort`
   - other commands have no changes or regressions
+
+- Routine tasks support, please refer to [Routine Tasks](./docs/routine-tasks.md)
