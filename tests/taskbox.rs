@@ -47,9 +47,23 @@ fn test_mark() {
     tb.add("Task 2".to_string(), None, false, "");
     tb.add("Task 3".to_string(), None, false, "");
 
-    tb.mark(vec!["Task 1".to_string(), "Task 3".to_string()]);
+    tb.mark(vec!["Task 1".to_string(), "Task 3".to_string()], false);
     tb.load();
     assert_eq!(tb.tasks.iter().filter(|(_, done)| *done).count(), 2);
+    assert_eq!(tb.tasks.iter().filter(|(_, done)| !done).count(), 1);
+}
+
+#[test]
+fn test_mark_and_delete() {
+    let (mut tb, _dir) = setup_test_taskbox("test");
+    tb.add("Task 1".to_string(), None, false, "");
+    tb.add("Task 2".to_string(), None, false, "");
+    tb.add("Task 3".to_string(), None, false, "");
+
+    tb.mark(vec!["Task 1".to_string(), "Task 3".to_string()], true);
+    tb.load();
+    assert_eq!(tb.tasks.iter().filter(|(_, done)| *done).count(), 0);
+    assert_eq!(tb.tasks.iter().filter(|(_, done)| !done).count(), 1);
 }
 
 #[test]
