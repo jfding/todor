@@ -464,10 +464,12 @@ impl TaskBox {
         let mut newtasks = Vec::new();
 
         // 1st scan: remove dups
+        let mut tname;
         for (task, done) in self.tasks.iter() {
-            if ! hs.contains(task) {
-                newtasks.push((task.clone(), *done));
-                hs.insert(task);
+            tname = task.trim().to_string();
+            if ! hs.contains(&tname) {
+                newtasks.push((tname.clone(), *done));
+                hs.insert(tname);
             }
         }
         // 2nd scan: check status
