@@ -20,6 +20,7 @@ Commands:
   pool      -> pooling all uncompeleted of today to INBOX
   import    -> import uncompeleted task in any markdown file to current
   cleanup   -> clean up all empty datetime taskbox
+  filemanager  -> launch file manager on basedir [aliases: fm]
   checkout  -> checkout routine tasks to "today"(collect --inbox routine)
   routines  -> shortcut command to list all routine tasks [aliases: r, rt]
   help      Print this message or the help of the given subcommand(s)

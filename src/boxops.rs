@@ -32,6 +32,28 @@ pub fn browse() -> Result<()> {
     Ok(())
 }
 
+pub fn file_manager() -> Result<()> {
+    if cfg!(windows) {
+        println!("Sorry, this feature is not supported on Windows.");
+        return Ok(());
+    }
+
+    let basedir = Config_get!("basedir");
+    let def_fm = if cfg!(target_os = "macos") {
+        "open"
+    } else {
+        // linux
+        "/bin/ls -l"
+    };
+
+    let fm = which("ranger").unwrap_or(def_fm.into());
+
+    run_cmd!(
+      sh -c "$fm $basedir"
+    )?;
+    Ok(())
+}
+
 pub fn edit_box(cur_box: &str, diffwith: Option<String>) {
     let boxpath = get_inbox_file(cur_box);
     _ = TaskBox::new(boxpath.clone()); // only touch file

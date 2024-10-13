@@ -135,6 +135,10 @@ pub enum Commands {
     /// -> clean up all empty datetime taskbox
     Cleanup,
 
+    /// -> launch file manager on basedir
+    #[clap(visible_aliases(["fm"]))]
+    Filemanager,
+
     /// -> checkout routine tasks to "today"(collect --from routine)
     Checkout,
 
