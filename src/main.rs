@@ -65,11 +65,6 @@ fn main() {
         }
 
         Some(Commands::Sink { interactive, cleanup }) => { // outdated -> today
-            // if cleanup flag used, to cleanup/archive boxes at first for performance
-            if cleanup {
-                boxops::cleanup().unwrap()
-            }
-
             let mut boxes = Vec::new();
             let re_date_box = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
             for entry in std::fs::read_dir(Config_get!("basedir")).expect("cannot read dir") {
@@ -98,6 +93,11 @@ fn main() {
                     tb_today.collect_from(&mut tb_from);
                     println!();
                 }
+            }
+
+            // if cleanup flag used, to cleanup/archive boxes at last
+            if cleanup {
+                boxops::cleanup_and_archive().unwrap()
             }
         }
 

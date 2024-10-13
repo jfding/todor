@@ -4,6 +4,8 @@ use anyhow::Result;
 use regex::Regex;
 use which::which;
 use std::ffi::OsStr;
+use std::path::Path;
+use chrono::*;
 
 use crate::util::*;
 use crate::taskbox::*;
@@ -115,42 +117,62 @@ pub fn list_boxes() {
         })
 }
 
-// clean up all empty datetime taskbox
-pub fn cleanup() -> Result<()> {
+// clean up and all empty datetime taskbox and archive done tasks
+// rules:
+// 1. all empty boxed will be removed
+// 2. all boxes with only DONE tasks will be removed and the tasks go ARCHIVE box
+// 3. will keep "yesterday" "today" "tomorrow" untouched
+pub fn cleanup_and_archive() -> Result<()> {
     let basedir = Config_get!("basedir");
-    println!("[ {} ]", S_fpath!(basedir));
 
-    let mut boxes = Vec::new();
-    let re = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
-    for entry in std::fs::read_dir(basedir)? {
+    let mut actions = Vec::new();
+    let yesterday = Local::now().date_naive() - Duration::days(1);
+    let re = Regex::new(r"(\d{4}-\d{2}-\d{2}).md$").unwrap();
+    for entry in std::fs::read_dir(&basedir)? {
         let path = entry.expect("cannot get dir entry").path();
-        if path.is_file() && re.is_match(path.to_str().unwrap()) {
-            let content = std::fs::read_to_string(&path)?;
-            if content.lines().count() <= 2 {
-                boxes.push((String::from(path.file_stem().unwrap().to_str().unwrap()), path))
+        if path.is_file() {
+            if let Some(caps) = re.captures(path.to_str().unwrap()) {
+                let boxdate = NaiveDate::parse_from_str(&caps[1], "%Y-%m-%d").unwrap();
+                if boxdate < yesterday {
+                    let mut tb = TaskBox::new(path.clone());
+                    if tb.count() > 0 { continue }
+                    if tb.tasks.is_empty() {
+                        actions.push(("delete", String::from(path.file_stem().unwrap().to_str().unwrap()), path))
+                    } else {
+                        actions.push(("archive", String::from(path.file_stem().unwrap().to_str().unwrap()), path))
+
+                    }
+                }
             }
         }
     }
-    if boxes.is_empty() {
-        println!("{} to cleanup", S_empty!("nothing"));
+
+    if actions.is_empty() {
+        println!("{} to cleanup and archive, skipped", S_empty!("nothing"));
         return Ok(())
     }
 
-    boxes.sort_by(|a,b| b.0.cmp(&a.0));
-    boxes.clone().into_iter().for_each(
-        |(name, _path)| {
-            print!("{}  {}",S_checkbox!(TASKBOX), name);
-            if let Some(alias) = get_box_alias(&name) {
-                println!(" ({})", S_hints!(alias))
-            } else {
-                println!()
-            }
-        });
-    if util::i_confirm("Going to remove the aboves, are you sure?") {
-        boxes.into_iter().for_each(
-            |(_, path)| {
-                std::fs::remove_file(&path).expect("cannot remove file");
-                println!("{} removed!", S_fpath!(path.display()));
+    let archive_dir = Path::new(&basedir).join("archives");
+    if ! archive_dir.exists() {
+        std::fs::create_dir(&archive_dir).expect("cannot create archive dir");
+    }
+
+    actions.sort_by(|a,b| b.1.cmp(&a.1)); // reverse ordering by date
+
+    actions.clone().into_iter().for_each(
+        |(act, name, _path)| {
+            println!("{}  {} ::{}", S_checkbox!(TASKBOX), name, S_blink!(S_warning!(act)));
+        }
+     );
+
+    if util::i_confirm("Going to apply the above actions, are you sure?") {
+        actions.into_iter().for_each(
+            |(act, _name, path)| {
+                if act == "archive" {
+                    std::fs::rename(&path, archive_dir.join(path.file_name().unwrap())).expect("cannot move file");
+                } else {
+                    std::fs::remove_file(&path).expect("cannot remove file");
+                }
             }
         );
     }
