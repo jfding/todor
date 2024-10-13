@@ -64,13 +64,15 @@ fn main() {
                   .collect_from(&mut TaskBox::new(util::get_inbox_file("routine")))
         }
 
-        Some(Commands::Sink { interactive }) => { // outdated -> today
-            let basedir = Config_get!("basedir");
-            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
+        Some(Commands::Sink { interactive, cleanup }) => { // outdated -> today
+            // if cleanup flag used, to cleanup/archive boxes at first for performance
+            if cleanup {
+                boxops::cleanup().unwrap()
+            }
 
             let mut boxes = Vec::new();
             let re_date_box = Regex::new(r"\d{4}-\d{2}-\d{2}.md$").unwrap();
-            for entry in std::fs::read_dir(basedir).expect("cannot read dir") {
+            for entry in std::fs::read_dir(Config_get!("basedir")).expect("cannot read dir") {
                 let path = entry.expect("cannot get entry").path();
                 if path.is_file() && re_date_box.is_match(path.to_str().unwrap()) { 
                     boxes.push(path)
@@ -79,6 +81,7 @@ fn main() {
             boxes.sort(); boxes.reverse();
 
             let today =  Local::now().date_naive();
+            let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             for taskbox in boxes {
                 let boxdate = NaiveDate::parse_from_str(
                     taskbox.file_stem().unwrap().to_str().unwrap(),
@@ -174,7 +177,6 @@ fn main() {
 
         Some(Commands::Browse)      => boxops::browse().unwrap(),
         Some(Commands::Listbox)     => boxops::list_boxes(),
-        Some(Commands::Cleanup)     => boxops::cleanup().unwrap(),
         Some(Commands::Filemanager) => boxops::file_manager().unwrap(),
         Some(Commands::Edit { diffwith, routines }) =>
             boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),

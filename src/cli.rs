@@ -99,6 +99,10 @@ pub enum Commands {
         /// interactive mode to select items to move
         #[arg(short, long)]
         interactive: bool,
+
+        /// whether to clean up old days boxex
+        #[arg(short, long)]
+        cleanup: bool,
     },
 
     /// -> shift all uncompeleted in "today" to "tomorrow"
@@ -131,9 +135,6 @@ pub enum Commands {
         #[arg(value_name = "markdown-file")]
         file: Option<String>,
     },
-
-    /// -> clean up all empty datetime taskbox
-    Cleanup,
 
     /// -> launch file manager on basedir
     #[clap(visible_aliases(["fm"]))]
