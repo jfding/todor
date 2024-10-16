@@ -131,6 +131,24 @@ pub fn list_boxes() {
 pub fn enc_boxfile(ifile: &Path) {
     let basedir = Config_get!("basedir");
 
+    // validating ext name
+    if ifile.extension() == Some(OsStr::new("mdx")) {
+        println!("{} was already encrypted, skipped", S_fpath!(ifile.display()));
+        std::process::exit(1);
+    }
+
+    // validating box name: reserved and date format box cannot enc
+    let boxname = ifile.file_stem().unwrap().to_str().unwrap();
+    let can_be = match boxname {
+        ROUTINE_BOXNAME | INBOX_BOXNAME => false,
+        _ if Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap().is_match(boxname) => false,
+        _ => true
+    };
+    if ! can_be {
+        println!("{} cannot be encrypted, skipped", S_fpath!(ifile.display()));
+        std::process::exit(1);
+    }
+
     let passwd = i_getpass(true);
     if passwd.is_empty() {
         println!("password is empty, canceled");
@@ -144,6 +162,12 @@ pub fn enc_boxfile(ifile: &Path) {
 
 pub fn dec_boxfile(ifile: &Path) {
     let basedir = Config_get!("basedir");
+
+    // validating ext name
+    if ifile.extension() == Some(OsStr::new("md")) {
+        println!("{} was not encrypted, skipped", S_fpath!(ifile.display()));
+        std::process::exit(1);
+    }
 
     let passwd = i_getpass(false);
     if passwd.is_empty() {

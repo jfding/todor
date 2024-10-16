@@ -19,7 +19,7 @@ lazy_static! {
         Regex::new(r"\{󰃯:(daily|weekly|biweekly|qweekly|monthly)\} (.*)").unwrap();
 }
 
-pub const INBOX_NAME :&str  = "INBOX";
+pub const INBOX_BOXNAME :&str  = "INBOX";
 pub const ROUTINE_BOXNAME :&str  = "ROUTINES";
 
 const PREFIX_OPEN :&str  = "- [ ] ";
@@ -295,7 +295,7 @@ impl TaskBox {
                             S_failure!(WARN),
                             S_checkbox!(CHECKBOX),
                             task);
-                } else if RE_ROUTINES_CHECKOUT.is_match(&task) && to == INBOX_NAME {
+                } else if RE_ROUTINES_CHECKOUT.is_match(&task) && to == INBOX_BOXNAME {
                     // ignore checkout routine task
                     println!("{} {} : {} {}",
                             S_failure!(WARN),

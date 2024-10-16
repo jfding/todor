@@ -108,7 +108,7 @@ pub fn get_box_unalias(alias: &str) -> String {
         "today" => get_today(),
         "yesterday" => get_yesterday(),
         "tomorrow" => get_tomorrow(),
-        "inbox" => taskbox::INBOX_NAME.into(),
+        "inbox" => taskbox::INBOX_BOXNAME.into(),
         "routine" | "routines" => taskbox::ROUTINE_BOXNAME.into(),
         _ => alias.into(),
     }
