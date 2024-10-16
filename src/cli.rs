@@ -69,6 +69,12 @@ pub enum Commands {
     #[clap(visible_aliases(["lb"]))]
     Listbox,
 
+    /// -> encrypt todo box file
+    Enc,
+
+    /// -> decrypt todo box file
+    Dec,
+
     /// -> edit todo inbox file
     #[clap(visible_aliases(["e", "ed"]))]
     Edit {

@@ -16,6 +16,7 @@ pub const QUESTION: &str = "󱜹";
 pub const ROUTINES: &str = "󰃯";
 pub const DATESTAMP: &str = "󰴹"; // 󰃵
 pub const WEEKLINE: &str = "󰕶";
+pub const LOCKED: &str = "󰍁";
 // S means Style
 #[macro_export]
 macro_rules! S_fpath { ($e:expr) => { $e.to_string().purple() }; }

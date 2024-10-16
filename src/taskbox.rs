@@ -33,16 +33,20 @@ pub struct TaskBox {
     pub alias: Option<String>,
     pub tasks: Vec<(String, bool)>,
     pub selected: Option<Vec<String>>,
+    pub encrypted: bool,
 }
 
 impl TaskBox {
     pub fn new(fpath: PathBuf) -> Self {
+        let encrypted = fpath.extension().unwrap_or_default() == "mdx";
+
         Self {
             fpath,
             title: None, // None means not loaded
             alias: None,
             tasks: vec![],
             selected: None,
+            encrypted,
         }
     }
 

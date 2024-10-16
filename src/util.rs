@@ -116,7 +116,10 @@ pub fn get_box_unalias(alias: &str) -> String {
 
 pub fn get_inbox_file(inbox: &str) -> PathBuf {
     let basedir = PathBuf::from(Config_get!("basedir"));
-    basedir.join(get_box_unalias(inbox)).with_extension("md")
+    let enc_box = basedir.join(inbox).with_extension("mdx");
+
+    if enc_box.exists() { enc_box }
+    else { basedir.join(get_box_unalias(inbox)).with_extension("md") }
 }
 
 // following i_* fn are for "inquire" based wrappers

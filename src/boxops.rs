@@ -102,19 +102,46 @@ pub fn list_boxes() {
     let mut boxes = Vec::new();
     for entry in std::fs::read_dir(&basedir).expect("cannot read dir") {
         let path = entry.expect("cannot get entry").path();
-        if path.is_file() && path.extension() == Some(OsStr::new("md")) {
-            boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()))
+        if path.is_file() {
+            if path.extension() == Some(OsStr::new("md")) {
+                boxes.push((String::from(path.file_stem().unwrap().to_str().unwrap()), false))
+            } else if path.extension() == Some(OsStr::new("mdx")) {
+                boxes.push((String::from(path.file_stem().unwrap().to_str().unwrap()), true))
+            }
         }
     }
-    boxes.sort(); boxes.reverse(); boxes.into_iter().for_each(
-        |b| {
-            print!("{}  {}",S_checkbox!(TASKBOX), b);
-            if let Some(alias) = get_box_alias(&b) {
+    boxes.sort_by(|a,b| b.0.cmp(&a.0));
+    boxes.into_iter().for_each(
+        |(boxname, encrypted)| {
+            if encrypted {
+                print!("{} ", S_warning!(LOCKED));
+            } else {
+                print!("  ");
+
+            }
+            print!("{}  {}",S_checkbox!(TASKBOX), boxname);
+            if let Some(alias) = get_box_alias(&boxname) {
                 println!(" ({})", S_hints!(alias))
             } else {
                 println!()
             }
         })
+}
+
+pub fn enc_boxfile(ifile: &Path) {
+    let basedir = Config_get!("basedir");
+
+    println!("encrypting : {}", S_fpath!(ifile.display()));
+
+    std::fs::rename(ifile, Path::new(&basedir).join(ifile.file_stem().unwrap()).with_extension("mdx")).expect("cannot move file");
+}
+
+pub fn dec_boxfile(ifile: &Path) {
+    let basedir = Config_get!("basedir");
+
+    println!("decrypting : {}", S_fpath!(ifile.display()));
+
+    std::fs::rename(ifile, Path::new(&basedir).join(ifile.file_stem().unwrap()).with_extension("md")).expect("cannot move file");
 }
 
 // clean up and all empty datetime taskbox and archive done tasks
