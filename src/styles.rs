@@ -69,6 +69,21 @@ pub fn get_confirm_style() -> RenderConfig<'static> {
             .with_attr(Attributes::BOLD)
         )
 }
+pub fn get_pass_input_style() -> RenderConfig<'static> {
+    RenderConfig::default()
+        .with_prompt_prefix(LOCKED.into())
+        .with_answered_prompt_prefix(LOCKED.into())
+        .with_help_message(
+             StyleSheet::default()
+            .with_fg(Color::DarkGrey)
+            .with_attr(Attributes::ITALIC)
+        )
+        .with_answer(
+             StyleSheet::default()
+            .with_fg(Color::DarkGreen)
+            .with_attr(Attributes::BOLD)
+        )
+}
 pub fn get_text_input_style() -> RenderConfig<'static> {
     RenderConfig::default()
         .with_prompt_prefix(CHECKBOX.into())

@@ -131,13 +131,25 @@ pub fn list_boxes() {
 pub fn enc_boxfile(ifile: &Path) {
     let basedir = Config_get!("basedir");
 
-    println!("encrypting : {}", S_fpath!(ifile.display()));
+    let passwd = i_getpass(true);
+    if passwd.is_empty() {
+        println!("password is empty, canceled");
+        std::process::exit(1);
+    }
+
+    println!("encrypting : {} with pass: {}", S_fpath!(ifile.display()), passwd);
 
     std::fs::rename(ifile, Path::new(&basedir).join(ifile.file_stem().unwrap()).with_extension("mdx")).expect("cannot move file");
 }
 
 pub fn dec_boxfile(ifile: &Path) {
     let basedir = Config_get!("basedir");
+
+    let passwd = i_getpass(false);
+    if passwd.is_empty() {
+        println!("password is empty, canceled");
+        std::process::exit(1);
+    }
 
     println!("decrypting : {}", S_fpath!(ifile.display()));
 

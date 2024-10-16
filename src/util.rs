@@ -132,6 +132,21 @@ pub fn i_confirm(question: &str) -> bool {
         .prompt().unwrap_or(false)
 }
 
+pub fn i_getpass(confirm: bool) -> String {
+    let mut com = inquire::Password::new("the password:")
+        .with_help_message("<enter> | ctrl+r | ctrl+c")
+        .with_render_config(get_pass_input_style())
+        .with_display_toggle_enabled();
+
+    if ! confirm { com = com.without_confirmation() }
+
+    execute!(std::io::stdout(), SteadyBar).expect("failed to set cursor");
+    let pass = com.prompt().unwrap_or_else(|_| String::new());
+    execute!(std::io::stdout(), DefaultUserShape).expect("failed to set cursor");
+
+    pass
+}
+
 pub fn i_gettext() -> String {
     execute!(std::io::stdout(), BlinkingBlock).expect("failed to set cursor");
     let input = inquire::Text::new("")
