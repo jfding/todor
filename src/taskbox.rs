@@ -34,6 +34,7 @@ pub struct TaskBox {
     pub tasks: Vec<(String, bool)>,
     pub selected: Option<Vec<String>>,
     pub encrypted: bool,
+    pub passwd_mem: Option<String>,
 }
 
 impl TaskBox {
@@ -47,6 +48,7 @@ impl TaskBox {
             tasks: vec![],
             selected: None,
             encrypted,
+            passwd_mem: None,
         }
     }
 
@@ -57,10 +59,11 @@ impl TaskBox {
         sib
     }
 
-    fn _load_file(&self) -> String {
+    fn _load_file(&mut self) -> String {
         if self.encrypted {
             use cmd_lib::*;
             let passwd = i_getpass(false);
+            self.passwd_mem = Some(passwd.clone());
 
             let cmd = format!("unzip -P {} -p {}",
                 passwd,
@@ -172,7 +175,13 @@ impl TaskBox {
             content.push_str(&(task + "\n"))
         }
 
-        fs::write(&self.fpath, content).expect("cannot write file")
+        let mut plain_fpath = self.fpath.clone(); plain_fpath.set_extension("md");
+        fs::write(&plain_fpath, content).expect("cannot write file");
+
+        if self.encrypted {
+            use boxops;
+            boxops::zip_file_with_pass(&plain_fpath, &self.fpath, self.passwd_mem.as_ref().unwrap());
+        }
     }
 
     // mark the task which has "done" subtask as "done"

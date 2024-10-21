@@ -128,7 +128,7 @@ pub fn list_boxes() {
         })
 }
 
-fn zip_file_with_pass(ifile: &Path, ofile: &Path, passwd: &str) {
+pub fn zip_file_with_pass(ifile: &Path, ofile: &Path, passwd: &str) {
     let cmd = format!("cd {}; zip -P {} {} {} >/dev/null; rm -f {}",
         ifile.parent().unwrap().display(),
         passwd,
