@@ -57,10 +57,26 @@ impl TaskBox {
         sib
     }
 
+    fn _load_file(&self) -> String {
+        if self.encrypted {
+            use cmd_lib::*;
+            let passwd = i_getpass(false);
+
+            let cmd = format!("unzip -P {} -p {}",
+                passwd,
+                self.fpath.display(),
+                );
+            run_fun!(sh -c $cmd).expect("cannot unzip file")
+        } else {
+            fs::read_to_string(&self.fpath).expect("Failed to read file")
+        }
+    }
+
     pub fn load(&mut self) {
         if self.title.is_some() { return } // avoid load() twice
 
         if ! self.fpath.exists() {
+            // initial box file `touch`
             let fpath = &self.fpath;
             let title = fpath.file_stem()
                              .and_then(|s| s.to_str())
@@ -92,9 +108,7 @@ impl TaskBox {
         let mut postfix_sub = String::new();
         let mut last_is_sub = false;
 
-        for (index, rline) in fs::read_to_string(&self.fpath)
-                            .expect("Failed to read file")
-                            .lines().enumerate() {
+        for (index, rline) in self._load_file().lines().enumerate() {
 
             let line = rline.trim_end();
             if index == 0 {
