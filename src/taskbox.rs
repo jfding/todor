@@ -9,6 +9,7 @@ use crate::cli::*;
 use crate::util::*;
 use crate::styles::*;
 use crate::conf::*;
+use crate::boxops;
 
 lazy_static! {
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
@@ -61,15 +62,9 @@ impl TaskBox {
 
     fn _load_file(&mut self) -> String {
         if self.encrypted {
-            use cmd_lib::*;
             let passwd = i_getpass(false);
             self.passwd_mem = Some(passwd.clone());
-
-            let cmd = format!("unzip -P {} -p {}",
-                passwd,
-                self.fpath.display(),
-                );
-            run_fun!(sh -c $cmd).expect("cannot unzip file")
+            boxops::read_encrypted_box(&self.fpath, &passwd)
         } else {
             fs::read_to_string(&self.fpath).expect("Failed to read file")
         }
@@ -179,8 +174,7 @@ impl TaskBox {
         fs::write(&plain_fpath, content).expect("cannot write file");
 
         if self.encrypted {
-            use boxops;
-            boxops::zip_file_with_pass(&plain_fpath, &self.fpath, self.passwd_mem.as_ref().unwrap());
+            boxops::zip_file_with_pass(&plain_fpath, &self.fpath, self.passwd_mem.as_ref().unwrap()).unwrap();
         }
     }
 

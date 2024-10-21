@@ -6,6 +6,8 @@ use which::which;
 use std::ffi::OsStr;
 use std::path::{PathBuf, Path};
 use chrono::*;
+use std::io::{Read, Write};
+use zip::*;
 
 use crate::util::*;
 use crate::taskbox::*;
@@ -128,24 +130,50 @@ pub fn list_boxes() {
         })
 }
 
-pub fn zip_file_with_pass(ifile: &Path, ofile: &Path, passwd: &str) {
-    let cmd = format!("cd {}; zip -P {} {} {} >/dev/null; rm -f {}",
-        ifile.parent().unwrap().display(),
-        passwd,
-        ofile.display(),
-        ifile.file_name().unwrap().to_str().unwrap(),
-        ifile.display()
-        );
-    run_cmd!(sh -c $cmd).expect("cannot zip file");
+pub fn zip_file_with_pass(ifile: &Path, ofile: &Path, passwd: &str) -> Result<()> {
+    let tbname = ifile.file_stem().unwrap().to_str().unwrap();
+
+    let mut zfile = ZipWriter::new(std::fs::File::create(ofile)?);
+    let zopt = write::SimpleFileOptions::default()
+                                 .compression_method(CompressionMethod::Stored)
+                                 .with_aes_encryption(AesMode::Aes256, passwd);
+    zfile.start_file(tbname, zopt)?;
+    zfile.write_all(&std::fs::read(ifile)?)?;
+    zfile.finish()?;
+    std::fs::remove_file(ifile)?;
+    Ok(())
 }
-fn unzip_file_with_pass(ifile: &Path, passwd: &str) {
-    let cmd = format!("cd {}; unzip -P {} {} >/dev/null; rm -f {}",
-        ifile.parent().unwrap().display(),
-        passwd,
-        ifile.file_name().unwrap().to_str().unwrap(),
-        ifile.display()
-        );
-    run_cmd!(sh -c $cmd).expect("cannot unzip file");
+fn unzip_file_with_pass(ifile: &Path, passwd: &str, extract: bool) -> Result<String> {
+    let tbname = ifile.file_stem().unwrap().to_str().unwrap();
+
+    let mut zfile = ZipArchive::new(std::fs::File::open(ifile)?)?;
+    if zfile.len() != 1 {
+        println!("Taskbox: {} is not a valid encrypted taskbox, skipped", S_checkbox!(tbname));
+        std::process::exit(1);
+    }
+
+    let mut entry = zfile.by_index_decrypt(0, passwd.as_bytes())?;
+    if entry.name() != tbname {
+        println!("Taskbox: {} is not a valid encrypted taskbox, skipped", S_checkbox!(tbname));
+        std::process::exit(1);
+    }
+
+    let mut content = String::new();
+    entry.read_to_string(&mut content)?;
+
+    if extract {
+        let mut ofile = PathBuf::from(ifile);
+        ofile.set_extension("md");
+        std::fs::write(&ofile, content.clone())?;
+
+        std::fs::remove_file(ifile)?;
+    }
+
+    Ok(content)
+}
+
+pub fn read_encrypted_box(ifile: &Path, passwd: &str) -> String {
+    unzip_file_with_pass(ifile, passwd, false).unwrap()
 }
 
 pub fn enc_boxfile(ifile: &Path) {
@@ -178,7 +206,7 @@ pub fn enc_boxfile(ifile: &Path) {
 
     let mut encfile = PathBuf::from(ifile);
     encfile.set_extension("mdx");
-    zip_file_with_pass(ifile, &encfile, &passwd)
+    zip_file_with_pass(ifile, &encfile, &passwd).unwrap();
 }
 
 pub fn dec_boxfile(ifile: &Path) {
@@ -197,7 +225,7 @@ pub fn dec_boxfile(ifile: &Path) {
 
     println!("Decrypting taskbox: {}", S_checkbox!(ifile.file_stem().unwrap().to_str().unwrap()));
 
-    unzip_file_with_pass(ifile, &passwd)
+    unzip_file_with_pass(ifile, &passwd, true).unwrap();
 }
 
 // clean up and all empty datetime taskbox and archive done tasks
