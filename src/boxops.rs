@@ -4,7 +4,7 @@ use anyhow::Result;
 use regex::Regex;
 use which::which;
 use std::ffi::OsStr;
-use std::path::Path;
+use std::path::{PathBuf, Path};
 use chrono::*;
 
 use crate::util::*;
@@ -128,24 +128,43 @@ pub fn list_boxes() {
         })
 }
 
+fn zip_file_with_pass(ifile: &Path, ofile: &Path, passwd: &str) {
+    let cmd = format!("cd {}; zip -P {} {} {} >/dev/null; rm -f {}",
+        ifile.parent().unwrap().display(),
+        passwd,
+        ofile.display(),
+        ifile.file_name().unwrap().to_str().unwrap(),
+        ifile.display()
+        );
+    run_cmd!(sh -c $cmd).expect("cannot zip file");
+}
+fn unzip_file_with_pass(ifile: &Path, passwd: &str) {
+    let cmd = format!("cd {}; unzip -P {} {} >/dev/null; rm -f {}",
+        ifile.parent().unwrap().display(),
+        passwd,
+        ifile.file_name().unwrap().to_str().unwrap(),
+        ifile.display()
+        );
+    run_cmd!(sh -c $cmd).expect("cannot unzip file");
+}
+
 pub fn enc_boxfile(ifile: &Path) {
-    let basedir = Config_get!("basedir");
+    let tbname = ifile.file_stem().unwrap().to_str().unwrap();
 
     // validating ext name
     if ifile.extension() == Some(OsStr::new("mdx")) {
-        println!("{} was already encrypted, skipped", S_fpath!(ifile.display()));
+        println!("Taskbox: {} was already encrypted, skipped", S_checkbox!(tbname));
         std::process::exit(1);
     }
 
     // validating box name: reserved and date format box cannot enc
-    let boxname = ifile.file_stem().unwrap().to_str().unwrap();
-    let can_be = match boxname {
+    let can_be = match tbname {
         ROUTINE_BOXNAME | INBOX_BOXNAME => false,
-        _ if Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap().is_match(boxname) => false,
+        _ if Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap().is_match(tbname) => false,
         _ => true
     };
     if ! can_be {
-        println!("{} cannot be encrypted, skipped", S_fpath!(ifile.display()));
+        println!("Taskbox: {} cannot be encrypted, skipped", S_checkbox!(tbname));
         std::process::exit(1);
     }
 
@@ -155,17 +174,18 @@ pub fn enc_boxfile(ifile: &Path) {
         std::process::exit(1);
     }
 
-    println!("encrypting : {} with pass: {}", S_fpath!(ifile.display()), passwd);
+    println!("Encrypting taskbox: {}", S_checkbox!(tbname));
 
-    std::fs::rename(ifile, Path::new(&basedir).join(ifile.file_stem().unwrap()).with_extension("mdx")).expect("cannot move file");
+    let mut encfile = PathBuf::from(ifile);
+    encfile.set_extension("mdx");
+    zip_file_with_pass(ifile, &encfile, &passwd)
 }
 
 pub fn dec_boxfile(ifile: &Path) {
-    let basedir = Config_get!("basedir");
-
+    let tbname = ifile.file_stem().unwrap().to_str().unwrap();
     // validating ext name
     if ifile.extension() == Some(OsStr::new("md")) {
-        println!("{} was not encrypted, skipped", S_fpath!(ifile.display()));
+        println!("Taskbox: {} was not encrypted, skipped", S_checkbox!(tbname));
         std::process::exit(1);
     }
 
@@ -175,9 +195,9 @@ pub fn dec_boxfile(ifile: &Path) {
         std::process::exit(1);
     }
 
-    println!("decrypting : {}", S_fpath!(ifile.display()));
+    println!("Decrypting taskbox: {}", S_checkbox!(ifile.file_stem().unwrap().to_str().unwrap()));
 
-    std::fs::rename(ifile, Path::new(&basedir).join(ifile.file_stem().unwrap()).with_extension("md")).expect("cannot move file");
+    unzip_file_with_pass(ifile, &passwd)
 }
 
 // clean up and all empty datetime taskbox and archive done tasks

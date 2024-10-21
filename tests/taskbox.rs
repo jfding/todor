@@ -366,7 +366,7 @@ fn test_import_somefile_to_inbox() {
 - [ ] {󰃯:m 2024-10-31Mon 󰳟} one montly to import
 "#;
 
-    let (mut inbox, dir) = setup_test_taskbox(INBOX_NAME);
+    let (mut inbox, dir) = setup_test_taskbox(INBOX_BOXNAME);
     let mut routine = inbox.sibling("routine");
 
     let fpath = dir.path().join("import-input").with_extension("md");
