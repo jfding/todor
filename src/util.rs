@@ -129,8 +129,8 @@ pub fn i_confirm(question: &str) -> bool {
         .prompt().unwrap_or(false)
 }
 
-pub fn i_getpass(confirm: bool) -> String {
-    let mut com = inquire::Password::new("the password:")
+pub fn i_getpass(confirm: bool, msg: Option<&str>) -> String {
+    let mut com = inquire::Password::new(msg.unwrap_or("the password:"))
         .with_help_message("<enter> | ctrl+r | ctrl+c")
         .with_render_config(get_pass_input_style())
         .with_display_toggle_enabled();

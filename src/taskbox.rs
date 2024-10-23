@@ -65,9 +65,12 @@ impl TaskBox {
 
     fn _load_file(&mut self) -> String {
         if self.encrypted {
-            let passwd = i_getpass(false);
+            let passwd = i_getpass(false, Some("the password for encrypted box:"));
             self.passwd_mem = Some(passwd.clone());
-            self._load_with_pass(&passwd).unwrap()
+            self._load_file_with_pass(&passwd).unwrap_or_else(|_| {
+                println!("{}", S_failure!("wrong password, abort"));
+                std::process::exit(1);
+            })
         } else {
             fs::read_to_string(&self.fpath).expect("Failed to read file")
         }
@@ -554,7 +557,7 @@ impl TaskBox {
         Ok(())
     }
 
-    fn _load_with_pass(&self, passwd: &str) -> Result<String> {
+    fn _load_file_with_pass(&self, passwd: &str) -> Result<String> {
         let mut zfile = ZipArchive::new(fs::File::open(&self.fpath)?)?;
         let tbname = self.tbname.clone();
 
@@ -599,7 +602,7 @@ impl TaskBox {
             std::process::exit(1);
         }
 
-        let passwd = i_getpass(true);
+        let passwd = i_getpass(true, None);
         if passwd.is_empty() {
             println!("password is empty, canceled");
             std::process::exit(1);
@@ -630,7 +633,7 @@ impl TaskBox {
             std::process::exit(1);
         }
 
-        let passwd = i_getpass(false);
+        let passwd = i_getpass(false, None);
         if passwd.is_empty() {
             println!("password is empty, canceled");
             std::process::exit(1);
@@ -638,7 +641,10 @@ impl TaskBox {
 
         println!("Decrypting taskbox: {}", S_checkbox!(tbname));
 
-        let content = self._load_with_pass(&passwd)?;
+        let content = self._load_file_with_pass(&passwd).unwrap_or_else(|_| {
+            println!("{}", S_failure!("wrong password, abort"));
+            std::process::exit(1);
+        });
         let original_fpath = self.fpath.clone();
 
         self.fpath.set_extension("md");
