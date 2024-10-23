@@ -1,15 +1,17 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::collections::HashSet;
+use std::io::{Read, Write};
 use regex::Regex;
 use colored::Colorize;
 use lazy_static::lazy_static;
+use zip::*;
+use anyhow::Result;
 
 use crate::cli::*;
 use crate::util::*;
 use crate::styles::*;
 use crate::conf::*;
-use crate::boxops;
 
 lazy_static! {
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
@@ -64,7 +66,7 @@ impl TaskBox {
         if self.encrypted {
             let passwd = i_getpass(false);
             self.passwd_mem = Some(passwd.clone());
-            boxops::read_encrypted_box(&self.fpath, &passwd)
+            self._load_with_pass(&passwd).unwrap()
         } else {
             fs::read_to_string(&self.fpath).expect("Failed to read file")
         }
@@ -154,7 +156,7 @@ impl TaskBox {
         self.tasks = tasks;
     }
 
-    fn _dump(&mut self) {
+    fn _dump(&mut self) -> Result<()> {
         let mut content = format!("# {}\n\n", self.title.clone().unwrap());
 
         for (mut task, done) in self.tasks.clone() {
@@ -170,12 +172,13 @@ impl TaskBox {
             content.push_str(&(task + "\n"))
         }
 
-        let mut plain_fpath = self.fpath.clone(); plain_fpath.set_extension("md");
-        fs::write(&plain_fpath, content).expect("cannot write file");
-
         if self.encrypted {
-            boxops::zip_file_with_pass(&plain_fpath, &self.fpath, self.passwd_mem.as_ref().unwrap()).unwrap();
+            self._dump_with_passwd(&content, self.passwd_mem.as_ref().unwrap())?
+        } else {
+            fs::write(&self.fpath, &content)?
         }
+
+        Ok(())
     }
 
     // mark the task which has "done" subtask as "done"
@@ -228,7 +231,7 @@ impl TaskBox {
         if tasks.is_empty() { return }
 
         tasks.iter().for_each(|t| self._addone(t.to_string()));
-        self._dump()
+        self._dump().unwrap()
     }
 
     pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
@@ -331,9 +334,9 @@ impl TaskBox {
 
         // "ROUTINES" not drain
         if from != ROUTINE_BOXNAME {
-            tb_from._dump();
+            tb_from._dump().unwrap()
         }
-        self._dump();
+        self._dump().unwrap()
     }
 
     pub fn add(&mut self, what: String,
@@ -344,7 +347,7 @@ impl TaskBox {
 
         let task = if let Some(routine) = routine {
             format!("{{{}:{} {}{} 󰳟}} {}",
-                ROUTINES, 
+                ROUTINES,
                 match routine {
                     Routine::Daily    => "d",
                     Routine::Weekly   => "w",
@@ -361,7 +364,7 @@ impl TaskBox {
         } else { what };
 
         self._addone(task);
-        self._dump()
+        self._dump().unwrap()
     }
 
     pub fn get_all_to_mark(&mut self) -> Vec<String> {
@@ -468,7 +471,7 @@ impl TaskBox {
             self.tasks.retain(|(task, done)| !done || !items.contains(task))
         }
 
-        self._dump();
+        self._dump().unwrap()
     }
 
     pub fn purge(&mut self, sort: bool) {
@@ -505,7 +508,7 @@ impl TaskBox {
         if sort { newtasks.sort_by(|a, b| b.1.cmp(&a.1)) }
 
         self.tasks = newtasks;
-        self._dump();
+        self._dump().unwrap()
     }
 
     // specified markdown file -> cur
@@ -515,7 +518,7 @@ impl TaskBox {
 
         let fpath = Path::new(&mdfile);
         if ! fpath.is_file() {
-            eprintln!("not a file or not exists: {}", S_fpath!(mdfile)); 
+            eprintln!("not a file or not exists: {}", S_fpath!(mdfile));
             std::process::exit(1)
         }
         println!("importing {} {}", S_fpath!(mdfile), PROGRESS);
@@ -544,5 +547,112 @@ impl TaskBox {
 
         self.add_tasks(newt);
         self.sibling(ROUTINE_BOXNAME).add_tasks(newr);
+    }
+
+    fn _dump_with_passwd(&self, content: &str, passwd: &str) -> Result<()> {
+        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
+
+        let mut zfile = ZipWriter::new(fs::File::create(&self.fpath)?);
+        let zopt = write::SimpleFileOptions::default()
+                                     .compression_method(CompressionMethod::Stored)
+                                     .with_aes_encryption(AesMode::Aes256, passwd);
+        zfile.start_file(tbname, zopt)?;
+        zfile.write_all(content.as_bytes())?;
+        zfile.finish()?;
+        Ok(())
+    }
+
+    fn _load_with_pass(&self, passwd: &str) -> Result<String> {
+        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
+
+        let mut zfile = ZipArchive::new(fs::File::open(&self.fpath)?)?;
+        if zfile.len() != 1 {
+            println!("Taskbox: {} is not a valid encrypted taskbox, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+
+        let mut entry = zfile.by_index_decrypt(0, passwd.as_bytes())?;
+        if entry.name() != tbname {
+            println!("Taskbox: {} is not a valid encrypted taskbox, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+
+        let mut content = String::new();
+        entry.read_to_string(&mut content)?;
+
+        Ok(content)
+    }
+
+    pub fn encrypt(&mut self) -> Result<()> {
+        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
+
+        // validating encryption status
+        if self.encrypted {
+            println!("Taskbox: {} was already encrypted, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+
+        // validating box name: reserved and date format box cannot enc
+        let can_be = match tbname {
+            ROUTINE_BOXNAME | INBOX_BOXNAME => false,
+            _ if Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap().is_match(tbname) => false,
+            _ => true
+        };
+        if ! can_be {
+            println!("Taskbox: {} cannot be encrypted, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+        if !self.fpath.exists() {
+            println!("Taskbox: {} hasn't initialized, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+
+        let passwd = i_getpass(true);
+        if passwd.is_empty() {
+            println!("password is empty, canceled");
+            std::process::exit(1);
+        }
+
+        println!("Encrypting taskbox: {}", S_checkbox!(tbname));
+
+        let original_fpath = self.fpath.clone();
+        self.fpath.set_extension("mdx");
+        self.encrypted = true;
+
+        self._dump_with_passwd(&fs::read_to_string(&original_fpath)?, &passwd)?;
+        fs::remove_file(&original_fpath)?;
+
+        Ok(())
+    }
+
+    pub fn decrypt(&mut self) -> Result<()> {
+        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
+        // validating ext name
+        if ! self.encrypted {
+            println!("Taskbox: {} was not encrypted, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+        if ! self.fpath.exists() {
+            println!("Taskbox: {} hasn't initialized, skipped", S_checkbox!(tbname));
+            std::process::exit(1);
+        }
+
+        let passwd = i_getpass(false);
+        if passwd.is_empty() {
+            println!("password is empty, canceled");
+            std::process::exit(1);
+        }
+
+        println!("Decrypting taskbox: {}", S_checkbox!(tbname));
+
+        let content = self._load_with_pass(&passwd)?;
+        let original_fpath = self.fpath.clone();
+
+        self.fpath.set_extension("md");
+        self.encrypted = false;
+        fs::write(&self.fpath, &content)?;
+        fs::remove_file(&original_fpath)?;
+
+        Ok(())
     }
 }

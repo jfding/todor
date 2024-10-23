@@ -43,6 +43,8 @@ fn main() {
     match args.command {
         Some(Commands::List) | None => TaskBox::new(inbox_path).list(false),
         Some(Commands::Listall)     => TaskBox::new(inbox_path).list(true),
+        Some(Commands::Enc)         => TaskBox::new(inbox_path).encrypt().unwrap(),
+        Some(Commands::Dec)         => TaskBox::new(inbox_path).decrypt().unwrap(),
         Some(Commands::Routines)    => TaskBox::new(get_inbox_file(ROUTINE_BOXNAME)).list(true),
 
         Some(Commands::Count)             => {
@@ -177,8 +179,6 @@ fn main() {
 
         Some(Commands::Browse)      => boxops::browse().unwrap(),
         Some(Commands::Listbox)     => boxops::list_boxes(),
-        Some(Commands::Enc)         => boxops::enc_boxfile(&inbox_path),
-        Some(Commands::Dec)         => boxops::dec_boxfile(&inbox_path),
         Some(Commands::Filemanager) => boxops::file_manager().unwrap(),
         Some(Commands::Edit { diffwith, routines }) =>
             boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
