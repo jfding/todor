@@ -153,6 +153,7 @@ fn main() {
                 inbox_path = get_inbox_file("routine")
             }
             let mut todo = TaskBox::new(inbox_path);
+            todo.load();
 
             #[allow(clippy::redundant_closure)]
             let input = what.unwrap_or_else(|| i_gettext());
