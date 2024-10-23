@@ -91,16 +91,13 @@ pub fn match_routine(kind: &str, s_date_str: &str, match_to: &str) -> bool {
     s_date == match_to_date
 }
 
-pub fn get_box_alias(name_in: &str) -> Option<String> {
-    let alias = match name_in {
+pub fn get_box_alias(name_in: &str) -> String {
+    match name_in {
         _ if name_in == get_today() => "today",
         _ if name_in == get_tomorrow() => "tomorrow",
         _ if name_in == get_yesterday() => "yesterday",
-        _ => "",
-    };
-
-    if alias.is_empty() { None }
-    else { Some(alias.to_string()) }
+        _ => name_in,
+    }.into()
 }
 
 pub fn get_box_unalias(alias: &str) -> String {
@@ -187,11 +184,11 @@ mod tests {
 
     #[test]
     fn test_aliases() {
-        assert_eq!(get_box_alias(&get_today()), Some("today".into()));
-        assert_eq!(get_box_alias(&get_yesterday()), Some("yesterday".into()));
-        assert_eq!(get_box_alias(&get_tomorrow()), Some("tomorrow".into()));
-        assert_eq!(get_box_alias("dummy"), None);
-        assert_eq!(get_box_alias(""), None);
+        assert_eq!(get_box_alias(&get_today()), "today");
+        assert_eq!(get_box_alias(&get_yesterday()), "yesterday");
+        assert_eq!(get_box_alias(&get_tomorrow()), "tomorrow");
+        assert_eq!(get_box_alias("dummy"), "dummy");
+        assert_eq!(get_box_alias(""), "");
     }
 
     #[test]

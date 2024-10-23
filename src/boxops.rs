@@ -120,7 +120,8 @@ pub fn list_boxes() {
 
             }
             print!("{}  {}",S_checkbox!(TASKBOX), boxname);
-            if let Some(alias) = get_box_alias(&boxname) {
+            let alias = get_box_alias(&boxname);
+            if alias != boxname {
                 println!(" ({})", S_hints!(alias))
             } else {
                 println!()

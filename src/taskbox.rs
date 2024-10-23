@@ -32,7 +32,7 @@ const PREFIX_SUBT :&str  = " 󱞩 ";
 #[derive(Debug)]
 pub struct TaskBox {
     pub fpath: PathBuf,
-    pub title: Option<String>,
+    pub tbname: String,
     pub alias: Option<String>,
     pub tasks: Vec<(String, bool)>,
     pub selected: Option<Vec<String>>,
@@ -43,11 +43,12 @@ pub struct TaskBox {
 impl TaskBox {
     pub fn new(fpath: PathBuf) -> Self {
         let encrypted = fpath.extension().unwrap_or_default() == "mdx";
+        let tbname = fpath.file_stem().unwrap().to_str().unwrap().to_string();
 
         Self {
             fpath,
-            title: None, // None means not loaded
-            alias: None,
+            tbname,
+            alias: None, // None means not loaded
             tasks: vec![],
             selected: None,
             encrypted,
@@ -72,8 +73,9 @@ impl TaskBox {
         }
     }
 
+    // load from md file, should be called only once
     pub fn load(&mut self) {
-        if self.title.is_some() { return } // avoid load() twice
+        if self.alias.is_some() { return } // avoid load() twice
 
         if ! self.fpath.exists() {
             // initial box file `touch`
@@ -151,13 +153,12 @@ impl TaskBox {
             }
         }
 
-        self.alias = get_box_alias(&title);
-        self.title = Some(title);
+        self.alias = Some(get_box_alias(&title));
         self.tasks = tasks;
     }
 
     fn _dump(&mut self) -> Result<()> {
-        let mut content = format!("# {}\n\n", self.title.clone().unwrap());
+        let mut content = format!("# {}\n\n", self.tbname.clone());
 
         for (mut task, done) in self.tasks.clone() {
             task = task.trim_end().to_string();
@@ -178,6 +179,7 @@ impl TaskBox {
             fs::write(&self.fpath, &content)?
         }
 
+        self.alias = None; // trigger load() next time
         Ok(())
     }
 
@@ -235,14 +237,6 @@ impl TaskBox {
     }
 
     pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
-        fn _get_nickname(fp: &Path) -> String {
-            let title_from_fp = fp.file_stem()
-                                  .and_then(|s| s.to_str())
-                                  .unwrap()
-                                  .to_string();
-            get_box_alias(&title_from_fp).unwrap_or(title_from_fp)
-        }
-
         let tasks_in = tb_from.get_all_to_mark();
         if tasks_in.is_empty() { return }
 
@@ -251,8 +245,8 @@ impl TaskBox {
         }
 
         // print title line
-        let from = _get_nickname(&tb_from.fpath);
-        let to = _get_nickname(&self.fpath);
+        let from = tb_from.alias.clone().unwrap();
+        let to = self.alias.clone().unwrap_or(get_box_alias(&self.tbname));
         println!("{} {} {} {}", S_movefrom!(from), MOVING,
                                 S_moveto!(to), PROGRESS);
 
@@ -334,9 +328,9 @@ impl TaskBox {
 
         // "ROUTINES" not drain
         if from != ROUTINE_BOXNAME {
-            tb_from._dump().unwrap()
+            tb_from._dump().unwrap();
         }
-        self._dump().unwrap()
+        self._dump().unwrap();
     }
 
     pub fn add(&mut self, what: String,
@@ -396,7 +390,7 @@ impl TaskBox {
         let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
         let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
 
-        let checkbox_style = if self.title == Some("ROUTINES".into()) {
+        let checkbox_style = if self.tbname == "ROUTINES" {
             ROUTINES
         } else {
             CHECKBOX
@@ -550,22 +544,20 @@ impl TaskBox {
     }
 
     fn _dump_with_passwd(&self, content: &str, passwd: &str) -> Result<()> {
-        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
-
         let mut zfile = ZipWriter::new(fs::File::create(&self.fpath)?);
         let zopt = write::SimpleFileOptions::default()
                                      .compression_method(CompressionMethod::Stored)
                                      .with_aes_encryption(AesMode::Aes256, passwd);
-        zfile.start_file(tbname, zopt)?;
+        zfile.start_file(&self.tbname, zopt)?;
         zfile.write_all(content.as_bytes())?;
         zfile.finish()?;
         Ok(())
     }
 
     fn _load_with_pass(&self, passwd: &str) -> Result<String> {
-        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
-
         let mut zfile = ZipArchive::new(fs::File::open(&self.fpath)?)?;
+        let tbname = self.tbname.clone();
+
         if zfile.len() != 1 {
             println!("Taskbox: {} is not a valid encrypted taskbox, skipped", S_checkbox!(tbname));
             std::process::exit(1);
@@ -584,7 +576,7 @@ impl TaskBox {
     }
 
     pub fn encrypt(&mut self) -> Result<()> {
-        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
+        let tbname = self.tbname.clone();
 
         // validating encryption status
         if self.encrypted {
@@ -593,9 +585,9 @@ impl TaskBox {
         }
 
         // validating box name: reserved and date format box cannot enc
-        let can_be = match tbname {
+        let can_be = match tbname.as_ref() {
             ROUTINE_BOXNAME | INBOX_BOXNAME => false,
-            _ if Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap().is_match(tbname) => false,
+            _ if Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap().is_match(&tbname) => false,
             _ => true
         };
         if ! can_be {
@@ -626,7 +618,8 @@ impl TaskBox {
     }
 
     pub fn decrypt(&mut self) -> Result<()> {
-        let tbname = self.fpath.file_stem().unwrap().to_str().unwrap();
+        let tbname = self.tbname.clone();
+
         // validating ext name
         if ! self.encrypted {
             println!("Taskbox: {} was not encrypted, skipped", S_checkbox!(tbname));
