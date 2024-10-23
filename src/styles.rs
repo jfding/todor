@@ -16,6 +16,7 @@ pub const QUESTION: &str = "󱜹";
 pub const ROUTINES: &str = "󰃯";
 pub const DATESTAMP: &str = "󰴹"; // 󰃵
 pub const WEEKLINE: &str = "󰕶";
+pub const LOCKED: &str = "󰍁";
 // S means Style
 #[macro_export]
 macro_rules! S_fpath { ($e:expr) => { $e.to_string().purple() }; }
@@ -65,6 +66,21 @@ pub fn get_confirm_style() -> RenderConfig<'static> {
         .with_answer(
              StyleSheet::default()
             .with_fg(Color::DarkBlue)
+            .with_attr(Attributes::BOLD)
+        )
+}
+pub fn get_pass_input_style() -> RenderConfig<'static> {
+    RenderConfig::default()
+        .with_prompt_prefix(LOCKED.into())
+        .with_answered_prompt_prefix(LOCKED.into())
+        .with_help_message(
+             StyleSheet::default()
+            .with_fg(Color::DarkGrey)
+            .with_attr(Attributes::ITALIC)
+        )
+        .with_answer(
+             StyleSheet::default()
+            .with_fg(Color::DarkGreen)
             .with_attr(Attributes::BOLD)
         )
 }

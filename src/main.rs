@@ -43,6 +43,8 @@ fn main() {
     match args.command {
         Some(Commands::List) | None => TaskBox::new(inbox_path).list(false),
         Some(Commands::Listall)     => TaskBox::new(inbox_path).list(true),
+        Some(Commands::Enc)         => TaskBox::new(inbox_path).encrypt().unwrap(),
+        Some(Commands::Dec)         => TaskBox::new(inbox_path).decrypt().unwrap(),
         Some(Commands::Routines)    => TaskBox::new(get_inbox_file(ROUTINE_BOXNAME)).list(true),
 
         Some(Commands::Count)             => {
@@ -151,6 +153,7 @@ fn main() {
                 inbox_path = get_inbox_file("routine")
             }
             let mut todo = TaskBox::new(inbox_path);
+            todo.load();
 
             #[allow(clippy::redundant_closure)]
             let input = what.unwrap_or_else(|| i_gettext());

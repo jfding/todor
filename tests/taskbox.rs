@@ -23,7 +23,7 @@ fn setup_test_taskbox(name: &str) -> (TaskBox, tempfile::TempDir) {
 #[test]
 fn test_taskbox_new() {
     let (tb, _dir) = setup_test_taskbox("test");
-    assert_eq!(tb.title, None);
+    assert_eq!(tb.tbname, "test");
     assert_eq!(tb.alias, None);
     assert_eq!(tb.tasks.len(), 0);
 }
@@ -366,7 +366,7 @@ fn test_import_somefile_to_inbox() {
 - [ ] {󰃯:m 2024-10-31Mon 󰳟} one montly to import
 "#;
 
-    let (mut inbox, dir) = setup_test_taskbox(INBOX_NAME);
+    let (mut inbox, dir) = setup_test_taskbox(INBOX_BOXNAME);
     let mut routine = inbox.sibling("routine");
 
     let fpath = dir.path().join("import-input").with_extension("md");
