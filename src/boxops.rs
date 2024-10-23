@@ -58,7 +58,11 @@ pub fn file_manager() -> Result<()> {
 
 pub fn edit_box(cur_box: &str, diffwith: Option<String>) {
     let boxpath = get_inbox_file(cur_box);
-    _ = TaskBox::new(boxpath.clone()); // only touch file
+    let tb = TaskBox::new(boxpath.clone());
+    if tb.encrypted {
+        println!("cannot edit {}box, plz decrypt first", S_failure!(LOCKED));
+        std::process::exit(1);
+    }
 
     if let Some(other) = diffwith {
         let otherf = if other.ends_with(".md") {
