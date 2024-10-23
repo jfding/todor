@@ -10,6 +10,8 @@ Commands:
   list      -> list all uncompeleted tasks in box [aliases: l, ls]
   listall   -> list all(including compeleted) tasks [aliases: la]
   listbox   -> list all todo box in working dir [aliases: lb]
+  enc       -> encrypt todo box file
+  dec       -> decrypt todo box file
   edit      -> edit todo inbox file [aliases: e, ed]
   count     -> count items in inbox [aliases: c]
   browse    -> show items in all inboxes [aliases: b]
