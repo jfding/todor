@@ -26,5 +26,10 @@ class TodorBin < Formula
 
   def install
     bin.install "todor"
+    bin.install "today"
+    bin.install "tomorrow"
+    on_macos do
+      bin.install "t2reminders.scpt"
+    end
   end
 end
