@@ -91,6 +91,7 @@ jobs:
           mv target/${{ matrix.platform.target }}/release${{ contains(matrix.platform.target, 'windows') && '-with-symbols' || '' }}/$_BIN ${{ env.BIN_NAME }}.bin
           sh -c "cd $_BINDIR; ln -sf $_BIN today"
           sh -c "cd $_BINDIR; ln -sf $_BIN tomorrow"
+          [[ ${{ matrix.platform.target }} == *"apple-darwin" ]] && cp scripts/t2reminders.scpt $_BINDIR/
           zip -r --symlinks ${{ env.BIN_NAME }}-${{ matrix.platform.target }}.zip $_BINDIR/*
 
       - name: archive the exe
