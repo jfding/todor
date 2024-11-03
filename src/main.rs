@@ -41,11 +41,15 @@ fn main() {
     let mut inbox_path = util::get_inbox_file(inbox);
 
     match args.command {
-        Some(Commands::List) | None => TaskBox::new(inbox_path).list(false),
-        Some(Commands::Listall)     => TaskBox::new(inbox_path).list(true),
+        Some(Commands::Listall)     => TaskBox::new(inbox_path).list(true, false),
         Some(Commands::Enc)         => TaskBox::new(inbox_path).encrypt().unwrap(),
         Some(Commands::Dec)         => TaskBox::new(inbox_path).decrypt().unwrap(),
-        Some(Commands::Routines)    => TaskBox::new(get_inbox_file(ROUTINE_BOXNAME)).list(true),
+        Some(Commands::Routines)    => TaskBox::new(get_inbox_file(ROUTINE_BOXNAME)).list(true, false),
+        None                        => TaskBox::new(inbox_path).list(false, false),
+
+        Some(Commands::List{ all, plain }) => {
+            TaskBox::new(inbox_path).list(all, plain)
+        }
 
         Some(Commands::Count)             => {
             let cc = TaskBox::new(inbox_path).count();

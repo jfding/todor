@@ -59,7 +59,15 @@ pub enum Commands {
 
     /// -> list all uncompeleted tasks in box
     #[clap(visible_aliases(["l", "ls"]))]
-    List,
+    List {
+        /// including completed tasks
+        #[arg(short, long)]
+        all: bool,
+
+        /// plain mode means only show major task without styles
+        #[arg(long)]
+        plain: bool,
+    },
 
     /// -> list all(including compeleted) tasks
     #[clap(visible_aliases(["la"]))]

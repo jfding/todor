@@ -388,7 +388,7 @@ impl TaskBox {
         tasks
     }
 
-    pub fn list(&mut self, listall: bool) {
+    pub fn list(&mut self, listall: bool, plain: bool) {
         self.load();
         let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
         let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
@@ -407,7 +407,7 @@ impl TaskBox {
         }
 
         if left.is_empty() {
-            println!(" {} left!", S_empty!("nothing"));
+            if ! plain { println!(" {} left!", S_empty!("nothing")); }
         } else {
             let mut msg;
             let mut last_major_task :Option<(String, bool)> = None;
@@ -440,7 +440,11 @@ impl TaskBox {
                     msg = msg + t;
                 }
 
-                println!("{}", msg);
+                if plain {
+                    if !t.starts_with(PREFIX_SUBT) { println!("{}", &t); }
+                } else {
+                    println!("{}", msg);
+                }
             }
         }
     }
