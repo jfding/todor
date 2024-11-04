@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/zsh
 
 [[ -z $1 ]] && { echo "Usage: $(basename $0) <version>"; exit 1 }
 version="$1"
@@ -13,8 +13,8 @@ for arch in aarch64 x86_64; do
 done
 
 # Source.
-for ext in zip tar.gz; do
-  url="https://github.com/jfding/todor/archive/refs/tags/$version.$ext"
-  sha=$(curl -sfSL "$url" | sha256sum)
-  echo "source.$ext $sha"
-done
+# for ext in zip tar.gz; do
+#   url="https://github.com/jfding/todor/archive/refs/tags/$version.$ext"
+#   sha=$(curl -sfSL "$url" | sha256sum)
+#   echo "source.$ext $sha"
+# done
