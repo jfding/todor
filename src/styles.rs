@@ -3,6 +3,7 @@ use clap::builder::styling;
 
 pub use crate::conf::*;
 
+// Emoji
 pub const CHECKBOX: &str = "󰄗";
 pub const CHECKED: &str = "󰄲";
 pub const TASKBOX: &str = "󰄹";
@@ -11,10 +12,12 @@ pub const SCROLLUP: &str = "↥";
 pub const SCROLLDOWN: &str = "↧";
 pub const SUBTASK: &str = "󱞩";
 pub const PROGRESS: &str = "󰓌";
-pub const WARN: &str = "󰼈";
+pub const WARN: &str = ""; // 󰼈
 pub const QUESTION: &str = "󱜹";
 pub const ROUTINES: &str = "󰃯";
+pub const ROUTINES_PLAIN: &str = "R";
 pub const DATESTAMP: &str = "󰴹"; // 󰃵
+pub const DATESTAMP_PLAIN: &str = "@";
 pub const WEEKLINE: &str = "󰕶";
 pub const LOCKED: &str = "󰍁";
 // S means Style

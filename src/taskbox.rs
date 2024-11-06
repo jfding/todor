@@ -441,7 +441,9 @@ impl TaskBox {
                 }
 
                 if plain {
-                    if !t.starts_with(PREFIX_SUBT) { println!("{}", &t); }
+                    if !t.starts_with(PREFIX_SUBT) { println!("{}",
+                                    &t.replace(ROUTINES, ROUTINES_PLAIN)
+                                      .replace(DATESTAMP, DATESTAMP_PLAIN)); }
                 } else {
                     println!("{}", msg);
                 }
