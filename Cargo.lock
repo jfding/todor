@@ -592,8 +592,7 @@ dependencies = [
 [[package]]
 name = "inquire"
 version = "0.7.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fddf93031af70e75410a2511ec04d49e758ed2f26dad3404a934e0fb45cc12a"
+source = "git+https://github.com/mikaelmello/inquire?rev=3cd5d7a#3cd5d7aee8e3c947a57931e61f1678e067b79e48"
 dependencies = [
  "bitflags 2.6.0",
  "chrono",
@@ -601,7 +600,6 @@ dependencies = [
  "dyn-clone",
  "fuzzy-matcher",
  "fxhash",
- "newline-converter",
  "once_cell",
  "unicode-segmentation",
  "unicode-width",
@@ -706,15 +704,6 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "newline-converter"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47b6b097ecb1cbfed438542d16e84fd7ad9b0c76c8a65b7f9039212a3d14dc7f"
-dependencies = [
- "unicode-segmentation",
 ]
 
 [[package]]
