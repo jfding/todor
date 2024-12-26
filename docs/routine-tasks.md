@@ -6,6 +6,7 @@
 3. bi-weekly
 4. monthly-on-date
 5. monthly-on-weekday (4 weeks)
+6. once (one-shot reminder)
 
 ## How to store them in markdown
 - [ ] {󰃵:d yyyy-mm-dd} daily
@@ -13,6 +14,7 @@
 - [ ] {󰃵:b yyyy-mm-dd} bi-weekly
 - [ ] {󰃵:q yyyy-mm-dd} monthly-on-weekday
 - [ ] {󰃵:m yyyy-mm-dd} monthly-on-date
+- [ ] {󰃵:1 yyyy-mm-dd} reminder
 
 ## Where to save
 There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure will be:
@@ -35,7 +37,7 @@ There will be a dedicated taskbox file, named `ROUTINES.md`, and the structure w
 
 ## How to operate on them
 * use `add` command to add a new routine task with option, and it will be store in ROUTINES md file with proper *routine-prefix* and current date, available options are:
-  * `-r/--routine <daily | weekly | biweekly | qweekly | monthly>`
+  * `-r/--routine <daily | weekly | biweekly | qweekly | monthly | once>`
 * add a new command `checkout` to pick up any matched routine tasks to "today" box, with expanded routine info (means "checkout")
   * actually its an alias of `collect --inbox routines`
 * when to run `today` cli with any command, will have a daily-once hook to run `checkout`

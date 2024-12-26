@@ -29,6 +29,7 @@ pub enum Routine {
     Biweekly,
     Qweekly,
     Monthly,
+    Once,
 }
 
 #[derive(Debug, Clone, Subcommand)]

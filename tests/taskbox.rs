@@ -199,7 +199,7 @@ fn test_collect_from_with_sub_done() {
 - [ ] Task2 to move
 - [ ] Task3 to move but keep with "done" status
   - [ ] SubTask1 to move
-- [ ] 󰼈 Task5 to move with warning icon
+- [ ]  Task5 to move with warning icon
   - [ ] SubTask1 to move
   - [ ] SubTask3 to move
 "#;
@@ -255,7 +255,7 @@ fn test_collect_from_with_dup_sub() {
 - [ ] Task2 to move
   - [ ] SubTask1 to move
 - [ ] Task3 to move
-- [ ] 󰼈 Task4 to move
+- [ ]  Task4 to move
   - [ ] SubTask1 to move
 "#;
 
@@ -290,28 +290,40 @@ fn test_checkout() {
     let mut routine = tb.sibling("routine");
 
     routine.add("Daily routine".to_string(), Some(Routine::Daily), false, &get_today());
+
+    // two reminders
+    routine.add("reminder today".to_string(), Some(Routine::Once), false, &get_today());
+    routine.add("reminder tomorrow".to_string(), Some(Routine::Once), false, &get_tomorrow());
+
     routine.add("ignore not routine".to_string(), None, false, "");
 
     routine.load();
-    assert_eq!(routine.tasks.len(), 2);
+    assert_eq!(routine.tasks.len(), 4);
     assert!(routine.tasks[0].0.starts_with("{󰃯:d "));
     assert!(routine.tasks[0].0.ends_with("} Daily routine"));
+    assert!(routine.tasks[1].0.starts_with("{󰃯:1 "));
+    assert!(routine.tasks[1].0.ends_with("} reminder today"));
+    assert!(routine.tasks[2].0.starts_with("{󰃯:1 "));
+    assert!(routine.tasks[2].0.ends_with("} reminder tomorrow"));
 
     today.collect_from(&mut routine);
 
     today.load();
-    assert_eq!(today.tasks.len(), 1);
+    assert_eq!(today.tasks.len(), 2);
     assert!(today.tasks[0].0.starts_with("{󰃯:daily} "));
     assert!(today.tasks[0].0.contains("} Daily routine"));
     assert!(today.tasks[0].0.contains(" [󰴹 "));
+
+    assert!(today.tasks[1].0.starts_with("{󰃯:reminder} "));
+    assert!(today.tasks[1].0.contains("} reminder today"));
+    assert!(today.tasks[1].0.contains(" [󰴹 "));
 
     tb.collect_from(&mut routine);
     tb.load();
     assert_eq!(tb.tasks.len(), 0);
 
-    today.collect_from(&mut routine);
-    today.load();
-    assert_eq!(today.tasks.len(), 1);
+    routine.load();
+    assert_eq!(routine.tasks.len(), 3);
 }
 
 #[test]

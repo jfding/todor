@@ -17,9 +17,9 @@ lazy_static! {
     static ref RE_PREFIX_OPEN :Regex = Regex::new(r"^- \[[ ]\] (.*)").unwrap();
     static ref RE_PREFIX_DONE :Regex = Regex::new(r"^- \[[xX\-/<>\*]\] (.*)").unwrap();
     static ref RE_ROUTINES :Regex =
-        Regex::new(r"\{󰃯:([dDwWbBqQmM]) (\d{4}-\d{2}-\d{2})\w{3} 󰳟\} (.*)").unwrap();
+        Regex::new(r"\{󰃯:([dDwWbBqQmM1]) (\d{4}-\d{2}-\d{2})\w{3} 󰳟\} (.*)").unwrap();
     static ref RE_ROUTINES_CHECKOUT :Regex =
-        Regex::new(r"\{󰃯:(daily|weekly|biweekly|qweekly|monthly)\} (.*)").unwrap();
+        Regex::new(r"\{󰃯:(daily|weekly|biweekly|qweekly|monthly|reminder)\} (.*)").unwrap();
 }
 
 pub const INBOX_BOXNAME :&str  = "INBOX";
@@ -277,6 +277,7 @@ impl TaskBox {
                         "b" => "biweekly",
                         "q" => "qweekly",
                         "m" => "monthly",
+                        "1" => "reminder",
                         _ => "unknown",
                     };
                     let checkout_date = match to.as_ref() {
@@ -292,6 +293,11 @@ impl TaskBox {
                     let pair = (newtask, false);
                     if ! self.tasks.contains(&pair) {
                         self.tasks.push(pair)
+                    }
+
+                    // clean up "once reminder"
+                    if kind == "reminder" {
+                        tb_from.tasks.retain(|(_task, _)| _task != &task)
                     }
                 } else {
                     // ignore non-routine task
@@ -329,10 +335,7 @@ impl TaskBox {
             }
         }
 
-        // "ROUTINES" not drain
-        if from != ROUTINE_BOXNAME {
-            tb_from._dump().unwrap();
-        }
+        tb_from._dump().unwrap();
         self._dump().unwrap();
     }
 
@@ -351,6 +354,7 @@ impl TaskBox {
                     Routine::Biweekly => "b",
                     Routine::Qweekly  => "q",
                     Routine::Monthly  => "m",
+                    Routine::Once  => "1",
                 },
                 start_date,
                 weekday_from_date(start_date),
