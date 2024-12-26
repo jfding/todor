@@ -294,6 +294,11 @@ impl TaskBox {
                     if ! self.tasks.contains(&pair) {
                         self.tasks.push(pair)
                     }
+
+                    // clean up "once reminder"
+                    if kind == "reminder" {
+                        tb_from.tasks.retain(|(_task, _)| _task != &task)
+                    }
                 } else {
                     // ignore non-routine task
                     println!("{} {} : {} {}",
@@ -330,10 +335,7 @@ impl TaskBox {
             }
         }
 
-        // "ROUTINES" not drain
-        if from != ROUTINE_BOXNAME {
-            tb_from._dump().unwrap();
-        }
+        tb_from._dump().unwrap();
         self._dump().unwrap();
     }
 
