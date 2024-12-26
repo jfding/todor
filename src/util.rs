@@ -62,8 +62,8 @@ pub fn weekday_from_date(date_str: &str) -> String {
     NaiveDate::parse_from_str(date_str, "%Y-%m-%d").unwrap().weekday().to_string()
 }
 
-pub fn match_routine(kind: &str, s_date_str: &str, match_to: &str) -> bool {
-    let mut s_date = NaiveDate::parse_from_str(s_date_str, "%Y-%m-%d").unwrap();
+pub fn match_routine(kind: &str, start_date_str: &str, match_to: &str) -> bool {
+    let mut closest_date = NaiveDate::parse_from_str(start_date_str, "%Y-%m-%d").unwrap();
     let match_to_date = match match_to {
         "today" => Local::now().date_naive(),
         "yesterday" => Local::now().add(chrono::Duration::days(-1)).date_naive(),
@@ -72,23 +72,23 @@ pub fn match_routine(kind: &str, s_date_str: &str, match_to: &str) -> bool {
     };
 
     if kind == "m" {
-        while s_date < match_to_date {
-            s_date = s_date + chrono::Months::new(1);
+        while closest_date < match_to_date {
+            closest_date = closest_date + chrono::Months::new(1);
         }
     } else {
         let steps = match kind {
-            "d" => 1,
+            "d" | "1" => 1,
             "w" => 7,
             "b" => 14,
             "q" => 28,
             _ => panic!("unknown routine kind"),
         };
-        while s_date < match_to_date {
-            s_date += chrono::Duration::days(steps);
+        while closest_date < match_to_date {
+            closest_date += chrono::Duration::days(steps);
         }
     }
 
-    s_date == match_to_date
+    closest_date == match_to_date
 }
 
 pub fn get_box_alias(name_in: &str) -> String {
