@@ -177,11 +177,11 @@ pub fn cleanup_and_archive() -> Result<()> {
 
     actions.clone().into_iter().for_each(
         |(act, name, _path)| {
-            println!("{}  {} ::{}", S_checkbox!(TASKBOX), name, S_blink!(S_warning!(act)));
+            println!("{}  {} 󰳟 {}", S_checkbox!(TASKBOX), name, S_blink!(S_warning!(act)));
         }
      );
 
-    if util::i_confirm("Going to apply the above actions, are you sure?") {
+    if util::i_confirm("to apply?") {
         actions.into_iter().for_each(
             |(act, _name, path)| {
                 if act == "archive" {

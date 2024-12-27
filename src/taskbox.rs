@@ -68,7 +68,7 @@ impl TaskBox {
             let passwd = i_getpass(false, Some("the password for encrypted box:"));
             self.passwd_mem = Some(passwd.clone());
             self._load_file_with_pass(&passwd).unwrap_or_else(|_| {
-                println!("{}", S_failure!("wrong password, abort"));
+                println!("{}", S_failure!("Invalid password."));
                 std::process::exit(1);
             })
         } else {
@@ -90,7 +90,7 @@ impl TaskBox {
 
             fs::create_dir_all(fpath.parent().unwrap()).expect("Failed to create basedir");
             fs::File::create(fpath).expect("Failed to create file");
-            fs::write(fpath, format!("# {}\n\n", title)).expect("Failed to write to file");
+            fs::write(fpath, format!("# {}\n\n", title)).expect("Failed to write file");
 
             // if it's "today" box, run 'checkout' once [only Unix]
             #[cfg(unix)]
