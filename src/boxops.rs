@@ -99,8 +99,14 @@ pub fn edit_box(cur_box: &str, diffwith: Option<String>) {
     }
 }
 
-pub fn list_boxes() {
+pub fn list_boxes(basedir_only: bool) {
     let basedir = Config_get!("basedir");
+
+    if basedir_only {
+        println!("{}", basedir);
+        return
+    }
+
     println!("[ {} ]", S_fpath!(basedir));
 
     let mut boxes = Vec::new();

@@ -183,8 +183,8 @@ fn main() {
         }
 
         Some(Commands::Browse)      => boxops::browse().unwrap(),
-        Some(Commands::Listbox)     => boxops::list_boxes(),
         Some(Commands::Filemanager) => boxops::file_manager().unwrap(),
+        Some(Commands::Listbox { basedir_only })  => boxops::list_boxes(basedir_only),
         Some(Commands::Edit { diffwith, routines }) =>
             boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
     }

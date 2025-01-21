@@ -76,7 +76,11 @@ pub enum Commands {
 
     /// -> list all todo box in working dir
     #[clap(visible_aliases(["lb"]))]
-    Listbox,
+    Listbox {
+        /// show basedir only
+        #[arg(long)]
+        basedir_only: bool,
+    },
 
     /// -> encrypt todo box file
     Enc,
