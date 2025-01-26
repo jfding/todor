@@ -4,3 +4,4 @@ pub mod util;
 pub mod conf;
 pub mod styles;
 pub mod boxops;
+pub mod webui;

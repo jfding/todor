@@ -165,6 +165,19 @@ pub enum Commands {
     /// -> shortcut command to list all routine tasks
     #[clap(visible_aliases(["r", "rt"]))]
     Routines,
+
+    /// -> start web ui serving
+    #[clap(visible_aliases(["s", "web"]))]
+    Serve {
+        #[arg(long)]
+        host: Option<String>,
+
+        #[arg(short, long)]
+        port: Option<u16>,
+
+        #[arg(long)]
+        secret: Option<String>,
+    },
 }
 
 impl Default for Cli {

@@ -7,9 +7,9 @@ use todor::taskbox::*;
 use todor::cli::*;
 use todor::conf::*;
 use todor::util::*;
-
 use todor::util;
 use todor::boxops;
+use todor::webui;
 
 fn main() {
     let args = Cli::default();
@@ -187,5 +187,11 @@ fn main() {
         Some(Commands::Listbox { basedir_only })  => boxops::list_boxes(basedir_only),
         Some(Commands::Edit { diffwith, routines }) =>
             boxops::edit_box(if routines { ROUTINE_BOXNAME } else { inbox }, diffwith),
+
+        Some(Commands::Serve { host, port, secret }) => {
+            webui::serve(&host.unwrap_or("localhost".into()),
+                         port.unwrap_or(7788),
+                         secret).unwrap();
+        }
     }
 }

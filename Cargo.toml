@@ -10,6 +10,7 @@ keywords = ["todo", "rust", "cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
+actix-web = "4.9.0"
 anyhow = "1.0.89"
 chrono = "0.4.38"
 clap = { version = "4.5.18", features = ["derive"] }

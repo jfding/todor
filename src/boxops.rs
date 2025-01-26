@@ -99,6 +99,27 @@ pub fn edit_box(cur_box: &str, diffwith: Option<String>) {
     }
 }
 
+pub fn get_boxes() -> (Vec<String>, Vec<String>) {
+    let basedir = Config_get!("basedir");
+    let mut boxes = Vec::new();
+    let mut locked_boxes = Vec::new();
+    for entry in std::fs::read_dir(&basedir).expect("cannot read dir") {
+        let path = entry.expect("cannot get entry").path();
+        if path.is_file() {
+            if path.extension() == Some(OsStr::new("md")) {
+                boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()));
+            } else if path.extension() == Some(OsStr::new("mdx")) {
+                locked_boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()));
+            }
+        }
+    }
+
+    boxes.sort_by(|a,b| b.cmp(&a));
+    locked_boxes.sort_by(|a,b| b.cmp(&a));
+    (boxes, locked_boxes)
+}
+
+
 pub fn list_boxes(basedir_only: bool) {
     let basedir = Config_get!("basedir");
 
@@ -109,34 +130,26 @@ pub fn list_boxes(basedir_only: bool) {
 
     println!("[ {} ]", S_fpath!(basedir));
 
-    let mut boxes = Vec::new();
-    for entry in std::fs::read_dir(&basedir).expect("cannot read dir") {
-        let path = entry.expect("cannot get entry").path();
-        if path.is_file() {
-            if path.extension() == Some(OsStr::new("md")) {
-                boxes.push((String::from(path.file_stem().unwrap().to_str().unwrap()), false))
-            } else if path.extension() == Some(OsStr::new("mdx")) {
-                boxes.push((String::from(path.file_stem().unwrap().to_str().unwrap()), true))
-            }
-        }
-    }
-    boxes.sort_by(|a,b| b.0.cmp(&a.0));
-    boxes.into_iter().for_each(
-        |(boxname, encrypted)| {
-            if encrypted {
-                print!("{} ", S_warning!(LOCKED));
-            } else {
-                print!("  ");
+    let (boxes, locked_boxes) = get_boxes();
 
-            }
-            print!("{}  {}",S_checkbox!(TASKBOX), boxname);
+    boxes.into_iter().for_each(|boxname| {
+            print!("  {}  {}",S_checkbox!(TASKBOX), boxname);
             let alias = get_box_alias(&boxname);
             if alias != boxname {
                 println!(" ({})", S_hints!(alias))
             } else {
                 println!()
             }
-        })
+        });
+    locked_boxes.into_iter().for_each(|boxname| {
+            print!("{} {}  {}", S_warning!(LOCKED), S_checkbox!(TASKBOX), boxname);
+            let alias = get_box_alias(&boxname);
+            if alias != boxname {
+                println!(" ({})", S_hints!(alias))
+            } else {
+                println!()
+            }
+        });
 }
 
 // clean up and all empty datetime taskbox and archive done tasks

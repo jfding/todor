@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todor</title>
+</head>
+<body>
+    <h1>Todor</h1>
+    <div id="boxes"></div>
+    <script>
+        fetch('/v1/boxes')
+            .then(response => response.json())
+            .then(data => {
+                const boxes = document.getElementById('boxes');
+                data.forEach(box => {
+                    const boxElement = document.createElement('div');
+                    boxElement.textContent = box;
+                    boxes.appendChild(boxElement);
+                });
+            });
+    </script>
+</body>
+</html>
