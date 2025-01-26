@@ -16,17 +16,19 @@
     }" x-init="fetch('/v1/boxes')
         .then(response => response.json())
         .then(data => boxes = data)">
-        <template x-for="box in boxes">
-            <div class="box" 
-                x-text="box" 
-                x-on:click="fetch('/v1/boxes/' + box)
-                    .then(response => response.json())
-                    .then(data => {
-                        current_box = box;
-                        box_contents = data;
-                    })">
-            </div>
-        </template>
+        <ul>
+            <template x-for="box in boxes">
+                <li><button class="boxbutton" 
+                        x-text="box" 
+                        @click="fetch('/v1/boxes/' + box)
+                            .then(response => response.json())
+                            .then(data => {
+                                current_box = box;
+                                box_contents = data;
+                                })">
+                    </button>
+            </template>
+        </ul>
         <div x-show="current_box">
             <h2>TODOs in <span x-text="current_box"></span></h2>
             <template x-for="todo in box_contents.todos">

@@ -19,12 +19,13 @@ async fn boxes() -> impl Responder {
 
 #[get("/boxes/{boxname}")]
 async fn box_contents(boxname: web::Path<String>) -> impl Responder {
-    let boxname = boxname.into_inner();
-    let mut tb = taskbox::TaskBox::from_boxname(&boxname);
-    HttpResponse::Ok().json(json!({
-        "boxname": boxname,
-        "todos": tb.get_all_todos()
-    }))
+    if let Some(mut tb) = taskbox::TaskBox::from_boxname(&boxname.into_inner()) {
+        HttpResponse::Ok().json(json!({
+            "todos": tb.get_all_todos()
+        }))
+    } else {
+        HttpResponse::NotFound().json(json!({}))
+    }
 }
 
 #[actix_web::main]

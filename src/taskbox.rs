@@ -55,10 +55,13 @@ impl TaskBox {
             passwd_mem: None,
         }
     }
-    pub fn from_boxname(boxname: &str) -> Self {
+    pub fn from_boxname(boxname: &str) -> Option<Self> {
         let basedir = Config_get!("basedir");
         let fpath = Path::new(&basedir).join(boxname).with_extension("md");
-        Self::new(fpath)
+        if !fpath.exists() {
+            return None;
+        }
+        Some(Self::new(fpath))
     }
 
     pub fn sibling(&self, boxname: &str) -> Self {
