@@ -55,6 +55,11 @@ impl TaskBox {
             passwd_mem: None,
         }
     }
+    pub fn from_boxname(boxname: &str) -> Self {
+        let basedir = Config_get!("basedir");
+        let fpath = Path::new(&basedir).join(boxname).with_extension("md");
+        Self::new(fpath)
+    }
 
     pub fn sibling(&self, boxname: &str) -> Self {
         let mut sib = TaskBox::new(self.fpath.parent().unwrap()
@@ -240,7 +245,7 @@ impl TaskBox {
     }
 
     pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
-        let tasks_in = tb_from.get_all_to_mark();
+        let tasks_in = tb_from.get_all_todos();
         if tasks_in.is_empty() { return }
 
         if let Some(ref selected) = tb_from.selected {
@@ -368,7 +373,7 @@ impl TaskBox {
         self._dump().unwrap()
     }
 
-    pub fn get_all_to_mark(&mut self) -> Vec<String> {
+    pub fn get_all_todos(&mut self) -> Vec<String> {
         self.load();
 
         let mut tasks = Vec::new();

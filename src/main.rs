@@ -93,7 +93,7 @@ fn main() {
                     if tb_from.count() == 0 { continue }
 
                     if interactive {
-                        tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),
+                        tb_from.selected = Some(i_select(tb_from.get_all_todos(),
                                                 &format!("choose from {}", boxdate)));
                     }
                     tb_today.collect_from(&mut tb_from);
@@ -110,7 +110,7 @@ fn main() {
         Some(Commands::Shift { interactive }) => { // today -> tomorrow
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             if interactive {
-                tb_today.selected = Some(i_select(tb_today.get_all_to_mark(), "choose from TODAY"));
+                tb_today.selected = Some(i_select(tb_today.get_all_todos(), "choose from TODAY"));
             }
             TaskBox::new(util::get_inbox_file("tomorrow")).collect_from(&mut tb_today)
         }
@@ -118,7 +118,7 @@ fn main() {
         Some(Commands::Pool { interactive }) => { // today -> INBOX
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             if interactive {
-                tb_today.selected = Some(i_select(tb_today.get_all_to_mark(), "choose from TODAY"));
+                tb_today.selected = Some(i_select(tb_today.get_all_todos(), "choose from TODAY"));
             }
 
             TaskBox::new(util::get_inbox_file("inbox")).collect_from(&mut tb_today)
@@ -134,7 +134,7 @@ fn main() {
             let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
 
             if interactive {
-                tb_from.selected = Some(i_select(tb_from.get_all_to_mark(),
+                tb_from.selected = Some(i_select(tb_from.get_all_todos(),
                                                  &format!("choose from {}", from)));
             }
 
@@ -143,7 +143,7 @@ fn main() {
 
         Some(Commands::Mark { delete } ) => {
             let mut todo = TaskBox::new(inbox_path);
-            let tasks = todo.get_all_to_mark();
+            let tasks = todo.get_all_todos();
             if tasks.is_empty() {
                 println!(" {} left!", S_empty!("nothing"));
                 return

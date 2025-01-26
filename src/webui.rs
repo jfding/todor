@@ -1,6 +1,8 @@
 use crate::boxops;
+use crate::taskbox;
 
 use actix_web::{get, web, App, HttpServer, Responder, HttpResponse};
+use serde_json::json;
 
 #[get("/")]
 async fn index() -> impl Responder {
@@ -15,6 +17,16 @@ async fn boxes() -> impl Responder {
     HttpResponse::Ok().json(boxes)
 }
 
+#[get("/boxes/{boxname}")]
+async fn box_contents(boxname: web::Path<String>) -> impl Responder {
+    let boxname = boxname.into_inner();
+    let mut tb = taskbox::TaskBox::from_boxname(&boxname);
+    HttpResponse::Ok().json(json!({
+        "boxname": boxname,
+        "todos": tb.get_all_todos()
+    }))
+}
+
 #[actix_web::main]
 pub async fn serve(host: &str, port: u16, secret: Option<String>) -> std::io::Result<()> {
     println!("Starting server on: http://{}:{}", host, port);
@@ -24,7 +36,8 @@ pub async fn serve(host: &str, port: u16, secret: Option<String>) -> std::io::Re
         .service(index)
         .service(
             web::scope(&upgrade_path_prefix)
-            .service(boxes))
+            .service(boxes)
+            .service(box_contents))
         )
         .bind(format!("{}:{}", host, port))?
         .run()

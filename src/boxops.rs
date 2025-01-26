@@ -119,7 +119,6 @@ pub fn get_boxes() -> (Vec<String>, Vec<String>) {
     (boxes, locked_boxes)
 }
 
-
 pub fn list_boxes(basedir_only: bool) {
     let basedir = Config_get!("basedir");
 

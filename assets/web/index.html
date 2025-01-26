@@ -9,14 +9,30 @@
 </head>
 <body>
     <h1>Todor</h1>
-    <div x-data="{ boxes: [] }" x-init="fetch('/v1/boxes')
+    <div x-data="{ 
+        boxes: [],
+        current_box: null,
+        box_contents: { todos: [] }
+    }" x-init="fetch('/v1/boxes')
         .then(response => response.json())
         .then(data => boxes = data)">
         <template x-for="box in boxes">
-            <div x-text="box" x-on:click="fetch('/v1/boxes/' + box)
-                .then(response => response.json())
-                .then(data => boxes = data)"></div>
+            <div class="box" 
+                x-text="box" 
+                x-on:click="fetch('/v1/boxes/' + box)
+                    .then(response => response.json())
+                    .then(data => {
+                        current_box = box;
+                        box_contents = data;
+                    })">
+            </div>
         </template>
+        <div x-show="current_box">
+            <h2>TODOs in <span x-text="current_box"></span></h2>
+            <template x-for="todo in box_contents.todos">
+                <div class="todo" x-text="todo"></div>
+            </template>
+        </div>
     </div>
 </body>
 </html>
