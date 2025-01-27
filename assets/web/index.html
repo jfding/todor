@@ -24,6 +24,10 @@
         .boxcontents {
             padding-left: 1rem;
         }
+        .boxname {
+            font-weight: bold;
+            color: #88d;
+        }
         .boxbutton {
             width: 100%;
             text-align: left;
@@ -69,7 +73,20 @@
         </ul>
         </div>
         <div class="boxcontents" x-show="current_box">
-            <h2>TODOs in <span x-text="current_box"></span></h2>
+            <h2>TODOs in <span x-text="current_box" class="boxname"></span></h2>
+            <input type="text" name="todo" placeholder="Add a todo" @keyup.enter="addbutton.click()">
+            <button id="addbutton" @click="fetch('/v1/boxes/' + current_box, {
+                method: 'POST',
+                body: document.querySelector('input[name=todo]').value
+            }).then(() => {
+                // Refresh the box contents after adding
+                fetch('/v1/boxes/' + current_box)
+                    .then(response => response.json())
+                    .then(data => {
+                        box_contents = data;
+                        document.querySelector('input[name=todo]').value = ''; // Clear input
+                    });
+            })">Add</button>
             <template x-for="todo in box_contents.todos">
                 <div class="todo" x-text="todo"></div>
             </template>

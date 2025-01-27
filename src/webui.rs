@@ -1,7 +1,7 @@
 use crate::boxops;
 use crate::taskbox;
 
-use actix_web::{get, web, App, HttpServer, Responder, HttpResponse};
+use actix_web::{get, post, web, App, HttpServer, Responder, HttpResponse};
 use serde_json::json;
 
 #[get("/")]
@@ -24,9 +24,21 @@ async fn box_contents(boxname: web::Path<String>) -> impl Responder {
             "todos": tb.get_all_todos()
         }))
     } else {
-        HttpResponse::NotFound().json(json!({}))
+        HttpResponse::NotFound().body("Taskbox not found")
     }
 }
+
+#[post("/boxes/{boxname}")]
+async fn update_box(boxname: web::Path<String>, body: String) -> impl Responder {
+    if let Some(mut tb) = taskbox::TaskBox::from_boxname(&boxname.into_inner()) {
+        tb.add(body, None, false, "now");
+
+        HttpResponse::Ok().body("Taskbox updated")
+    } else {
+        HttpResponse::NotFound().body("Taskbox not found")
+    }
+}
+
 
 #[actix_web::main]
 pub async fn serve(host: &str, port: u16, secret: Option<String>) -> std::io::Result<()> {
@@ -38,7 +50,8 @@ pub async fn serve(host: &str, port: u16, secret: Option<String>) -> std::io::Re
         .service(
             web::scope(&upgrade_path_prefix)
             .service(boxes)
-            .service(box_contents))
+            .service(box_contents)
+            .service(update_box))
         )
         .bind(format!("{}:{}", host, port))?
         .run()
