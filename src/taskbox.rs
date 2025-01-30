@@ -248,7 +248,7 @@ impl TaskBox {
     }
 
     pub fn collect_from(&mut self, tb_from: &mut TaskBox) {
-        let tasks_in = tb_from.get_all_todos();
+        let (tasks_in, _) = tb_from.get_all_todos();
         if tasks_in.is_empty() { return }
 
         if let Some(ref selected) = tb_from.selected {
@@ -376,10 +376,11 @@ impl TaskBox {
         self._dump().unwrap()
     }
 
-    pub fn get_all_todos(&mut self) -> Vec<String> {
+    pub fn get_all_todos(&mut self) -> (Vec<String>, Vec<String>) {
         self.load();
 
         let mut tasks = Vec::new();
+        let mut dones = Vec::new();
         let mut last_major_task :Option<(String, bool)> = None;
         for (t, done) in &self.tasks {
             if t.starts_with(PREFIX_SUBT) {
@@ -394,16 +395,16 @@ impl TaskBox {
             }
             if !done {
                 tasks.push(t.clone());
+            } else {
+                dones.push(t.clone());
             }
         }
 
-        tasks
+        (tasks, dones)
     }
 
     pub fn list(&mut self, listall: bool, plain: bool) {
-        self.load();
-        let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
-        let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
+        let (left, dones) = self.get_all_todos();
 
         let checkbox_style = if self.tbname == "ROUTINES" {
             ROUTINES

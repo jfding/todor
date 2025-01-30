@@ -64,11 +64,11 @@
     <div class="container" x-data="{ 
         boxes: [],
         current_box: null,
-        box_contents: { todos: [] },
+        box_contents: { todos: [], dones: [] },
         init: function() {
-            this.load_boxes();
+            this.list_boxes();
         },
-        load_boxes: function() {
+        list_boxes: function() {
             fetch('/v1/boxes')
                 .then(response => response.json())
                 .then(data => this.boxes = data);
@@ -118,6 +118,13 @@
                 <div class="todo" x-data="{is_done: false}" x-bind:class="{ 'done': is_done }">
                     <input type="checkbox" class="todo-checkbox" x-model="is_done" @change="mark_done(current_box, todo); is_done = false" />
                     <span class="todo-text" x-text="todo"></span>
+                </div>
+            </template>
+
+            <h2>Dones in <span x-text="current_box" class="boxname"></span></h2>
+            <template x-for="done in box_contents.dones">
+                <div class="todo done">
+                    <span class="todo-text" x-text="done"></span>
                 </div>
             </template>
         </div>

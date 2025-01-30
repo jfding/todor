@@ -20,8 +20,10 @@ async fn boxes() -> impl Responder {
 #[get("/boxes/{boxname}")]
 async fn box_contents(boxname: web::Path<String>) -> impl Responder {
     if let Some(mut tb) = taskbox::TaskBox::from_boxname(&boxname.into_inner()) {
+        let (tasks, dones) = tb.get_all_todos();
         HttpResponse::Ok().json(json!({
-            "todos": tb.get_all_todos()
+            "todos": tasks,
+            "dones": dones
         }))
     } else {
         HttpResponse::NotFound().body("Taskbox not found")
@@ -46,7 +48,7 @@ async fn mark_done(boxname: web::Path<String>, todo: String) -> impl Responder {
 
         HttpResponse::Ok().content_type("text/plain").body("Todo marked as done")
     } else {
-        HttpResponse::NotFound().content_type("text/plain").body("Taskbox not found")
+        HttpResponse::NotFound().body("Taskbox not found")
     }
 }
 

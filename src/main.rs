@@ -93,8 +93,8 @@ fn main() {
                     if tb_from.count() == 0 { continue }
 
                     if interactive {
-                        tb_from.selected = Some(i_select(tb_from.get_all_todos(),
-                                                &format!("choose from {}", boxdate)));
+                        let (tasks, _) = tb_from.get_all_todos();
+                        tb_from.selected = Some(i_select(tasks, &format!("choose from {}", boxdate)));
                     }
                     tb_today.collect_from(&mut tb_from);
                     println!();
@@ -110,7 +110,8 @@ fn main() {
         Some(Commands::Shift { interactive }) => { // today -> tomorrow
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             if interactive {
-                tb_today.selected = Some(i_select(tb_today.get_all_todos(), "choose from TODAY"));
+                let (tasks, _) = tb_today.get_all_todos();
+                tb_today.selected = Some(i_select(tasks, "choose from TODAY"));
             }
             TaskBox::new(util::get_inbox_file("tomorrow")).collect_from(&mut tb_today)
         }
@@ -118,7 +119,8 @@ fn main() {
         Some(Commands::Pool { interactive }) => { // today -> INBOX
             let mut tb_today = TaskBox::new(util::get_inbox_file("today"));
             if interactive {
-                tb_today.selected = Some(i_select(tb_today.get_all_todos(), "choose from TODAY"));
+                let (tasks, _) = tb_today.get_all_todos();
+                tb_today.selected = Some(i_select(tasks, "choose from TODAY"));
             }
 
             TaskBox::new(util::get_inbox_file("inbox")).collect_from(&mut tb_today)
@@ -134,8 +136,8 @@ fn main() {
             let mut tb_from = TaskBox::new(util::get_inbox_file(&from));
 
             if interactive {
-                tb_from.selected = Some(i_select(tb_from.get_all_todos(),
-                                                 &format!("choose from {}", from)));
+                let (tasks, _) = tb_from.get_all_todos();
+                tb_from.selected = Some(i_select(tasks, &format!("choose from {}", from)));
             }
 
             TaskBox::new(util::get_inbox_file("today")).collect_from(&mut tb_from)
@@ -143,7 +145,7 @@ fn main() {
 
         Some(Commands::Mark { delete } ) => {
             let mut todo = TaskBox::new(inbox_path);
-            let tasks = todo.get_all_todos();
+            let (tasks, _) = todo.get_all_todos();
             if tasks.is_empty() {
                 println!(" {} left!", S_empty!("nothing"));
                 return
