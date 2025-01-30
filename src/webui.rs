@@ -12,8 +12,7 @@ async fn index() -> impl Responder {
 
 #[get("/boxes")]
 async fn boxes() -> impl Responder {
-    let (mut boxes, locked_boxes) = boxops::get_boxes();
-    boxes.extend(locked_boxes.into_iter().map(|boxname| format!("[encrypted] {}", boxname)));
+    let (boxes, _) = boxops::get_boxes();
     HttpResponse::Ok().json(boxes)
 }
 
