@@ -29,16 +29,26 @@ async fn box_contents(boxname: web::Path<String>) -> impl Responder {
 }
 
 #[post("/boxes/{boxname}")]
-async fn update_box(boxname: web::Path<String>, body: String) -> impl Responder {
+async fn add_todo(boxname: web::Path<String>, todo: String) -> impl Responder {
     if let Some(mut tb) = taskbox::TaskBox::from_boxname(&boxname.into_inner()) {
-        tb.add(body, None, false, "now");
+        tb.add(todo, None, false, "now");
 
-        HttpResponse::Ok().body("Taskbox updated")
+        HttpResponse::Ok().content_type("text/plain").body("Todo added")
     } else {
-        HttpResponse::NotFound().body("Taskbox not found")
+        HttpResponse::NotFound().content_type("text/plain").body("Taskbox not found")
     }
 }
 
+#[post("/boxes/{boxname}/done")]
+async fn mark_done(boxname: web::Path<String>, todo: String) -> impl Responder {
+    if let Some(mut tb) = taskbox::TaskBox::from_boxname(&boxname.into_inner()) {
+        tb.mark(vec![todo], false);
+
+        HttpResponse::Ok().content_type("text/plain").body("Todo marked as done")
+    } else {
+        HttpResponse::NotFound().content_type("text/plain").body("Taskbox not found")
+    }
+}
 
 #[actix_web::main]
 pub async fn serve(host: &str, port: u16, secret: Option<String>) -> std::io::Result<()> {
@@ -51,7 +61,8 @@ pub async fn serve(host: &str, port: u16, secret: Option<String>) -> std::io::Re
             web::scope(&upgrade_path_prefix)
             .service(boxes)
             .service(box_contents)
-            .service(update_box))
+            .service(add_todo)
+            .service(mark_done))
         )
         .bind(format!("{}:{}", host, port))?
         .run()

@@ -81,10 +81,10 @@
                     this.current_box = box;
                 });
         },
-        todo_done: function(box, todo) {
-            fetch('/v1/boxes/' + box, {
+        mark_done: function(box, todo) {
+            fetch('/v1/boxes/' + box + '/done', {
                 method: 'POST',
-                body: todo + ' done'
+                body: todo
             }).then(() => {
                 this.load_box(box);
             })
@@ -116,7 +116,7 @@
 
             <template x-for="todo in box_contents.todos">
                 <div class="todo" x-data="{is_done: false}" x-bind:class="{ 'done': is_done }">
-                    <input type="checkbox" class="todo-checkbox" x-model="is_done" @change="todo_done(current_box, todo)" />
+                    <input type="checkbox" class="todo-checkbox" x-model="is_done" @change="mark_done(current_box, todo); is_done = false" />
                     <span class="todo-text" x-text="todo"></span>
                 </div>
             </template>
