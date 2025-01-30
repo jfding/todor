@@ -43,6 +43,17 @@
         .todo {
             padding: 0.5rem;
             border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        .todo.done {
+            text-decoration: line-through;
+        }
+        .todo-checkbox {
+            margin-right: 0.5rem;
+        }
+        .todo-text {
+            flex: 1;
         }
     </style>
 
@@ -53,42 +64,61 @@
     <div class="container" x-data="{ 
         boxes: [],
         current_box: null,
-        box_contents: { todos: [] }
-    }" x-init="fetch('/v1/boxes')
-        .then(response => response.json())
-        .then(data => boxes = data)">
+        box_contents: { todos: [] },
+        init: function() {
+            this.load_boxes();
+        },
+        load_boxes: function() {
+            fetch('/v1/boxes')
+                .then(response => response.json())
+                .then(data => this.boxes = data);
+        },
+        load_box: function(box) {
+            fetch('/v1/boxes/' + box)
+                .then(response => response.json())
+                .then(data => {
+                    this.box_contents = data;
+                    this.current_box = box;
+                });
+        },
+        todo_done: function(box, todo) {
+            fetch('/v1/boxes/' + box, {
+                method: 'POST',
+                body: todo + ' done'
+            }).then(() => {
+                this.load_box(box);
+            })
+        },
+        add_todo: function(box) {
+            fetch('/v1/boxes/' + box, {
+                method: 'POST',
+                body: document.querySelector('input[name=todo]').value
+            }).then(() => {
+                this.load_box(box);
+                document.querySelector('input[name=todo]').value = '';
+            })
+        }
+    }">
         <div class="boxlist">
             <ul>
                 <template x-for="box in boxes">
                     <li><button class="boxbutton" 
                             x-text="box" 
-                        @click="fetch('/v1/boxes/' + box)
-                            .then(response => response.json())
-                            .then(data => {
-                                current_box = box;
-                                box_contents = data;
-                                })">
+                        @click="load_box(box)">
                     </button>
             </template>
         </ul>
         </div>
         <div class="boxcontents" x-show="current_box">
             <h2>TODOs in <span x-text="current_box" class="boxname"></span></h2>
-            <input type="text" name="todo" placeholder="Add a todo" @keyup.enter="addbutton.click()">
-            <button id="addbutton" @click="fetch('/v1/boxes/' + current_box, {
-                method: 'POST',
-                body: document.querySelector('input[name=todo]').value
-            }).then(() => {
-                // Refresh the box contents after adding
-                fetch('/v1/boxes/' + current_box)
-                    .then(response => response.json())
-                    .then(data => {
-                        box_contents = data;
-                        document.querySelector('input[name=todo]').value = ''; // Clear input
-                    });
-            })">Add</button>
+            <input type="text" name="todo" placeholder="Add a todo" @keyup.enter="add_todo(current_box)">
+            <button id="addbutton" @click="add_todo(current_box)">Add</button>
+
             <template x-for="todo in box_contents.todos">
-                <div class="todo" x-text="todo"></div>
+                <div class="todo" x-data="{is_done: false}" x-bind:class="{ 'done': is_done }">
+                    <input type="checkbox" class="todo-checkbox" x-model="is_done" @change="todo_done(current_box, todo)" />
+                    <span class="todo-text" x-text="todo"></span>
+                </div>
             </template>
         </div>
     </div>
