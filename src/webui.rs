@@ -12,8 +12,7 @@ async fn index() -> impl Responder {
 
 #[get("/boxes")]
 async fn boxes() -> impl Responder {
-    let (boxes, _) = boxops::get_boxes();
-    HttpResponse::Ok().json(boxes)
+    HttpResponse::Ok().json(boxops::get_boxes())
 }
 
 #[get("/boxes/{boxname}")]

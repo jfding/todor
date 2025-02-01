@@ -2,6 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::collections::HashSet;
 use std::io::{Read, Write};
+use serde::Serialize;
 use regex::Regex;
 use colored::Colorize;
 use lazy_static::lazy_static;
@@ -28,6 +29,14 @@ pub const ROUTINE_BOXNAME :&str  = "ROUTINES";
 const PREFIX_OPEN :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
 const PREFIX_SUBT :&str  = " 󱞩 ";
+
+#[derive(Debug, Serialize)]
+pub struct Boxes {
+    pub fixedbox: Vec<String>,
+    pub datebox: Vec<String>,
+    pub otherbox: Vec<String>,
+    pub lockedbox: Vec<String>,
+}
 
 #[derive(Debug)]
 pub struct TaskBox {

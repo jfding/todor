@@ -39,6 +39,9 @@ gitmain:
     git checkout main
     git pull
 
+@gh-pull br:
+    git pull origin $1
+
 @gh-push br:
     git push origin $1
 

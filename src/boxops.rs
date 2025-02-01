@@ -99,24 +99,45 @@ pub fn edit_box(cur_box: &str, diffwith: Option<String>) {
     }
 }
 
-pub fn get_boxes() -> (Vec<String>, Vec<String>) {
+pub fn get_boxes() -> Boxes {
     let basedir = Config_get!("basedir");
-    let mut boxes = Vec::new();
-    let mut locked_boxes = Vec::new();
+
+    let mut fixedbox = Vec::new();
+    let mut datebox = Vec::new();
+    let mut otherbox = Vec::new();
+    let mut lockedbox = Vec::new();
     for entry in std::fs::read_dir(&basedir).expect("cannot read dir") {
         let path = entry.expect("cannot get entry").path();
         if path.is_file() {
+            let boxname = String::from(path.file_stem().unwrap().to_str().unwrap());
+            let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
+
             if path.extension() == Some(OsStr::new("md")) {
-                boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()));
+                if boxname == taskbox::INBOX_BOXNAME || boxname == taskbox::ROUTINE_BOXNAME {
+                    fixedbox.push(boxname);
+                } else if re_date.is_match(&boxname) {
+                    datebox.push(boxname);
+                } else {
+                    otherbox.push(boxname);
+                }
             } else if path.extension() == Some(OsStr::new("mdx")) {
-                locked_boxes.push(String::from(path.file_stem().unwrap().to_str().unwrap()));
+                lockedbox.push(boxname);
             }
         }
     }
 
-    boxes.sort_by(|a,b| b.cmp(&a));
-    locked_boxes.sort_by(|a,b| b.cmp(&a));
-    (boxes, locked_boxes)
+    fixedbox.sort_by(|a,b| b.cmp(a));
+    datebox.sort_by(|a,b| b.cmp(a));
+    otherbox.sort_by(|a,b| b.cmp(a));
+    lockedbox.sort_by(|a,b| b.cmp(a));
+
+
+    Boxes {
+        fixedbox,
+        datebox,
+        otherbox,
+        lockedbox,
+    }
 }
 
 pub fn list_boxes(basedir_only: bool) {
@@ -129,9 +150,9 @@ pub fn list_boxes(basedir_only: bool) {
 
     println!("[ {} ]", S_fpath!(basedir));
 
-    let (boxes, locked_boxes) = get_boxes();
+    let boxes = get_boxes();
 
-    boxes.into_iter().for_each(|boxname| {
+    boxes.datebox.into_iter().for_each(|boxname| {
             print!("  {}  {}",S_checkbox!(TASKBOX), boxname);
             let alias = get_box_alias(&boxname);
             if alias != boxname {
@@ -140,14 +161,17 @@ pub fn list_boxes(basedir_only: bool) {
                 println!()
             }
         });
-    locked_boxes.into_iter().for_each(|boxname| {
-            print!("{} {}  {}", S_warning!(LOCKED), S_checkbox!(TASKBOX), boxname);
-            let alias = get_box_alias(&boxname);
-            if alias != boxname {
-                println!(" ({})", S_hints!(alias))
-            } else {
-                println!()
-            }
+    println!("  ---");
+    boxes.fixedbox.into_iter().for_each(|boxname| {
+            println!("  {}  {}", S_checkbox!(TASKBOX), boxname);
+        });
+    println!("  ---");
+    boxes.otherbox.into_iter().for_each(|boxname| {
+            println!("  {}  {}", S_checkbox!(TASKBOX), boxname);
+        });
+    println!("  ---");
+    boxes.lockedbox.into_iter().for_each(|boxname| {
+            println!("{} {}  {}", S_warning!(LOCKED), S_checkbox!(TASKBOX), boxname);
         });
 }
 
