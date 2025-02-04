@@ -237,3 +237,56 @@ pub fn cleanup_and_archive() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+
+    // init test dir for all test cases
+    // create a tmp dir and set basedir to it
+    fn init_test_basedir() -> PathBuf{
+        let tmpdir = tempfile::tempdir().unwrap();
+        let basedir = tmpdir.path().join("testdir");
+        std::fs::create_dir_all(&basedir).unwrap();
+
+        let testtoml = tmpdir.path().join("config.toml");
+        let testcontent = format!("basedir = \"{}\"\nblink = false\n", basedir.display());
+        fs::write(&testtoml, testcontent).expect("write err");
+        let test_conf = Config::load(Some(testtoml.to_str().unwrap().into()));
+
+        let mut g_conf = CONFIG.write().unwrap();
+        g_conf.update_with(&test_conf);
+
+        basedir
+    }
+
+    // add several boxes for testing
+    fn add_test_boxes(basedir: &Path, names: &[&str]) {
+        for name in names {
+            let boxpath = basedir.join(name).with_extension("md");
+            let mut tb = TaskBox::new(boxpath);
+            tb.add("test task".to_string(), None, false, "");
+        }
+
+        let mut tb = TaskBox::new(util::get_inbox_file("today"));
+        tb.add("test task".to_string(), None, false, "");
+
+        let mut tb = TaskBox::new(util::get_inbox_file("inbox"));
+        tb.add("test task".to_string(), None, false, "");
+    }
+
+    #[test]
+    fn test_get_boxes() {
+        let basedir = init_test_basedir();
+        add_test_boxes(&basedir, &["testbox1", "testbox2", "testbox3"]);
+
+        let boxes = get_boxes();
+        assert_eq!(boxes.datebox.len(), 1); // today
+        assert_eq!(boxes.fixedbox.len(), 2); // inbox, routine
+        assert_eq!(boxes.otherbox.len(), 3); // testbox1, testbox2, testbox3
+        assert_eq!(boxes.lockedbox.len(), 0);
+    }
+}
+

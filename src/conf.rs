@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use crate::util::*;
 
 const DEF_CONFIG_PATH : &str = ".config/todor/todor.toml";
-const DATA_BASE : &str = ".local/share/todor";
+const DEF_DATA_BASE : &str = ".local/share/todor";
 const DEF_CONFIG_CONTENT: &str = r#"# config for todor in toml
 
 ## base directory for todor data
@@ -24,7 +24,7 @@ lazy_static! {
 
 pub fn get_default_basedir() -> String {
     // for windows compatibility
-    let rel_base :PathBuf = DATA_BASE.split("/").collect();
+    let rel_base :PathBuf = DEF_DATA_BASE.split("/").collect();
     dirs::home_dir()
         .expect("cannot get home dir")
         .join(rel_base)
