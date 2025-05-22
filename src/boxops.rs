@@ -51,7 +51,7 @@ pub fn file_manager() -> Result<()> {
     let fm = which("ranger").unwrap_or(def_fm.into());
 
     run_cmd!(
-      sh -c "$fm $basedir 2>/dev/null"
+      sh -c "$fm \"$basedir\" 2>/dev/null"
     )?;
     Ok(())
 }
