@@ -1,6 +1,6 @@
 [package]
 name = "todor"
-version = "1.10.1"
+version = "1.10.2"
 edition = "2021"
 authors = ["JF Ding <jfding@gmail.com>"]
 description = "yet another cli TODO in Rust"
