@@ -153,6 +153,9 @@ pub enum Commands {
     Import{
         #[arg(value_name = "markdown-file")]
         file: Option<String>,
+
+        #[arg(short, long)]
+        from_logseq: bool,
     },
 
     /// -> launch file manager on basedir

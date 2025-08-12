@@ -56,7 +56,10 @@ fn main() {
             if cc > 0 { println!("{}", cc) }
         }
 
-        Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
+        Some(Commands::Import{ file, from_logseq }) => {
+            TaskBox::new(inbox_path).import(file, from_logseq);
+        }
+
         Some(Commands::Purge { sort }) => {
             if i_confirm("are you sure?") {
                 if sort && ! i_confirm("sort cannot handle subtasks well, continue?") { return }

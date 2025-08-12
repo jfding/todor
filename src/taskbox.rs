@@ -29,6 +29,10 @@ const PREFIX_OPEN :&str  = "- [ ] ";
 const PREFIX_DONE :&str  = "- [x] ";
 const PREFIX_SUBT :&str  = " 󱞩 ";
 
+const PREFIX_OPEN_LOGSEQ :&str  = "- TODO ";
+const PREFIX_OPEN2_LOGSEQ :&str  = "- LATER ";
+// const PREFIX_DONE_LOGSEQ :&str  = "- DONE ";
+
 #[derive(Debug)]
 pub struct TaskBox {
     pub fpath: PathBuf,
@@ -519,9 +523,30 @@ impl TaskBox {
     }
 
     // specified markdown file -> cur
-    pub fn import(&mut self, file: Option<String>) {
+    pub fn import(&mut self, file: Option<String>, from_logseq: bool) {
         #[allow(clippy::redundant_closure)]
-        let mdfile= file.unwrap_or_else(|| super::util::pick_file());
+
+        let mdfile = if from_logseq {
+            // get icloud path of "Logseq"
+            let icloud = dirs::home_dir().unwrap().join("Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/journals");
+
+            // when logseq is true, the input "mdfile" is the date string of the journal file
+            // and can accept today, yesterday, week, etc.
+            // if date is not provided, use today
+            let mut date = match file {
+                Some(d) if d == "today" => get_today(),
+                Some(d) if d == "yesterday" => get_yesterday(),
+                // TODO Some("week") => get_week(),
+                Some(d) => d,
+                None => get_today(),
+            };
+
+            date = date.replace("-", "_");
+
+            icloud.join(format!("{}.md", date)).to_str().unwrap().to_string()
+        } else {
+            file.unwrap_or_else(|| super::util::pick_file())
+        };
 
         let fpath = Path::new(&mdfile);
         if ! fpath.is_file() {
@@ -538,10 +563,16 @@ impl TaskBox {
 
             if let Some(stripped) = line.strip_prefix(PREFIX_OPEN) {
                 if RE_ROUTINES.is_match(stripped) {
-                    println!("  {} : {}", S_checkbox!(ROUTINES), stripped);
                     newr.push(stripped.to_string())
                 } else {
-                    println!("  {} : {}", S_checkbox!(CHECKBOX), stripped);
+                    newt.push(stripped.to_string())
+                }
+            }
+
+            if from_logseq {
+                if let Some(stripped) = line.strip_prefix(PREFIX_OPEN_LOGSEQ) {
+                    newt.push(stripped.to_string())
+                } else if let Some(stripped) = line.strip_prefix(PREFIX_OPEN2_LOGSEQ) {
                     newt.push(stripped.to_string())
                 }
             }
@@ -550,9 +581,17 @@ impl TaskBox {
         if newt.is_empty() && newr.is_empty() {
             println!("{} found!", S_empty!("nothing"));
             return
+        } else {
+            println!("New tasks found in input file:");
+            for task in &newt {
+                println!("  {} : {}", S_checkbox!(CHECKBOX), task);
+            }
+            for task in &newr {
+                println!("  {} : {}", S_checkbox!(ROUTINES), task);
+            }
         }
 
-        self.add_tasks(newt);
+        self.load(); self.add_tasks(newt);
         self.sibling(ROUTINE_BOXNAME).add_tasks(newr);
     }
 
