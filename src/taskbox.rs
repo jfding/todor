@@ -533,7 +533,7 @@ impl TaskBox {
             // when logseq is true, the input "mdfile" is the date string of the journal file
             // and can accept today, yesterday, week, etc.
             // if date is not provided, use today
-            let mut date = match file {
+            let mut mdfile_name = match file {
                 Some(d) if d == "today" => get_today(),
                 Some(d) if d == "yesterday" => get_yesterday(),
                 // TODO Some("week") => get_week(),
@@ -541,12 +541,12 @@ impl TaskBox {
                 None => get_today(),
             };
 
-            if ! date.ends_with(".md") {
-                date = format!("{}.md", date);
-                date = date.replace("-", "_");
+            if ! mdfile_name.ends_with(".md") {
+                mdfile_name = format!("{}.md", mdfile_name);
+                mdfile_name = mdfile_name.replace("-", "_");
             }
 
-            icloud.join(date).to_str().unwrap().to_string()
+            icloud.join(mdfile_name).to_str().unwrap().to_string()
         } else {
             file.unwrap_or_else(|| super::util::pick_file())
         };
@@ -558,8 +558,10 @@ impl TaskBox {
         }
         println!("importing {} {}", S_fpath!(mdfile), PROGRESS);
 
-        let mut newt = Vec::new();
-        let mut newr = Vec::new();
+        let mut newt = Vec::new(); // new tasks
+        let mut newr = Vec::new(); // new routines
+        let mut newl = Vec::new(); // new later tasks from logseq to Inbox
+
         for rline in fs::read_to_string(fpath).expect("cannot read file").lines() {
             let line = rline.trim();
             if line.is_empty() { continue }
@@ -576,12 +578,12 @@ impl TaskBox {
                 if let Some(stripped) = line.strip_prefix(PREFIX_OPEN_LOGSEQ) {
                     newt.push(stripped.to_string())
                 } else if let Some(stripped) = line.strip_prefix(PREFIX_OPEN2_LOGSEQ) {
-                    newt.push(stripped.to_string())
+                    newl.push(stripped.to_string())
                 }
             }
         }
 
-        if newt.is_empty() && newr.is_empty() {
+        if newt.is_empty() && newr.is_empty() && newl.is_empty() {
             println!("{} found!", S_empty!("nothing"));
             return
         } else {
@@ -589,12 +591,20 @@ impl TaskBox {
             for task in &newt {
                 println!("  {} : {}", S_checkbox!(CHECKBOX), task);
             }
+            for task in &newl {
+                println!("  {} : {} [{}]", S_checkbox!(CHECKBOX), task, S_checkbox!("LATER"));
+            }
             for task in &newr {
                 println!("  {} : {}", S_checkbox!(ROUTINES), task);
             }
         }
 
         self.load(); self.add_tasks(newt);
+        if self.tbname == INBOX_BOXNAME {
+            self.add_tasks(newl);
+        } else {
+            self.sibling(INBOX_BOXNAME).add_tasks(newl);
+        }
         self.sibling(ROUTINE_BOXNAME).add_tasks(newr);
     }
 
