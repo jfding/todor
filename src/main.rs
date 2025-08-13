@@ -19,12 +19,13 @@ fn main() {
         if let Some(boxname) = args.inbox {
             &boxname.clone()
         } else {
-            let cmdname = arg0.split(path::MAIN_SEPARATOR).last().unwrap();
+            let cmdname = arg0.split(path::MAIN_SEPARATOR).next_back().unwrap();
+
             if cmdname == "todor" {
                 "inbox"
             } else {
                 // e.g. "today", "tomorrow", "yesterday", "t.read", "todo.working"
-                cmdname.split('.').last().unwrap()
+                cmdname.split('.').next_back().unwrap()
             }
         };
 

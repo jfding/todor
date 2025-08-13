@@ -209,8 +209,8 @@ impl TaskBox {
                 return false
             } else if *done {
                 // found done sub-task for this major task
-                if task_status.is_some() {
-                    *task_status.unwrap() = true;
+                if let Some(task_status) = task_status {
+                    *task_status = true;
                 }
                 return true
             }
@@ -541,9 +541,12 @@ impl TaskBox {
                 None => get_today(),
             };
 
-            date = date.replace("-", "_");
+            if ! date.ends_with(".md") {
+                date = format!("{}.md", date);
+                date = date.replace("-", "_");
+            }
 
-            icloud.join(format!("{}.md", date)).to_str().unwrap().to_string()
+            icloud.join(date).to_str().unwrap().to_string()
         } else {
             file.unwrap_or_else(|| super::util::pick_file())
         };
