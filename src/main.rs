@@ -19,12 +19,13 @@ fn main() {
         if let Some(boxname) = args.inbox {
             &boxname.clone()
         } else {
-            let cmdname = arg0.split(path::MAIN_SEPARATOR).last().unwrap();
+            let cmdname = arg0.split(path::MAIN_SEPARATOR).next_back().unwrap();
+
             if cmdname == "todor" {
                 "inbox"
             } else {
                 // e.g. "today", "tomorrow", "yesterday", "t.read", "todo.working"
-                cmdname.split('.').last().unwrap()
+                cmdname.split('.').next_back().unwrap()
             }
         };
 
@@ -56,7 +57,10 @@ fn main() {
             if cc > 0 { println!("{}", cc) }
         }
 
-        Some(Commands::Import{ file })    => TaskBox::new(inbox_path).import(file),
+        Some(Commands::Import{ file, from_logseq }) => {
+            TaskBox::new(inbox_path).import(file, from_logseq);
+        }
+
         Some(Commands::Purge { sort }) => {
             if i_confirm("are you sure?") {
                 if sort && ! i_confirm("sort cannot handle subtasks well, continue?") { return }

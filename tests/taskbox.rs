@@ -376,6 +376,11 @@ fn test_import_somefile_to_inbox() {
 - [ ] Task2 to import
 - [ ] {󰃯:d 2024-10-01Tue 󰳟} one daily to import
 - [ ] {󰃯:m 2024-10-31Mon 󰳟} one montly to import
+
+## belows are logseq style
+- TODO Task to import to "Today"
+- LATER Task to import also to "Inbox"
+- DONE Task Done not to import
 "#;
 
     let (mut inbox, dir) = setup_test_taskbox(INBOX_BOXNAME);
@@ -390,9 +395,13 @@ fn test_import_somefile_to_inbox() {
     assert_eq!(inbox.tasks.len(), 1);
     assert_eq!(routine.tasks.len(), 1);
 
-    inbox.import(Some(fpath.to_str().unwrap().to_string()));
+    inbox.import(Some(fpath.to_str().unwrap().to_string()), false);
     routine = inbox.sibling("routine"); //reset for force reload
     routine.load();
     assert_eq!(inbox.tasks.len(), 4);
     assert_eq!(routine.tasks.len(), 3);
+
+    // import again with "from_logseq" true
+    inbox.import(Some(fpath.to_str().unwrap().to_string()), true);
+    assert_eq!(inbox.tasks.len(), 6);
 }

@@ -40,9 +40,9 @@ pub fn path_normalize(path_str: &str) -> String {
     Path::new(path_str).normalize().unwrap()
 }
 
-pub fn pick_file() -> String {
+pub fn pick_file(dir: &str) -> String {
     run_fun!(
-        ls | fzf;
+        ls -r $dir | fzf -m --preview "cat '$dir/{}'";
     ).unwrap_or_else(|_|
         std::process::exit(1)
     )
