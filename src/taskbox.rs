@@ -538,7 +538,7 @@ impl TaskBox {
                 Some(d) if d == "yesterday" => get_yesterday(),
                 // TODO Some("week") => get_week(),
                 Some(d) => d,
-                None => get_today(),
+                None => super::util::pick_file(&icloud.to_str().unwrap()),
             };
 
             if ! mdfile_name.ends_with(".md") {
@@ -548,7 +548,7 @@ impl TaskBox {
 
             icloud.join(mdfile_name).to_str().unwrap().to_string()
         } else {
-            file.unwrap_or_else(|| super::util::pick_file())
+            file.unwrap_or_else(|| super::util::pick_file("."))
         };
 
         let fpath = Path::new(&mdfile);
