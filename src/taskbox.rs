@@ -526,59 +526,57 @@ impl TaskBox {
     pub fn import(&mut self, file: Option<String>, from_logseq: bool) {
         #[allow(clippy::redundant_closure)]
 
-        let mdfile = if from_logseq {
+        let mut newt = Vec::new(); // new tasks
+        let mut newr = Vec::new(); // new routines
+        let mut newl = Vec::new(); // new later tasks from logseq to Inbox
+
+        let mdfiles :Vec<String> = if from_logseq {
             // get icloud path of "Logseq"
             let icloud = dirs::home_dir().unwrap().join("Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/journals");
 
             // when logseq is true, the input "mdfile" is the date string of the journal file
             // and can accept today, yesterday, week, etc.
             // if date is not provided, use today
-            let mut mdfile_name = match file {
+            let mdfile_names = match file {
                 Some(d) if d == "today" => get_today(),
                 Some(d) if d == "yesterday" => get_yesterday(),
-                // TODO Some("week") => get_week(),
-                Some(d) => d,
-                None => super::util::pick_file(&icloud.to_str().unwrap()),
+                Some(d) if d.ends_with(".md") => d,
+                Some(d) => format!("{}.md", d),
+
+                None => super::util::pick_file(icloud.to_str().unwrap()),
             };
 
-            if ! mdfile_name.ends_with(".md") {
-                mdfile_name = format!("{}.md", mdfile_name);
-                mdfile_name = mdfile_name.replace("-", "_");
-            }
-
-            icloud.join(mdfile_name).to_str().unwrap().to_string()
+            mdfile_names.split("\n").map(|s| icloud.join(s).to_str().unwrap().to_string()).collect()
         } else {
-            file.unwrap_or_else(|| super::util::pick_file("."))
+            file.unwrap_or_else(|| super::util::pick_file(".")).split("\n").map(|s| s.to_string()).collect()
         };
 
-        let fpath = Path::new(&mdfile);
-        if ! fpath.is_file() {
-            eprintln!("not a file or not exists: {}", S_fpath!(mdfile));
-            std::process::exit(1)
-        }
-        println!("importing {} {}", S_fpath!(mdfile), PROGRESS);
-
-        let mut newt = Vec::new(); // new tasks
-        let mut newr = Vec::new(); // new routines
-        let mut newl = Vec::new(); // new later tasks from logseq to Inbox
-
-        for rline in fs::read_to_string(fpath).expect("cannot read file").lines() {
-            let line = rline.trim();
-            if line.is_empty() { continue }
-
-            if let Some(stripped) = line.strip_prefix(PREFIX_OPEN) {
-                if RE_ROUTINES.is_match(stripped) {
-                    newr.push(stripped.to_string())
-                } else {
-                    newt.push(stripped.to_string())
-                }
+        for mdfile in mdfiles {
+            let fpath = Path::new(&mdfile);
+            if ! fpath.is_file() {
+                eprintln!("not a file or not exists: {}", S_fpath!(mdfile));
+                std::process::exit(1)
             }
+            println!("importing {} {}", S_fpath!(mdfile), PROGRESS);
 
-            if from_logseq {
-                if let Some(stripped) = line.strip_prefix(PREFIX_OPEN_LOGSEQ) {
-                    newt.push(stripped.to_string())
-                } else if let Some(stripped) = line.strip_prefix(PREFIX_OPEN2_LOGSEQ) {
-                    newl.push(stripped.to_string())
+            for rline in fs::read_to_string(fpath).expect("cannot read file").lines() {
+                let line = rline.trim();
+                if line.is_empty() { continue }
+
+                if let Some(stripped) = line.strip_prefix(PREFIX_OPEN) {
+                    if RE_ROUTINES.is_match(stripped) {
+                        newr.push(stripped.to_string())
+                    } else {
+                        newt.push(stripped.to_string())
+                    }
+                }
+
+                if from_logseq {
+                    if let Some(stripped) = line.strip_prefix(PREFIX_OPEN_LOGSEQ) {
+                        newt.push(stripped.to_string())
+                    } else if let Some(stripped) = line.strip_prefix(PREFIX_OPEN2_LOGSEQ) {
+                        newl.push(stripped.to_string())
+                    }
                 }
             }
         }
