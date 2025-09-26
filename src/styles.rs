@@ -22,6 +22,8 @@ pub const WEEKLINE: &str = "󰕶";
 pub const LOCKED: &str = "󰍁";
 // S means Style
 #[macro_export]
+macro_rules! S_darktext { ($e:expr) => { $e.to_string().black() }; }
+#[macro_export]
 macro_rules! S_fpath { ($e:expr) => { $e.to_string().purple() }; }
 #[macro_export]
 macro_rules! S_checkbox { ($e:expr) => { $e.to_string().blue() }; }

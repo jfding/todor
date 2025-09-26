@@ -7,7 +7,7 @@ use colored::Colorize;
 use lazy_static::lazy_static;
 use zip::*;
 use anyhow::Result;
-use boxen::boxen;
+use boxen::{builder, BorderStyle, TextAlignment};
 
 use crate::cli::*;
 use crate::util::*;
@@ -465,12 +465,6 @@ impl TaskBox {
         let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
         let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
 
-        let checkbox_style = if self.tbname == "ROUTINES" {
-            ROUTINES
-        } else {
-            CHECKBOX
-        };
-
         if left.is_empty() {
             println!(" {} left!", S_empty!("nothing"));
             return;
@@ -511,8 +505,16 @@ impl TaskBox {
         if listall && !dones.is_empty() {
             for task in dones {
                 if !task.starts_with(PREFIX_SUBT) {
-                    let content = format!("{}  {}", S_checked!(CHECKED), task.strikethrough());
-                    let card = boxen(&content, None).unwrap();
+                    let content = format!("{}", task.strikethrough());
+                    let card = builder()
+                        .border_style(BorderStyle::Single)
+                        .padding(1)
+                        .width(45)
+                        .text_alignment(TextAlignment::Left)
+                        .border_color("green")
+                        .title(format!(" {} ", CHECKED))
+                        .render(content)
+                        .unwrap();
                     println!("{}", card);
                 }
             }
@@ -539,24 +541,34 @@ impl TaskBox {
             
             // Build content for the card
             let checkbox = if self.tbname == "ROUTINES" {
-                S_checkbox!(ROUTINES)
+                ROUTINES
             } else {
-                S_checkbox!(CHECKBOX)
+                CHECKBOX
             };
             
-            let mut content = format!("{}  {}", checkbox, display_text);
+            let mut content = format!("{}", S_darktext!(display_text));
             
             // Add subtasks if any
             for (subtask, _) in subtasks {
                 let sub_text = subtask.strip_prefix(PREFIX_SUBT).unwrap_or(subtask);
-                content.push_str(&format!("\n{} {}  {}", 
-                    S_blink!(SUBTASK), 
-                    S_checkbox!(checkbox_style), 
-                    sub_text));
+                content.push_str(&format!("\n{}  {}", 
+                    S_darktext!(SUBTASK), 
+                    S_darktext!(sub_text)));
             }
             
             // Create styled card with boxen
-            let card = boxen(&content, None).unwrap();
+            let card = builder()
+                .border_style(BorderStyle::Single)
+                .padding(1)
+                //.float(Float::Center)
+                .width(45)
+                .text_alignment(TextAlignment::Left)
+                .border_color("blue")
+                .background_color("yellow")
+                .dim_border(true)
+                .title(format!(" {} ", checkbox))
+                .render(content)
+                .unwrap();
             println!("{}", card);
         }
     }
