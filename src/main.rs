@@ -48,8 +48,12 @@ fn main() {
         Some(Commands::Routines)    => TaskBox::new(get_inbox_file(ROUTINE_BOXNAME)).list(true, false),
         None                        => TaskBox::new(inbox_path).list(false, false),
 
-        Some(Commands::List{ all, plain }) => {
-            TaskBox::new(inbox_path).list(all, plain)
+        Some(Commands::List{ all, plain, card }) => {
+            if card {
+                TaskBox::new(inbox_path).list_cards(all)
+            } else {
+                TaskBox::new(inbox_path).list(all, plain)
+            }
         }
 
         Some(Commands::Count)             => {

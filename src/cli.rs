@@ -68,6 +68,10 @@ pub enum Commands {
         /// plain mode means only show major task without styles
         #[arg(long)]
         plain: bool,
+
+        /// card mode means show tasks in card style
+        #[arg(long)]
+        card: bool,
     },
 
     /// -> list all(including compeleted) tasks

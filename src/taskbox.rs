@@ -7,6 +7,7 @@ use colored::Colorize;
 use lazy_static::lazy_static;
 use zip::*;
 use anyhow::Result;
+use boxen::boxen;
 
 use crate::cli::*;
 use crate::util::*;
@@ -456,6 +457,107 @@ impl TaskBox {
                     println!("{}", msg);
                 }
             }
+        }
+    }
+
+    pub fn list_cards(&mut self, listall: bool) {
+        self.load();
+        let left : Vec<_> = self.tasks.iter().filter(|(_,done)| !done).map(|(task, _)| task.clone()).collect();
+        let dones : Vec<_> = self.tasks.iter().filter(|(_,done)| *done).map(|(task, _)| task.clone()).collect();
+
+        let checkbox_style = if self.tbname == "ROUTINES" {
+            ROUTINES
+        } else {
+            CHECKBOX
+        };
+
+        if left.is_empty() {
+            println!(" {} left!", S_empty!("nothing"));
+            return;
+        }
+
+        // Group tasks by major task and their subtasks
+        let mut task_groups: Vec<Vec<(String, bool)>> = Vec::new();
+        let mut current_group: Vec<(String, bool)> = Vec::new();
+        let mut last_major_task: Option<(String, bool)> = None;
+
+        for (task, done) in &self.tasks {
+            if task.starts_with(PREFIX_SUBT) {
+                // This is a subtask
+                if let Some((ref _last_major, _)) = last_major_task {
+                    if !*done {
+                        current_group.push((task.clone(), *done));
+                    }
+                }
+            } else {
+                // This is a major task
+                if !current_group.is_empty() {
+                    task_groups.push(current_group.clone());
+                    current_group.clear();
+                }
+                last_major_task = Some((task.clone(), *done));
+                if !*done {
+                    current_group.push((task.clone(), *done));
+                }
+            }
+        }
+        
+        // Add the last group if it's not empty
+        if !current_group.is_empty() {
+            task_groups.push(current_group);
+        }
+
+        // Print completed tasks first if listall is true
+        if listall && !dones.is_empty() {
+            for task in dones {
+                if !task.starts_with(PREFIX_SUBT) {
+                    let content = format!("{}  {}", S_checked!(CHECKED), task.strikethrough());
+                    let card = boxen(&content, None).unwrap();
+                    println!("{}", card);
+                }
+            }
+        }
+
+        // Print each task group as a card
+        for group in task_groups {
+            if group.is_empty() { continue; }
+            
+            let major_task = &group[0];
+            let subtasks: Vec<_> = group.iter().skip(1).collect();
+            
+            let task_text = if major_task.0.starts_with(PREFIX_SUBT) {
+                major_task.0.strip_prefix(PREFIX_SUBT).unwrap_or(&major_task.0)
+            } else {
+                &major_task.0
+            };
+            
+            let display_text = if self.tbname == "ROUTINES" {
+                task_text.replace(ROUTINES, ROUTINES_PLAIN).replace(DATESTAMP, DATESTAMP_PLAIN)
+            } else {
+                task_text.to_string()
+            };
+            
+            // Build content for the card
+            let checkbox = if self.tbname == "ROUTINES" {
+                S_checkbox!(ROUTINES)
+            } else {
+                S_checkbox!(CHECKBOX)
+            };
+            
+            let mut content = format!("{}  {}", checkbox, display_text);
+            
+            // Add subtasks if any
+            for (subtask, _) in subtasks {
+                let sub_text = subtask.strip_prefix(PREFIX_SUBT).unwrap_or(subtask);
+                content.push_str(&format!("\n{} {}  {}", 
+                    S_blink!(SUBTASK), 
+                    S_checkbox!(checkbox_style), 
+                    sub_text));
+            }
+            
+            // Create styled card with boxen
+            let card = boxen(&content, None).unwrap();
+            println!("{}", card);
         }
     }
 
